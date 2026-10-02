@@ -26,11 +26,14 @@ def connect() -> sqlite3.Connection:
     return conn
 
 
-def insert_task(conn: sqlite3.Connection, title: str, due_date: str) -> int:
+def insert_task(
+    conn: sqlite3.Connection, title: str, due_date: str, tags: list[str]
+) -> int:
     with conn:
         cur = conn.execute(
             "INSERT INTO tasks (title, due_date) VALUES (?, ?)", (title, due_date)
         )
+        replace_tags(conn, cur.lastrowid, tags)
     return cur.lastrowid
 
 
@@ -43,15 +46,28 @@ def update_task(conn: sqlite3.Connection, task_id: int, fields: dict) -> bool:
         c for c in _UPDATABLE if c in fields
     ]  # colunas da lista fixa, nunca do corpo
     with conn:
-        if not cols:
-            row = conn.execute("SELECT 1 FROM tasks WHERE id = ?", (task_id,))
-            return row.fetchone() is not None
-        sets = ", ".join(f"{c} = ?" for c in cols)
-        vals = [int(fields[c]) if c == "done" else fields[c] for c in cols]
-        cur = conn.execute(f"UPDATE tasks SET {sets} WHERE id = ?", (*vals, task_id))
-    return cur.rowcount > 0
+        row = conn.execute("SELECT 1 FROM tasks WHERE id = ?", (task_id,))
+        if row.fetchone() is None:
+            return False
+        if cols:
+            sets = ", ".join(f"{c} = ?" for c in cols)
+            vals = [int(fields[c]) if c == "done" else fields[c] for c in cols]
+            conn.execute(f"UPDATE tasks SET {sets} WHERE id = ?", (*vals, task_id))
+        if "tags" in fields:
+            replace_tags(conn, task_id, fields["tags"])
+    return True
 
 
+def replace_tags(conn: sqlite3.Connection, task_id: int, tags: list[str]) -> None:
+    """Único caminho de escrita de tags (AD-9); quem chama abre o `with conn:`."""
+    conn.execute("DELETE FROM task_tags WHERE task_id = ?", (task_id,))
+    conn.executemany(
+        "INSERT INTO task_tags (task_id, tag) VALUES (?, ?)",
+        [(task_id, t) for t in tags],
+    )
+
+
+# ponytail: N+1 em load_tags, trocar por um SELECT ... WHERE task_id IN (...) se a lista crescer
 def load_tags(conn: sqlite3.Connection, task_id: int) -> list[str]:
     rows = conn.execute(
         "SELECT tag FROM task_tags WHERE task_id = ? ORDER BY tag", (task_id,)
@@ -74,8 +90,19 @@ def get_task(conn: sqlite3.Connection, task_id: int) -> dict | None:
     return _to_task(conn, row) if row else None
 
 
-def list_tasks(conn: sqlite3.Connection) -> list[dict]:
-    rows = conn.execute("SELECT * FROM tasks ORDER BY due_date, id").fetchall()
+def list_tasks(conn: sqlite3.Connection, tag: str | None = None) -> list[dict]:
+    conds, params = [], []
+    if tag is not None:
+        # EXISTS, nunca JOIN: a tarefa volta uma vez e com todas as tags (AD-9).
+        conds.append(
+            "EXISTS (SELECT 1 FROM task_tags tt"
+            " WHERE tt.task_id = tasks.id AND tt.tag = ?)"
+        )
+        params.append(tag)
+    where = f" WHERE {' AND '.join(conds)}" if conds else ""
+    rows = conn.execute(
+        f"SELECT * FROM tasks{where} ORDER BY due_date, id", params
+    ).fetchall()
     return [_to_task(conn, r) for r in rows]
 
 

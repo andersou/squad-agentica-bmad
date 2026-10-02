@@ -3,7 +3,7 @@ from collections.abc import Iterator
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Response
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from pydantic import (
     AfterValidator,
     BaseModel,
@@ -12,7 +12,7 @@ from pydantic import (
     StringConstraints,
 )
 
-from app import repo
+from app import domain, repo
 
 
 def _valid_date(v: str) -> str:
@@ -27,12 +27,16 @@ DueDate = Annotated[
     StringConstraints(pattern=r"^\d{4}-\d{2}-\d{2}$"),
     AfterValidator(_valid_date),
 ]
+# Item valida sozinho para o 422 sair com field "tags.N"; a lista deduplica e ordena (AD-9).
+Tag = Annotated[str, AfterValidator(lambda v: domain.normalize_tags([v])[0])]
+Tags = Annotated[list[Tag], AfterValidator(domain.normalize_tags)]
 
 
 class TaskCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     title: Title
     due_date: DueDate
+    tags: Tags = []
 
 
 class TaskUpdate(BaseModel):
@@ -41,6 +45,7 @@ class TaskUpdate(BaseModel):
     title: Title = None
     due_date: DueDate = None
     done: StrictBool = None
+    tags: Tags = None
 
 
 class Task(BaseModel):
@@ -68,12 +73,13 @@ router = APIRouter()
 
 @router.post("/tasks", status_code=201, response_model=Task)
 def create_task(body: TaskCreate, conn: Db):
-    return repo.get_task(conn, repo.insert_task(conn, body.title, body.due_date))
+    task_id = repo.insert_task(conn, body.title, body.due_date, body.tags)
+    return repo.get_task(conn, task_id)
 
 
 @router.get("/tasks", response_model=list[Task])
-def list_tasks(conn: Db):
-    return repo.list_tasks(conn)
+def list_tasks(conn: Db, tag: Annotated[Tag | None, Query()] = None):
+    return repo.list_tasks(conn, tag=tag)
 
 
 @router.get("/tasks/{id}", response_model=Task)

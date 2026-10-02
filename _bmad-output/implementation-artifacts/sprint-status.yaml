@@ -57,6 +57,6 @@ development_status:
 
   # Épico 2: Saber o que venceu e o que vence
   epic-2: in-progress
-  2-1-etiquetar-tarefas-e-filtrar-por-tag: ready-for-dev
+  2-1-etiquetar-tarefas-e-filtrar-por-tag: done
   2-2-filtrar-por-janela-de-prazo-e-combinar-com-tag: ready-for-dev
   epic-2-retrospective: optional

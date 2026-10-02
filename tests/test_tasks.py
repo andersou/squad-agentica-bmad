@@ -59,7 +59,7 @@ def test_create_past_due_date(client):
     assert resp.json()["done"] is False
 
 
-@pytest.mark.parametrize("extra", [{"done": True}, {"tags": ["a"]}])
+@pytest.mark.parametrize("extra", [{"done": True}, {"priority": 1}])
 def test_create_extra_field(client, extra):
     payload = {"title": "x", "due_date": "2026-10-10"} | extra
     assert_error(
@@ -201,7 +201,7 @@ def test_patch_empty_body(client):
         ({"done": "true"}, "done"),
         ({"done": 1}, "done"),
         ({"done": None}, "done"),
-        ({"tags": ["x"]}, "tags"),
+        ({"priority": 1}, "priority"),
         ({"id": 99}, "id"),
     ],
 )
@@ -240,3 +240,86 @@ def test_invalid_task_id(client, method):
     kwargs = {"json": {"done": True}} if method == "patch" else {}
     resp = getattr(client, method)("/tasks/abc", **kwargs)
     assert_error(resp, 422, "validation_error", "id")
+
+
+# Story 2.1: tags
+
+
+def test_normalize_tags():
+    assert domain.normalize_tags(["backend", " Backend ", "API"]) == ["api", "backend"]
+    assert domain.normalize_tags([]) == []
+    with pytest.raises(ValueError):
+        domain.normalize_tags([" "])
+
+
+def test_create_with_tags(client):
+    payload = {"title": "x", "due_date": "2026-10-10"}
+    resp = client.post(
+        "/tasks", json=payload | {"tags": ["backend", " Backend ", "API"]}
+    )
+    assert resp.status_code == 201
+    task = resp.json()
+    assert task["tags"] == ["api", "backend"]
+    assert client.get(f"/tasks/{task['id']}").json() == task
+    assert client.post("/tasks", json=payload).json()["tags"] == []
+
+
+INVALID_TAGS = [
+    (["ok", "  "], "tags.1"),
+    ([""], "tags.0"),
+    ([1], "tags.0"),
+    (None, "tags"),
+    ("backend", "tags"),
+]
+
+
+@pytest.mark.parametrize(("tags", "field"), INVALID_TAGS)
+def test_create_invalid_tags(client, tags, field):
+    payload = {"title": "x", "due_date": "2026-10-10", "tags": tags}
+    assert_error(client.post("/tasks", json=payload), 422, "validation_error", field)
+    assert client.get("/tasks").json() == []
+
+
+@pytest.mark.parametrize(("tags", "field"), INVALID_TAGS)
+def test_patch_invalid_tags(client, tags, field):
+    task = client.post(
+        "/tasks", json={"title": "x", "due_date": "2026-10-10", "tags": ["api"]}
+    ).json()
+    resp = client.patch(f"/tasks/{task['id']}", json={"title": "novo", "tags": tags})
+    assert_error(resp, 422, "validation_error", field)
+    assert client.get(f"/tasks/{task['id']}").json() == task
+
+
+def test_patch_tags(client):
+    task = client.post(
+        "/tasks",
+        json={"title": "x", "due_date": "2026-10-10", "tags": ["api", "backend"]},
+    ).json()
+    url = f"/tasks/{task['id']}"
+    assert client.patch(url, json={"title": "y"}).json()["tags"] == ["api", "backend"]
+    assert client.patch(url, json={"done": True}).json()["tags"] == ["api", "backend"]
+    assert client.patch(url, json={"tags": ["infra"]}).json()["tags"] == ["infra"]
+    assert client.patch(url, json={"tags": []}).json()["tags"] == []
+    assert client.get(url).json()["tags"] == []
+
+
+def test_patch_tags_not_found(client):
+    resp = client.patch("/tasks/999", json={"tags": ["a"]})
+    assert_error(resp, 404, "not_found", "id")
+
+
+def test_delete_cascades_tags(client):
+    from app import repo
+
+    task = client.post(
+        "/tasks", json={"title": "x", "due_date": "2026-10-10", "tags": ["a", "b"]}
+    ).json()
+    assert client.delete(f"/tasks/{task['id']}").status_code == 204
+    conn = repo.connect()
+    try:
+        count = conn.execute(
+            "SELECT COUNT(*) FROM task_tags WHERE task_id = ?", (task["id"],)
+        ).fetchone()[0]
+    finally:
+        conn.close()
+    assert count == 0

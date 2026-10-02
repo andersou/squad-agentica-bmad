@@ -1,6 +1,10 @@
+---
+baseline_commit: 2c30eec64598709e00af749db836a027d8696b06
+---
+
 # Story 2.1: Etiquetar tarefas e filtrar por tag
 
-Status: ready-for-dev
+Status: done
 
 <!-- Nota: a validação é opcional. Rode validate-create-story para checar a qualidade antes do dev-story. -->
 
@@ -22,36 +26,42 @@ para separar o trabalho por assunto, como `backend` ou `infra`.
 
 ## Tasks / Subtasks
 
-- [ ] **Tarefa 1: `domain.normalize_tags` (AC: 1, 2, 6)**
-  - [ ] 1.1 Em `app/domain.py`, criar `normalize_tags(tags: list[str]) -> list[str]`: `strip()` + `casefold()` em cada item, `ValueError` (mensagem curta) se algum item ficar vazio, remover repetidas e devolver `sorted(set(...))`. Função pura, sem IO, sem importar `api` nem `repo`.
-  - [ ] 1.2 Teste unitário direto em `tests/test_tasks.py` (ou `tests/test_domain.py` se já existir): `["backend", " Backend ", "API"]` → `["api", "backend"]`; `[]` → `[]`; `[" "]` → `ValueError`.
-- [ ] **Tarefa 2: tipos de tag nos schemas (AC: 1, 2, 4, 6)**
-  - [ ] 2.1 Em `app/api.py`, junto de `Title` e `DueDate`, definir o tipo de item `Tag` que rejeita tag vazia **no item** (para o `loc` sair como `("body", "tags", N)`): `Annotated[str, AfterValidator(...)]` cujo validador chama `domain.normalize_tags([v])[0]` (o `ValueError` vira 422 do Pydantic).
-  - [ ] 2.2 Definir `Tags = Annotated[list[Tag], AfterValidator(domain.normalize_tags)]` para a deduplicação e a ordenação da lista inteira.
-  - [ ] 2.3 Schema do `POST`: adicionar `tags: Tags = []` (não opcional: `null` → 422 `field: "tags"`). Manter `extra="forbid"` e continuar sem `done`.
-  - [ ] 2.4 Schema do `PATCH`: adicionar `tags` no mesmo padrão que a story 1.2 usou para `title`/`due_date`/`done` (campo omitível, `null` → 422, aplicado via `exclude_unset`). Não tornar `tags` `Optional`.
-  - [ ] 2.5 Parâmetro de query `tag` em `GET /tasks`: `Annotated[TagQuery | None, Query()] = None`, em que `TagQuery` é o mesmo `Tag` (normalizado por `domain.normalize_tags`). `?tag=` vazio ou só de espaços → 422 com `field: "tag"` vindo do validador, nunca de `if` na rota (AD-7).
-- [ ] **Tarefa 3: `repo` — escrita, leitura e filtro de tags (AC: 1, 3, 4, 5, 6)**
-  - [ ] 3.1 Em `app/repo.py`, criar `replace_tags(conn, task_id, tags)`: `DELETE FROM task_tags WHERE task_id = ?` seguido de `executemany("INSERT INTO task_tags (task_id, tag) VALUES (?, ?)", ...)`. Não abre transação própria: quem chama está dentro de `with conn:`.
-  - [ ] 3.2 Reutilizar o `load_tags(conn, task_id) -> list[str]` (`ORDER BY tag`) que a 1.1 já cria; não criar outra função. Só se ele não existir no código, criá-lo aqui. Garantir que consultar, listar, criar e editar devolvem as tags reais via `load_tags`.
-  - [ ] 3.3 Criação: inserir a tarefa e chamar `replace_tags` dentro do mesmo `with conn:` (se ainda não estiver, mover o `INSERT` da 1.1 para dentro do bloco).
-  - [ ] 3.4 Edição: quando `tags` estiver entre os campos enviados, chamar `replace_tags` no mesmo `with conn:` que já aplica os outros campos (1.2). O 404 continua sendo decidido antes de qualquer escrita.
-  - [ ] 3.5 Listagem: acrescentar ao `list_tasks` (nome que a 1.1 tiver dado) o argumento `tag: str | None = None`; quando presente, `WHERE EXISTS (SELECT 1 FROM task_tags tt WHERE tt.task_id = tasks.id AND tt.tag = ?)`. Manter `ORDER BY due_date, id`. Montar o `WHERE` a partir de uma lista de condições para a story 2.2 só acrescentar as de prazo.
-- [ ] **Tarefa 4: rotas (AC: 1, 3, 4)**
-  - [ ] 4.1 `POST /tasks` e `PATCH /tasks/{id}` repassam as tags já normalizadas ao `repo`; nenhuma normalização ou validação de tag dentro da rota.
-  - [ ] 4.2 `GET /tasks` repassa `tag` ao `repo`. Rotas continuam `def` e com a conexão de `get_db()` (AD-10).
-- [ ] **Tarefa 5: testes de tags na criação e na edição (AC: 1, 2, 3, 5) — `tests/test_tasks.py`**
-  - [ ] 5.1 `POST` com `["backend", " Backend ", "API"]` → 201 e `["api", "backend"]`; `GET /tasks/{id}` devolve as mesmas tags; `POST` sem `tags` → `[]`.
-  - [ ] 5.2 422 parametrizado em `POST` e `PATCH`, conferindo só `code` e `field`: `["ok", "  "]` → `tags.1`; `[""]` → `tags.0`; `[1]` → `tags.0`; `null` → `tags`; `"backend"` → `tags`. Depois de cada caso, `GET /tasks` (no `POST`) segue sem a tarefa e `GET /tasks/{id}` (no `PATCH`) segue igual ao antes.
-  - [ ] 5.3 `PATCH` com `["infra"]` → `["infra"]`; com `[]` → `[]`; com só `{"title": ...}` ou `{"done": true}` → tags inalteradas; `PATCH` com `tags` em `id` inexistente → 404 `not_found`/`id`.
-  - [ ] 5.4 Cascata: criar com tags, `DELETE`, e conferir com `repo.connect()` (mesmo `TASKS_DB_PATH` do `client`) que `SELECT COUNT(*) FROM task_tags WHERE task_id = ?` dá 0.
-- [ ] **Tarefa 6: testes do filtro por tag (AC: 4) — `tests/test_filters.py`**
-  - [ ] 6.1 Cenário: tarefa A `["backend", "api"]` prazo 10-10, B `["infra"]` prazo 10-05, C `["backend"]` prazo 10-05 (criada depois de B), D sem tags. `GET /tasks?tag=Backend` → `[C, A]` na ordem `due_date`, `id`; A volta com `["api", "backend"]` (todas as tags, não só a buscada).
-  - [ ] 6.2 `?tag=%20BACKEND%20` dá o mesmo resultado; `?tag=nada` → `200 []`; `?tag=` e `?tag=%20%20` → 422 com `field: "tag"`.
-  - [ ] 6.3 Uma tarefa concluída com a tag continua aparecendo no filtro por tag (só as janelas da 2.2 excluem concluídas).
-- [ ] **Tarefa 7: atualizar a regressão do épico 1 e a qualidade (AC: 7)**
-  - [ ] 7.1 Localizar nos testes das stories 1.1 e 1.2 os casos "campo fora do schema, como `tags`" e trocar `tags` por outro campo extra (por exemplo, `"priority": 1`), mantendo a cobertura de `extra="forbid"`. Não remover o caso de `done` no `POST` nem o de `id` no `PATCH`.
-  - [ ] 7.2 Rodar `uv run ruff check`, `uv run ruff format --check` e `uv run pytest`; tudo verde antes do commit.
+- [x] **Tarefa 1: `domain.normalize_tags` (AC: 1, 2, 6)**
+  - [x] 1.1 Em `app/domain.py`, criar `normalize_tags(tags: list[str]) -> list[str]`: `strip()` + `casefold()` em cada item, `ValueError` (mensagem curta) se algum item ficar vazio, remover repetidas e devolver `sorted(set(...))`. Função pura, sem IO, sem importar `api` nem `repo`.
+  - [x] 1.2 Teste unitário direto em `tests/test_tasks.py` (ou `tests/test_domain.py` se já existir): `["backend", " Backend ", "API"]` → `["api", "backend"]`; `[]` → `[]`; `[" "]` → `ValueError`.
+- [x] **Tarefa 2: tipos de tag nos schemas (AC: 1, 2, 4, 6)**
+  - [x] 2.1 Em `app/api.py`, junto de `Title` e `DueDate`, definir o tipo de item `Tag` que rejeita tag vazia **no item** (para o `loc` sair como `("body", "tags", N)`): `Annotated[str, AfterValidator(...)]` cujo validador chama `domain.normalize_tags([v])[0]` (o `ValueError` vira 422 do Pydantic).
+  - [x] 2.2 Definir `Tags = Annotated[list[Tag], AfterValidator(domain.normalize_tags)]` para a deduplicação e a ordenação da lista inteira.
+  - [x] 2.3 Schema do `POST`: adicionar `tags: Tags = []` (não opcional: `null` → 422 `field: "tags"`). Manter `extra="forbid"` e continuar sem `done`.
+  - [x] 2.4 Schema do `PATCH`: adicionar `tags` no mesmo padrão que a story 1.2 usou para `title`/`due_date`/`done` (campo omitível, `null` → 422, aplicado via `exclude_unset`). Não tornar `tags` `Optional`.
+  - [x] 2.5 Parâmetro de query `tag` em `GET /tasks`: `Annotated[TagQuery | None, Query()] = None`, em que `TagQuery` é o mesmo `Tag` (normalizado por `domain.normalize_tags`). `?tag=` vazio ou só de espaços → 422 com `field: "tag"` vindo do validador, nunca de `if` na rota (AD-7).
+- [x] **Tarefa 3: `repo` — escrita, leitura e filtro de tags (AC: 1, 3, 4, 5, 6)**
+  - [x] 3.1 Em `app/repo.py`, criar `replace_tags(conn, task_id, tags)`: `DELETE FROM task_tags WHERE task_id = ?` seguido de `executemany("INSERT INTO task_tags (task_id, tag) VALUES (?, ?)", ...)`. Não abre transação própria: quem chama está dentro de `with conn:`.
+  - [x] 3.2 Reutilizar o `load_tags(conn, task_id) -> list[str]` (`ORDER BY tag`) que a 1.1 já cria; não criar outra função. Só se ele não existir no código, criá-lo aqui. Garantir que consultar, listar, criar e editar devolvem as tags reais via `load_tags`.
+  - [x] 3.3 Criação: inserir a tarefa e chamar `replace_tags` dentro do mesmo `with conn:` (se ainda não estiver, mover o `INSERT` da 1.1 para dentro do bloco).
+  - [x] 3.4 Edição: quando `tags` estiver entre os campos enviados, chamar `replace_tags` no mesmo `with conn:` que já aplica os outros campos (1.2). O 404 continua sendo decidido antes de qualquer escrita.
+  - [x] 3.5 Listagem: acrescentar ao `list_tasks` (nome que a 1.1 tiver dado) o argumento `tag: str | None = None`; quando presente, `WHERE EXISTS (SELECT 1 FROM task_tags tt WHERE tt.task_id = tasks.id AND tt.tag = ?)`. Manter `ORDER BY due_date, id`. Montar o `WHERE` a partir de uma lista de condições para a story 2.2 só acrescentar as de prazo.
+- [x] **Tarefa 4: rotas (AC: 1, 3, 4)**
+  - [x] 4.1 `POST /tasks` e `PATCH /tasks/{id}` repassam as tags já normalizadas ao `repo`; nenhuma normalização ou validação de tag dentro da rota.
+  - [x] 4.2 `GET /tasks` repassa `tag` ao `repo`. Rotas continuam `def` e com a conexão de `get_db()` (AD-10).
+- [x] **Tarefa 5: testes de tags na criação e na edição (AC: 1, 2, 3, 5) — `tests/test_tasks.py`**
+  - [x] 5.1 `POST` com `["backend", " Backend ", "API"]` → 201 e `["api", "backend"]`; `GET /tasks/{id}` devolve as mesmas tags; `POST` sem `tags` → `[]`.
+  - [x] 5.2 422 parametrizado em `POST` e `PATCH`, conferindo só `code` e `field`: `["ok", "  "]` → `tags.1`; `[""]` → `tags.0`; `[1]` → `tags.0`; `null` → `tags`; `"backend"` → `tags`. Depois de cada caso, `GET /tasks` (no `POST`) segue sem a tarefa e `GET /tasks/{id}` (no `PATCH`) segue igual ao antes.
+  - [x] 5.3 `PATCH` com `["infra"]` → `["infra"]`; com `[]` → `[]`; com só `{"title": ...}` ou `{"done": true}` → tags inalteradas; `PATCH` com `tags` em `id` inexistente → 404 `not_found`/`id`.
+  - [x] 5.4 Cascata: criar com tags, `DELETE`, e conferir com `repo.connect()` (mesmo `TASKS_DB_PATH` do `client`) que `SELECT COUNT(*) FROM task_tags WHERE task_id = ?` dá 0.
+- [x] **Tarefa 6: testes do filtro por tag (AC: 4) — `tests/test_filters.py`**
+  - [x] 6.1 Cenário: tarefa A `["backend", "api"]` prazo 10-10, B `["infra"]` prazo 10-05, C `["backend"]` prazo 10-05 (criada depois de B), D sem tags. `GET /tasks?tag=Backend` → `[C, A]` na ordem `due_date`, `id`; A volta com `["api", "backend"]` (todas as tags, não só a buscada).
+  - [x] 6.2 `?tag=%20BACKEND%20` dá o mesmo resultado; `?tag=nada` → `200 []`; `?tag=` e `?tag=%20%20` → 422 com `field: "tag"`.
+  - [x] 6.3 Uma tarefa concluída com a tag continua aparecendo no filtro por tag (só as janelas da 2.2 excluem concluídas).
+- [x] **Tarefa 7: atualizar a regressão do épico 1 e a qualidade (AC: 7)**
+  - [x] 7.1 Localizar nos testes das stories 1.1 e 1.2 os casos "campo fora do schema, como `tags`" e trocar `tags` por outro campo extra (por exemplo, `"priority": 1`), mantendo a cobertura de `extra="forbid"`. Não remover o caso de `done` no `POST` nem o de `id` no `PATCH`.
+  - [x] 7.2 Rodar `uv run ruff check`, `uv run ruff format --check` e `uv run pytest`; tudo verde antes do commit.
+
+### Review Findings
+
+Revisão de código (2026-10-02, bmad-code-review, modo full): todos os ACs 1–7 atendidos; `uv run pytest` 68 passed; `ruff check` e `ruff format --check` limpos. Nenhum achado high/medium.
+
+- [x] [Review][Defer] Checagem de existência no `update_task` roda antes do `BEGIN` implícito do sqlite3 (o `SELECT` não abre transação); um `DELETE` concorrente entre o `SELECT` e o `INSERT` em `task_tags` gera `IntegrityError` de FK → 500 em vez de 404. Baixo: mesmo padrão da corrida já registrada na 1.2 [app/repo.py:48] — deferred, mesma classe de problema pré-existente
 
 ## Dev Notes
 
@@ -141,12 +151,31 @@ Versões fixadas no spine, conferidas no PyPI em 2026-10-02: FastAPI 0.142.2, Py
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 5.5 (claude-opus-5-5)
 
 ### Debug Log References
+
+- Red: 15 falhas + 4 erros com os testes novos antes da implementação. Green: `uv run pytest` 68 passed; `ruff check` e `ruff format --check` limpos.
 
 ### Completion Notes List
 
 - Análise de contexto concluída: guia completo para o dev criado (create-story, 2026-10-02).
+- `domain.normalize_tags`: `strip` + `casefold`, `ValueError("tag vazia")`, `sorted(set)`.
+- `api.py`: `Tag` (validador de item, 422 com `tags.N`) e `Tags` (deduplica/ordena). `TaskCreate.tags: Tags = []`; `TaskUpdate.tags: Tags = None` seguindo o padrão da 1.2 (omitível, `null` → 422). `GET /tasks` recebe `tag: Annotated[Tag | None, Query()]`; o `TagQuery` sugerido não foi criado, o próprio `Tag` serve.
+- `repo.py`: `replace_tags` (DELETE + executemany, sem commit próprio); `insert_task` ganhou `tags` e grava tudo no mesmo `with conn:`; `update_task` agora confere a existência da tarefa **antes** de qualquer escrita (sem isso, `PATCH` com `tags` em id inexistente tentaria inserir em `task_tags` e daria `IntegrityError` → 500); `list_tasks(conn, tag=None)` monta o `WHERE` por lista de condições com `EXISTS` (pronto para a 2.2). `load_tags` da 1.1 reaproveitado, com comentário `ponytail:` do N+1.
+- Esquema da 1.1 já estava conforme o AD-5 (`task_tags` com `ON DELETE CASCADE`); nada mudou no esquema.
+- Regressão: casos de campo extra `tags` nos testes da 1.1/1.2 trocados por `priority` (Tarefa 7).
+- Decisões das questões em aberto: vários `?tag=` usam o último valor (comportamento padrão do FastAPI); sem limite de tamanho/quantidade; `casefold` mantido.
+- Teste unitário de `normalize_tags` ficou em `tests/test_tasks.py` (não existe `tests/test_domain.py`). `tests/test_filters.py` foi criado (não existia).
 
 ### File List
+
+- app/domain.py
+- app/api.py
+- app/repo.py
+- tests/test_tasks.py
+- tests/test_filters.py (novo)
+
+## Change Log
+
+- 2026-10-02: Story 2.1 implementada — tags na criação/edição, filtro `?tag=` por `EXISTS`, testes novos e ajuste da regressão do épico 1. Status → review.

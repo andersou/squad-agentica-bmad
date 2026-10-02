@@ -1119,10 +1119,10 @@
           <span class="sec-num">04</span>
           <div class="rule"></div>
           <h2 class="sec-title">Simulação: do PRD ao primeiro commit</h2>
-          <p class="lede">A API de tarefas passando pela squad inteira. O PRD e a arquitetura são <strong>saídas reais</strong>; as conversas são <strong>ilustrativas</strong>.</p>
+          <p class="lede">A API de tarefas passando pela squad inteira. PRD, arquitetura, épicos e readiness são <strong>saídas reais</strong>; as conversas são <strong>ilustrativas</strong>.</p>
         </div>
         <div class="foot"><span>Squad agêntica com BMAD</span><span>23 / 30</span></div>
-        <aside class="notes"><p>Transição (~20 s). Agora juntamos tudo: vamos acompanhar a API de tarefas do PRD até o primeiro commit, passando pelos gates. Avise que as respostas dos agentes são um exemplo, com uma exceção: o trecho do PRD e o slide de arquitetura saíram de uma execução real.</p></aside>
+        <aside class="notes"><p>Transição (~20 s). Agora juntamos tudo: vamos acompanhar a API de tarefas do PRD até o primeiro commit, passando pelos gates. Avise que as respostas dos agentes são um exemplo, com uma exceção: o PRD, a arquitetura, os épicos e o relatório de readiness saíram de uma execução real.</p></aside>
       </section>
 
       <!-- Simulação 1: PRD -->
@@ -1212,29 +1212,28 @@ FR-4 Excluir            FR-8 Tag + janela
       <!-- Simulação 3: readiness -->
       <section class="slide s" data-screen-label="26 Simulacao readiness">
         <div class="head">
-          <span class="eyebrow">Simulação 3/5 · API de tarefas · saídas ilustrativas</span>
-          <h2 class="h">O readiness check pega a lacuna antes de virar código</h2>
+          <span class="eyebrow">Simulação 3/5 · saída real do readiness check</span>
+          <h2 class="h">O readiness check deu PASS, mas apontou onde a story vai doer</h2>
         </div>
         <div class="grid2 wide-left">
 <div class="term"><span class="p">›</span> <span class="k">bmad-check-implementation-readiness</span>
-<span class="m">▸</span> Resultado: CONCERNS
-<span class="m">▸</span> Story 2.2 sem critério de aceite
-  para "próximos 7 dias"
-<span class="m">▸</span> Limites da janela não batem
-  com o AD-3 da arquitetura
-<span class="p">›</span> Siga o AD-3: amanhã até hoje + 7,
-  inclusivos. Atualize a story.
-<span class="m">▸</span> (chat novo, nova checagem)
-<span class="m">▸</span> Resultado: PASS</div>
+<span class="m">▸</span> Cobertura: 8/8 FRs · 5/5 NFRs
+<span class="m">▸</span> Críticos: 0
+<span class="m">▸</span> M1 Story 1.1 grande (12 critérios)
+  → validar com create-story (VS)
+<span class="m">▸</span> M2 task_tags nasce antes: aceito
+<span class="m">▸</span> m3 FR1 diz "ISO 8601"; as stories
+  só aceitam YYYY-MM-DD
+<span class="m">▸</span> Resultado: PASS com ressalvas</div>
           <div class="card raised">
-            <span class="tag">O que aconteceu</span>
-            <div class="gate"><span class="pill">CONCERNS</span><span class="pill ok">PASS</span></div>
-            <p>A checagem cruzou PRD, arquitetura e stories e achou uma story que contradizia a arquitetura.</p>
-            <p>Você decidiu seguir o AD-3, a story foi corrigida e a segunda rodada passou.</p>
+            <span class="tag">O que o gate achou</span>
+            <div class="gate"><span class="pill ok">PASS</span></div>
+            <p>PRD, arquitetura e épicos contam a mesma história: nenhum requisito sem story e nenhuma story dependendo de outra futura.</p>
+            <p>As ressalvas viram ação, não bloqueio: a story 1.1 é validada antes do dev, e o PRD ganha dois ajustes de texto.</p>
           </div>
         </div>
-        <div class="foot"><span>04 · Simulação</span><span>26 / 30</span></div>
-        <aside class="notes"><p>(~1,5 min) Aqui o gate mostra valor: o readiness check voltou CONCERNS porque a story 2.2 não tinha critério de aceite para "próximos 7 dias", e o rascunho dela contradizia os limites do AD-3 que acabamos de ver.</p><p>Quem decide é você. A decisão volta para a story, e só então a checagem passa.</p><p>Frase para fixar: essa lacuna custou uma conversa. Descoberta em produção, custaria um filtro de prazo errado para todos os usuários.</p></aside>
+        <div class="foot"><span>04 · Simulação · fonte: implementation-readiness-report-2026-10-02.md</span><span>26 / 30</span></div>
+        <aside class="notes"><p>(~1,5 min) Este é o relatório real do readiness check. Ele cruzou PRD, arquitetura e épicos e deu PASS: os 8 requisitos funcionais e os 5 não funcionais têm story, e nenhuma story depende de outra que vem depois.</p><p>Mas o valor está nas ressalvas. A maior: a story 1.1 junta setup, CRUD, erros, persistência e README, com 12 critérios de aceite. A recomendação não é parar, é validar a story antes de dar para a Dev. E um detalhe fino: o PRD fala em "ISO 8601", mas as stories só aceitam data sem hora. Um dev lendo só o PRD mandaria data com hora e levaria 422.</p><p>Frase para fixar: o gate não serve só para dizer sim ou não; ele aponta onde a próxima etapa vai doer.</p></aside>
       </section>
 
       <!-- Simulação 4: story 1.1 -->
@@ -1283,16 +1282,17 @@ listá-la ou consultá-la.
   para o backlog.
 <span class="m">▸</span> Status: done
 <span class="p">$</span> git commit -m "feat: story 1.1"</div>
-<div class="tree tree-sm"><span class="m">sprint-status.yaml · trecho</span>
+<div class="tree tree-sm"><span class="m">sprint-status.yaml real · após a 1.1</span>
 development_status:
   epic-1: in-progress
   1-1-criar-listar-e-consultar-tarefas: <span class="a">done</span>
   1-2-editar-e-concluir-tarefa: backlog
   1-3-excluir-tarefa: backlog
+  epic-1-retrospective: optional
   epic-2: backlog</div>
         </div>
         <div class="foot"><span>04 · Simulação</span><span>28 / 30</span></div>
-        <aside class="notes"><p>(~1,5 min) Último passo da simulação. O code review roda num chat novo e separa o que pertence à story do que não pertence.</p><p>O primeiro achado é real para a story: o erro tem que sair no envelope do AD-7. O segundo, a paginação, o próprio PRD já tinha deixado fora da v1.</p><p>Você decide: corrige o achado da story agora e manda a paginação para o backlog, em vez de transformar a story numa faxina geral.</p><p>Story em done, sprint-status atualizado, commit feito. Feche: esse ciclo se repete para a 1.2, a 1.3 e assim por diante.</p></aside>
+        <aside class="notes"><p>(~1,5 min) Último passo da simulação. O code review roda num chat novo e separa o que pertence à story do que não pertence.</p><p>O primeiro achado é real para a story: o erro tem que sair no envelope do AD-7. O segundo, a paginação, o próprio PRD já tinha deixado fora da v1.</p><p>Você decide: corrige o achado da story agora e manda a paginação para o backlog, em vez de transformar a story numa faxina geral.</p><p>À direita, o sprint-status.yaml real gerado pelo sprint-planning, com as chaves exatas das stories. Ele nasce todo em backlog; o que aparece aqui é o estado depois deste ciclo: o épico 1 vira in-progress quando a primeira story é criada, e a 1.1 chega a done. A retrospectiva do épico fica como optional.</p><p>Story em done, sprint-status atualizado, commit feito. Feche: esse ciclo se repete para a 1.2, a 1.3 e assim por diante.</p></aside>
       </section>
 
       <!-- 21 Checklist -->

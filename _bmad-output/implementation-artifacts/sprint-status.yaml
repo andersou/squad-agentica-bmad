@@ -1,0 +1,62 @@
+# generated: 2026-10-02
+# last_updated: 2026-10-02
+# project: api-tarefas
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# DEFINIÇÕES DE STATUS:
+# =====================
+# Status do épico:
+#   - backlog: épico ainda não começou
+#   - in-progress: épico em andamento
+#   - done: todas as stories do épico concluídas
+#
+# Transições do épico:
+#   - backlog → in-progress: automática quando a primeira story é criada (create-story)
+#   - in-progress → done: manual quando todas as stories chegam a 'done'
+#
+# Status da story:
+#   - backlog: a story só existe no epics.md
+#   - ready-for-dev: arquivo da story criado na pasta de stories
+#   - in-progress: dev implementando
+#   - review: pronta para code review
+#   - done: story concluída
+#
+# Status da retrospectiva:
+#   - optional: pode ser feita, mas não é obrigatória
+#   - done: retrospectiva concluída
+#
+# Status dos itens de ação:
+#   - open: assumido em uma retrospectiva, ainda não tratado
+#   - in-progress: em andamento
+#   - done: concluído
+#
+# NOTAS DO WORKFLOW:
+# ==================
+# - O épico passa a 'in-progress' automaticamente quando a primeira story é criada
+# - Stories podem andar em paralelo se houver capacidade
+# - O dev normalmente cria a próxima story depois que a anterior chega a 'done', para aproveitar o aprendizado
+# - O dev move a story para 'review' e roda o code review (contexto novo; outro LLM é recomendado)
+# - A retrospectiva acrescenta itens de ação em action_items; o sprint-status mostra os abertos
+
+generated: 2026-10-02
+last_updated: 2026-10-02
+project: api-tarefas
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Épico 1: Registrar e manter tarefas
+  epic-1: backlog
+  1-1-criar-listar-e-consultar-tarefas: backlog
+  1-2-editar-e-concluir-tarefa: backlog
+  1-3-excluir-tarefa: backlog
+  epic-1-retrospective: optional
+
+  # Épico 2: Saber o que venceu e o que vence
+  epic-2: backlog
+  2-1-etiquetar-tarefas-e-filtrar-por-tag: backlog
+  2-2-filtrar-por-janela-de-prazo-e-combinar-com-tag: backlog
+  epic-2-retrospective: optional

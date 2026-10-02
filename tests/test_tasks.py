@@ -149,3 +149,70 @@ def test_set_now_overrides_clock(set_now):
     assert app.dependency_overrides[domain.now]() == datetime.fromisoformat(
         "2026-10-02T15:00Z"
     )
+
+
+# --- FR-3: editar e concluir (story 1.2) ---
+
+
+def test_patch_title_only(client):
+    task = create(client).json()
+    resp = client.patch(f"/tasks/{task['id']}", json={"title": "  Novo  "})
+    assert resp.status_code == 200
+    assert resp.json() == task | {"title": "Novo"}
+    assert client.get(f"/tasks/{task['id']}").json() == task | {"title": "Novo"}
+
+
+def test_patch_due_date_reorders(client):
+    a = create(client, "a", "2026-10-10").json()
+    b = create(client, "b", "2026-10-11").json()
+    resp = client.patch(f"/tasks/{a['id']}", json={"due_date": "2026-10-12"})
+    assert resp.json()["due_date"] == "2026-10-12"
+    assert [t["id"] for t in client.get("/tasks").json()] == [b["id"], a["id"]]
+
+
+def test_patch_done_toggle(client):
+    tid = create(client).json()["id"]
+    resp = client.patch(f"/tasks/{tid}", json={"done": True})
+    assert resp.status_code == 200
+    assert resp.json()["done"] is True
+    resp = client.patch(f"/tasks/{tid}", json={"done": False})
+    assert resp.status_code == 200
+    assert resp.json()["done"] is False
+
+
+def test_patch_empty_body(client):
+    task = create(client).json()
+    resp = client.patch(f"/tasks/{task['id']}", json={})
+    assert resp.status_code == 200
+    assert resp.json() == task
+
+
+@pytest.mark.parametrize(
+    ("payload", "field"),
+    [
+        ({"title": ""}, "title"),
+        ({"title": "   "}, "title"),
+        ({"title": None}, "title"),
+        ({"due_date": "2026-02-30"}, "due_date"),
+        ({"due_date": "2026-10-02T00:00:00Z"}, "due_date"),
+        ({"due_date": "02/10/2026"}, "due_date"),
+        ({"due_date": 1790899200}, "due_date"),
+        ({"due_date": None}, "due_date"),
+        ({"done": "true"}, "done"),
+        ({"done": 1}, "done"),
+        ({"done": None}, "done"),
+        ({"tags": ["x"]}, "tags"),
+        ({"id": 99}, "id"),
+    ],
+)
+def test_patch_invalid(client, payload, field):
+    task = create(client).json()
+    resp = client.patch(f"/tasks/{task['id']}", json=payload)
+    assert_error(resp, 422, "validation_error", field)
+    assert client.get(f"/tasks/{task['id']}").json() == task
+
+
+def test_patch_not_found(client):
+    assert_error(
+        client.patch("/tasks/999", json={"done": True}), 404, "not_found", "id"
+    )

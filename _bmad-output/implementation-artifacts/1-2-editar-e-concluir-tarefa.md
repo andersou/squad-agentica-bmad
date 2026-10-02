@@ -1,6 +1,10 @@
+---
+baseline_commit: 717a2ab94c68618ad7b767c881619d7e93817971
+---
+
 # Story 1.2: Editar e concluir tarefa
 
-Status: ready-for-dev
+Status: done
 
 <!-- Nota: a validação é opcional. Rode validate-create-story para checar a qualidade antes do dev-story. -->
 
@@ -22,33 +26,40 @@ para que a lista reflita o estado real do trabalho.
 
 ## Tasks / Subtasks
 
-- [ ] Tarefa 1: Schema de entrada `TaskUpdate` em `app/api.py` (AC: 4, 5, 7)
-  - [ ] 1.1 Declarar `TaskUpdate` com `model_config = ConfigDict(extra="forbid")`, reaproveitando os tipos `Title` e `DueDate` que a 1.1 já definiu em `app/api.py` (não redefinir, não copiar).
-  - [ ] 1.2 Campos opcionais sem `Optional`: `title: Title = None`, `due_date: DueDate = None`, `done: StrictBool = None` (ou o tipo `done` estrito que a 1.1 já tiver). Assim omitir é permitido e `null` explícito dá 422.
-  - [ ] 1.3 Não declarar `tags` nem `id` em `TaskUpdate` (o `extra="forbid"` rejeita). A 2.1 acrescenta `tags`.
-- [ ] Tarefa 2: Função de escrita em `app/repo.py` (AC: 1, 2, 3, 6, 7)
-  - [ ] 2.1 Criar `update_task(conn, task_id, fields: dict) -> bool` (ou nome equivalente seguindo o padrão da 1.1) que, dentro de `with conn:`, monta `UPDATE tasks SET <col> = ? ...` só com as chaves recebidas e devolve se a tarefa existe.
-  - [ ] 2.2 As colunas vêm de uma lista fixa (`title`, `due_date`, `done`), nunca do texto da requisição; valores sempre por parâmetro `?`.
-  - [ ] 2.3 Gravar `done` como `0`/`1` (`int(done)`).
-  - [ ] 2.4 `fields` vazio (corpo `{}`): não executar `UPDATE`; só verificar se a tarefa existe.
-  - [ ] 2.5 Ler a tarefa atualizada pelo mesmo caminho de leitura do `GET /tasks/{id}` da 1.1 (inclui `tags` via `load_tags`, se a 1.1 já o criou), sem caminho novo de leitura.
-- [ ] Tarefa 3: Rota `PATCH /tasks/{id}` em `app/api.py` (AC: 1–7)
-  - [ ] 3.1 `def patch_task(id: int, body: TaskUpdate, conn = Depends(get_db))` — rota `def`, não `async def` (AD-10); `response_model` igual ao das outras rotas (a tarefa `Task` da 1.1).
-  - [ ] 3.2 `fields = body.model_dump(exclude_unset=True)` e repassar ao `repo`.
-  - [ ] 3.3 Tarefa inexistente: levantar o mesmo 404 que o `GET /tasks/{id}` da 1.1 levanta (`field: "id"`), reaproveitando o helper/exceção existente.
-  - [ ] 3.4 Nenhum `if` de validação na rota: toda regra de 422 fica nos tipos Pydantic (AD-7).
-- [ ] Tarefa 4: Testes em `tests/test_tasks.py` (AC: 1–6)
-  - [ ] 4.1 Edição de título: só o título muda; `due_date`, `tags` e `done` iguais; `GET /tasks/{id}` confirma a persistência.
-  - [ ] 4.2 Edição de `due_date` e reordenação: após mudar o prazo, `GET /tasks` reflete a nova ordem (`due_date`, depois `id`).
-  - [ ] 4.3 `done: true` → `done: false`, conferindo o tipo booleano JSON na resposta (`is True`/`is False`, não `1`/`0`).
-  - [ ] 4.4 Corpo `{}` → 200 e tarefa igual à anterior.
-  - [ ] 4.5 422 parametrizado: `title` `""` e `"   "`; `due_date` nos quatro casos da 1.1; `done` `"true"` e `1`; `null` em `title`, `due_date` e `done`. Conferir `code` e `field` (nunca `message`) e que um `GET` depois mostra a tarefa inalterada.
-  - [ ] 4.6 Campo extra: `{"tags": ["x"]}` e `{"id": 99}` → 422 `validation_error`.
-  - [ ] 4.7 `PATCH` em `id` inexistente → 404, `code: "not_found"`, `field: "id"`.
-  - [ ] 4.8 Título com espaços nas pontas (`"  Novo  "`) é gravado sem eles (`"Novo"`), igual ao `POST`.
-- [ ] Tarefa 5: Qualidade e docs (AC: todos)
-  - [ ] 5.1 `uv run ruff check`, `uv run ruff format --check` e `uv run pytest` passando (toda a suíte da 1.1 continua verde).
-  - [ ] 5.2 Acrescentar ao `README.md` um exemplo `curl` de concluir uma tarefa (`PATCH` com `{"done": true}`), em português.
+- [x] Tarefa 1: Schema de entrada `TaskUpdate` em `app/api.py` (AC: 4, 5, 7)
+  - [x] 1.1 Declarar `TaskUpdate` com `model_config = ConfigDict(extra="forbid")`, reaproveitando os tipos `Title` e `DueDate` que a 1.1 já definiu em `app/api.py` (não redefinir, não copiar).
+  - [x] 1.2 Campos opcionais sem `Optional`: `title: Title = None`, `due_date: DueDate = None`, `done: StrictBool = None` (ou o tipo `done` estrito que a 1.1 já tiver). Assim omitir é permitido e `null` explícito dá 422.
+  - [x] 1.3 Não declarar `tags` nem `id` em `TaskUpdate` (o `extra="forbid"` rejeita). A 2.1 acrescenta `tags`.
+- [x] Tarefa 2: Função de escrita em `app/repo.py` (AC: 1, 2, 3, 6, 7)
+  - [x] 2.1 Criar `update_task(conn, task_id, fields: dict) -> bool` (ou nome equivalente seguindo o padrão da 1.1) que, dentro de `with conn:`, monta `UPDATE tasks SET <col> = ? ...` só com as chaves recebidas e devolve se a tarefa existe.
+  - [x] 2.2 As colunas vêm de uma lista fixa (`title`, `due_date`, `done`), nunca do texto da requisição; valores sempre por parâmetro `?`.
+  - [x] 2.3 Gravar `done` como `0`/`1` (`int(done)`).
+  - [x] 2.4 `fields` vazio (corpo `{}`): não executar `UPDATE`; só verificar se a tarefa existe.
+  - [x] 2.5 Ler a tarefa atualizada pelo mesmo caminho de leitura do `GET /tasks/{id}` da 1.1 (inclui `tags` via `load_tags`, se a 1.1 já o criou), sem caminho novo de leitura.
+- [x] Tarefa 3: Rota `PATCH /tasks/{id}` em `app/api.py` (AC: 1–7)
+  - [x] 3.1 `def patch_task(id: int, body: TaskUpdate, conn = Depends(get_db))` — rota `def`, não `async def` (AD-10); `response_model` igual ao das outras rotas (a tarefa `Task` da 1.1).
+  - [x] 3.2 `fields = body.model_dump(exclude_unset=True)` e repassar ao `repo`.
+  - [x] 3.3 Tarefa inexistente: levantar o mesmo 404 que o `GET /tasks/{id}` da 1.1 levanta (`field: "id"`), reaproveitando o helper/exceção existente.
+  - [x] 3.4 Nenhum `if` de validação na rota: toda regra de 422 fica nos tipos Pydantic (AD-7).
+- [x] Tarefa 4: Testes em `tests/test_tasks.py` (AC: 1–6)
+  - [x] 4.1 Edição de título: só o título muda; `due_date`, `tags` e `done` iguais; `GET /tasks/{id}` confirma a persistência.
+  - [x] 4.2 Edição de `due_date` e reordenação: após mudar o prazo, `GET /tasks` reflete a nova ordem (`due_date`, depois `id`).
+  - [x] 4.3 `done: true` → `done: false`, conferindo o tipo booleano JSON na resposta (`is True`/`is False`, não `1`/`0`).
+  - [x] 4.4 Corpo `{}` → 200 e tarefa igual à anterior.
+  - [x] 4.5 422 parametrizado: `title` `""` e `"   "`; `due_date` nos quatro casos da 1.1; `done` `"true"` e `1`; `null` em `title`, `due_date` e `done`. Conferir `code` e `field` (nunca `message`) e que um `GET` depois mostra a tarefa inalterada.
+  - [x] 4.6 Campo extra: `{"tags": ["x"]}` e `{"id": 99}` → 422 `validation_error`.
+  - [x] 4.7 `PATCH` em `id` inexistente → 404, `code: "not_found"`, `field: "id"`.
+  - [x] 4.8 Título com espaços nas pontas (`"  Novo  "`) é gravado sem eles (`"Novo"`), igual ao `POST`.
+- [x] Tarefa 5: Qualidade e docs (AC: todos)
+  - [x] 5.1 `uv run ruff check`, `uv run ruff format --check` e `uv run pytest` passando (toda a suíte da 1.1 continua verde).
+  - [x] 5.2 Acrescentar ao `README.md` um exemplo `curl` de concluir uma tarefa (`PATCH` com `{"done": true}`), em português.
+
+### Review Findings
+
+Revisão de código (bmad-code-review, 2026-10-02): todos os ACs 1–7 atendidos; `uv run pytest` 42 passed; ruff limpo. Nenhum achado alto ou médio.
+
+- [x] [Review][Defer] `id` fora do intervalo INTEGER do SQLite (ex.: `PATCH /tasks/99999999999999999999`) gera `OverflowError` → 500 em vez de 404/422 [app/repo.py:47] — deferred, pre-existing (o `GET /tasks/{id}` da 1.1 tem o mesmo comportamento)
+- [x] [Review][Defer] Corrida entre `update_task` e `get_task` (tarefa excluída entre as duas chamadas, possível após a 1.3) faria `patch_task` devolver `None` → 500 de validação de resposta [app/api.py:89] — deferred, inalcançável hoje (não há DELETE); reavaliar na 1.3
 
 ## Dev Notes
 
@@ -157,12 +168,30 @@ Arquivos a ATUALIZAR ainda não existem (greenfield; a 1.1 os cria). Antes de me
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 5.5 (claude-opus-5-5)
 
 ### Debug Log References
 
 ### Completion Notes List
 
 - Análise de contexto concluída: guia completo para o dev criado (create-story, 2026-10-02).
+- Nomes seguidos da 1.1 (código real): modelo de saída `Task`, alias `Db` para `get_db`, parâmetro de rota `task_id` (não `id`), 404 via `HTTPException(404, detail="task_not_found")` que o handler do AD-7 traduz em `field: "id"`, leitura via `repo.get_task` (já inclui `load_tags`).
+- `TaskUpdate` em `app/api.py` com `extra="forbid"`, reaproveitando `Title` e `DueDate`; `done: StrictBool = None` (sem `Optional`: `null` explícito dá 422).
+- `repo.update_task(conn, task_id, fields) -> bool`: colunas de lista fixa `_UPDATABLE`, valores por `?`, `done` gravado como `int`, corpo `{}` só verifica existência; tudo dentro de `with conn:`.
+- Rota `PATCH /tasks/{task_id}` síncrona (`def`), sem `if` de validação; `body.model_dump(exclude_unset=True)` repassado ao repo.
+- Testes (TDD: 18 falhando antes, todos verdes depois): edição de título com strip, reordenação por prazo, `done` true/false como booleano JSON, corpo vazio, 13 casos de 422 parametrizados (inclui `tags`/`id` extras e `null`) conferindo que a tarefa não muda, 404 com `field: "id"`.
+- Validação: `uv run pytest` 42 passed; `ruff check` e `ruff format --check` limpos. O aviso `StarletteDeprecationWarning` (httpx) já existia antes desta story.
+- Decisão: README ganhou o `curl` de concluir tarefa, como pedia a tarefa 5.2.
 
 ### File List
+
+- app/api.py
+- app/repo.py
+- tests/test_tasks.py
+- README.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+- _bmad-output/implementation-artifacts/1-2-editar-e-concluir-tarefa.md
+
+### Change Log
+
+- 2026-10-02: implementado `PATCH /tasks/{task_id}` (editar título/prazo, concluir/desmarcar), `repo.update_task`, testes do FR3 e exemplo no README. Status → review.

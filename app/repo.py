@@ -34,6 +34,24 @@ def insert_task(conn: sqlite3.Connection, title: str, due_date: str) -> int:
     return cur.lastrowid
 
 
+_UPDATABLE = ("title", "due_date", "done")
+
+
+def update_task(conn: sqlite3.Connection, task_id: int, fields: dict) -> bool:
+    """Aplica só os campos enviados; devolve se a tarefa existe."""
+    cols = [
+        c for c in _UPDATABLE if c in fields
+    ]  # colunas da lista fixa, nunca do corpo
+    with conn:
+        if not cols:
+            row = conn.execute("SELECT 1 FROM tasks WHERE id = ?", (task_id,))
+            return row.fetchone() is not None
+        sets = ", ".join(f"{c} = ?" for c in cols)
+        vals = [int(fields[c]) if c == "done" else fields[c] for c in cols]
+        cur = conn.execute(f"UPDATE tasks SET {sets} WHERE id = ?", (*vals, task_id))
+    return cur.rowcount > 0
+
+
 def load_tags(conn: sqlite3.Connection, task_id: int) -> list[str]:
     rows = conn.execute(
         "SELECT tag FROM task_tags WHERE task_id = ? ORDER BY tag", (task_id,)

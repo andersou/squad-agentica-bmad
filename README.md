@@ -52,6 +52,15 @@ curl http://<IP interno>:8000/tasks/1
 # 200 {"id": 1, "title": "Revisar PR", "due_date": "2026-10-10", "tags": [], "done": false}
 ```
 
+Editar ou concluir (`PATCH` aplica só os campos enviados; `{"done": false}` desmarca):
+
+```bash
+curl -X PATCH http://<IP interno>:8000/tasks/1 \
+  -H 'Content-Type: application/json' \
+  -d '{"done": true}'
+# 200 {"id": 1, "title": "Revisar PR", "due_date": "2026-10-10", "tags": [], "done": true}
+```
+
 Erro de validação (todo erro usa o mesmo envelope):
 
 ```bash

@@ -49,14 +49,14 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # Épico 1: Registrar e manter tarefas
-  epic-1: backlog
-  1-1-criar-listar-e-consultar-tarefas: backlog
-  1-2-editar-e-concluir-tarefa: backlog
-  1-3-excluir-tarefa: backlog
+  epic-1: in-progress
+  1-1-criar-listar-e-consultar-tarefas: ready-for-dev
+  1-2-editar-e-concluir-tarefa: ready-for-dev
+  1-3-excluir-tarefa: ready-for-dev
   epic-1-retrospective: optional
 
   # Épico 2: Saber o que venceu e o que vence
-  epic-2: backlog
-  2-1-etiquetar-tarefas-e-filtrar-por-tag: backlog
-  2-2-filtrar-por-janela-de-prazo-e-combinar-com-tag: backlog
+  epic-2: in-progress
+  2-1-etiquetar-tarefas-e-filtrar-por-tag: ready-for-dev
+  2-2-filtrar-por-janela-de-prazo-e-combinar-com-tag: ready-for-dev
   epic-2-retrospective: optional

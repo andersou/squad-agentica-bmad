@@ -1,0 +1,1426 @@
+<!doctype html>
+<html lang="pt-BR" data-od-deck-protocol="1">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Squad agêntica com BMAD v6.10 — do primeiro comando ao dia a dia</title>
+  <style>
+    /* ===========================================================
+       Deck framework — DO NOT EDIT the rules in this <style> block.
+       Edit only inside the second <style> block below (per-deck
+       styles) and inside <section class="slide"> bodies.
+
+       Contract this framework provides:
+         - 1920×1080 fixed canvas, scaled to fit the viewport
+         - Only .slide.active is visible at a time
+         - Programmatic prev/next + counter elements kept outside the scaled
+           stage but hidden by default so the host can render the UI chrome
+         - OD Deck Protocol v1 absolute navigation + slide-state events
+         - Keyboard (← → space PgUp PgDn Home End R), half-slide click, and stored
+           position survive iframe focus quirks
+         - "Save as PDF" produces a multi-page vertical PDF, one slide
+           per page, by toggling every slide visible under @media print
+       =========================================================== */
+    :root {
+      /* SLOT: theme tokens — Stripe design system binding */
+      --bg: #ffffff;
+      --fg: #061b31;
+      --fg-2: #273951;
+      --muted: #64748d;
+      --accent: #533afd;
+      --accent-active: #2e2b8c;
+      --accent-soft: #b9b9f9;
+      --surface: #ffffff;
+      --surface-warm: #f6f9fc;
+      --border: #e5edf5;
+      --brand-dark: #1c1e54;
+      --ink: #0d253d;
+      --ink-fg: #e5edf5;
+      --success: #108c3d;
+      --shell: #08090d;
+      --font-display: "sohne-var", "Söhne", "Sohne", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      --font-body: "sohne-var", "Söhne", "Sohne", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "SourceCodePro", "Source Code Pro", ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+      --elev-raised: rgba(50, 50, 93, 0.25) 0px 30px 45px -30px, rgba(0, 0, 0, 0.10) 0px 18px 36px -18px;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --pad-x: 120px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--shell);
+      color: var(--fg);
+      font: 18px/1.5 -apple-system, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .deck-shell {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+    .deck-stage {
+      width: 1920px;
+      height: 1080px;
+      background: var(--bg);
+      position: relative;
+      transform-origin: top left;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+    }
+    .slide {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    /* Visibility toggle hardened with :not(.active) + !important so cascade
+       order can't break it. The previous `.slide { display:none }` rule
+       lost the cascade whenever a per-slide variant class (e.g.
+       `.s-cold { display:grid }`) was declared after it on the same
+       element — every slide silently became visible at once. The
+       `!important` is a belt-and-suspenders against agent code that adds
+       `!important` on variant classes too. */
+    .slide:not(.active) { display: none !important; }
+    /* The active default uses :where() so it has zero specificity. Per-slide
+       variant classes like `.s-cold { display:grid }` or
+       `.s-magazine { display:block }` can override the default flex layout
+       just by declaring `display` — no need for the variant to be more
+       specific. The hide rule above still wins for inactive slides. */
+    :where(.slide.active) { display: flex; flex-direction: column; }
+
+    /* Programmatic chrome — counter + prev/next live outside the scaled
+       stage so the host bridge can read/update them, but they stay hidden
+       in preview, presentation, fullscreen, and new-tab modes. */
+    .deck-counter {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      align-items: center;
+      gap: 4px;
+      background: rgba(10, 14, 26, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.18em;
+      z-index: 1000;
+    }
+    .deck-counter button {
+      width: 36px; height: 36px;
+      background: transparent;
+      color: #fff;
+      border: 0;
+      border-radius: 50%;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: background 0.15s;
+    }
+    .deck-counter button:hover { background: rgba(255, 255, 255, 0.12); }
+    .deck-counter button[disabled] { opacity: 0.3; cursor: default; }
+    .deck-counter .deck-count {
+      padding: 0 14px;
+      letter-spacing: 0.22em;
+    }
+    .deck-counter .deck-count .total { color: rgba(255, 255, 255, 0.5); }
+    .deck-hint {
+      position: fixed;
+      bottom: 26px;
+      right: 28px;
+      color: rgba(255, 255, 255, 0.4);
+      font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      z-index: 999;
+      pointer-events: none;
+      display: none;
+    }
+
+    /* Print / PDF stitching — every slide stacks top-to-bottom, one per
+       page. The viewer's "Share → PDF" relies on this; do not remove. */
+    @media print {
+      @page { size: 1920px 1080px; margin: 0; }
+      html, body {
+        width: 1920px !important;
+        height: auto !important;
+        overflow: visible !important;
+        background: #fff !important;
+      }
+      .deck-shell {
+        position: static !important;
+        display: block !important;
+        inset: auto !important;
+      }
+      .deck-stage {
+        width: 1920px !important;
+        height: auto !important;
+        transform: none !important;
+        box-shadow: none !important;
+        position: static !important;
+      }
+      .slide {
+        display: flex !important;
+        position: relative !important;
+        inset: auto !important;
+        width: 1920px !important;
+        height: 1080px !important;
+        page-break-after: always;
+        break-after: page;
+      }
+      .slide:last-child { page-break-after: auto; break-after: auto; }
+      .deck-counter, .deck-hint { display: none !important; }
+    }
+  </style>
+  <style>
+    /* SLOT: per-deck styles */
+    .s {
+      padding: 96px var(--pad-x) 150px;
+      gap: 48px;
+      font-family: var(--font-body);
+      font-feature-settings: "ss01";
+      font-weight: 300;
+      color: var(--fg);
+      background: var(--bg);
+    }
+    .s.dark { background: var(--brand-dark); color: #fff; }
+    .s.center { justify-content: center; }
+
+    .head { display: flex; flex-direction: column; gap: 24px; }
+    .eyebrow {
+      display: block;
+      font: 500 22px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .dark .eyebrow { color: var(--accent-soft); }
+    .h {
+      font-family: var(--font-display);
+      font-weight: 300;
+      font-size: 64px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+      max-width: 1560px;
+      text-wrap: balance;
+    }
+    .dark .h { color: #fff; }
+    .lede {
+      font-size: 30px;
+      line-height: 1.5;
+      color: var(--fg-2);
+      max-width: 56ch;
+    }
+    .dark .lede { color: rgba(255, 255, 255, 0.8); }
+    .body { font-size: 28px; line-height: 1.5; color: var(--fg-2); }
+    .note { font-size: 24px; line-height: 1.5; color: var(--muted); max-width: 80ch; }
+    .dark .note { color: rgba(255, 255, 255, 0.72); }
+    strong { font-weight: 400; color: var(--fg); }
+    .dark strong { color: #fff; }
+
+    .c {
+      font-family: var(--font-mono);
+      font-weight: 500;
+      font-size: 0.86em;
+      color: var(--accent-active);
+      background: var(--surface-warm);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 2px 10px;
+      white-space: nowrap;
+    }
+    .dark .c { color: #fff; background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.16); }
+
+    .foot {
+      position: absolute;
+      left: var(--pad-x);
+      right: var(--pad-x);
+      bottom: 48px;
+      display: flex;
+      justify-content: space-between;
+      font: 400 22px/1 var(--font-mono);
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+    .dark .foot { color: rgba(255, 255, 255, 0.64); }
+
+    /* Layout helpers */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+    .grid2.wide-left { grid-template-columns: 1.15fr 1fr; }
+    .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+    .stack { display: flex; flex-direction: column; gap: 24px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .card.raised { border-color: transparent; box-shadow: var(--elev-raised); }
+    .card.tint { background: var(--surface-warm); }
+    .card h3 {
+      font-family: var(--font-display);
+      font-weight: 300;
+      font-size: 36px;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      color: var(--fg);
+    }
+    .card p { font-size: 26px; line-height: 1.5; color: var(--fg-2); }
+    .num {
+      font: 300 56px/1 var(--font-display);
+      font-feature-settings: "tnum";
+      color: var(--accent);
+    }
+    .tag {
+      display: inline-block;
+      align-self: flex-start;
+      font: 500 22px/1 var(--font-mono);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    ul.list { list-style: none; display: flex; flex-direction: column; gap: 18px; }
+    ul.list li {
+      position: relative;
+      padding-left: 36px;
+      font-size: 28px;
+      line-height: 1.45;
+      color: var(--fg-2);
+    }
+    ul.list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.6em;
+      width: 16px;
+      height: 2px;
+      background: var(--accent);
+    }
+    ul.list.neg li::before { background: var(--muted); }
+
+    /* Tables */
+    table.tbl { width: 100%; border-collapse: collapse; }
+    .tbl th {
+      text-align: left;
+      font: 500 22px/1.2 var(--font-mono);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 24px 18px 0;
+      border-bottom: 1px solid var(--fg);
+    }
+    .tbl td {
+      font-size: 26px;
+      line-height: 1.4;
+      color: var(--fg-2);
+      padding: 16px 24px 16px 0;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .tbl td:first-child { color: var(--fg); font-weight: 400; }
+    .tbl .c { font-size: 22px; }
+
+    /* Terminal card */
+    .term {
+      background: var(--ink);
+      color: var(--ink-fg);
+      border-radius: var(--radius-lg);
+      padding: 40px 48px;
+      font: 500 26px/1.8 var(--font-mono);
+      box-shadow: var(--elev-raised);
+      white-space: pre;
+    }
+    .term .p { color: var(--accent-soft); }
+    .term .k { color: #fff; }
+    .term .m { color: rgba(229, 237, 245, 0.66); }
+
+    /* File tree */
+    .tree {
+      background: var(--surface-warm);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 36px 44px;
+      font: 500 25px/1.75 var(--font-mono);
+      color: var(--fg);
+      white-space: pre;
+    }
+    .tree .m { color: var(--muted); }
+    .tree .a { color: var(--accent); }
+    .tree.tree-sm { font-size: 22px; line-height: 1.6; }
+
+    /* Cover + section slides */
+    .cover-title {
+      font-family: var(--font-display);
+      font-weight: 300;
+      font-size: 112px;
+      line-height: 1.05;
+      letter-spacing: -0.025em;
+      color: #fff;
+      max-width: 1440px;
+    }
+    .sec-num {
+      font: 300 140px/1 var(--font-display);
+      font-feature-settings: "tnum";
+      letter-spacing: -0.02em;
+      color: var(--accent-soft);
+    }
+    .sec-title {
+      font-family: var(--font-display);
+      font-weight: 300;
+      font-size: 120px;
+      line-height: 1.05;
+      letter-spacing: -0.025em;
+      color: #fff;
+    }
+    .rule { width: 120px; height: 2px; background: var(--accent-soft); }
+
+    /* Phases */
+    .phase { border-top: 2px solid var(--fg); padding-top: 28px; display: flex; flex-direction: column; gap: 14px; }
+    .phase.opt { border-top-style: dashed; border-top-color: var(--muted); }
+    .phase h3 { font: 300 36px/1.15 var(--font-display); letter-spacing: -0.01em; color: var(--fg); }
+    .phase p { font-size: 25px; line-height: 1.5; color: var(--fg-2); }
+    .band {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      padding: 28px 36px;
+      border: 1px dashed var(--accent);
+      border-radius: var(--radius-lg);
+      font-size: 26px;
+      line-height: 1.45;
+      color: var(--fg-2);
+    }
+    .band .tag { color: var(--accent); flex: none; }
+
+    /* Cycle */
+    .flow { display: grid; grid-template-columns: 1fr 64px 1fr 64px 1fr; align-items: stretch; }
+    .arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font: 400 40px/1 var(--font-mono);
+      color: var(--accent);
+    }
+    .once {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      font-size: 26px;
+      color: var(--fg-2);
+    }
+    .loop {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 26px;
+      color: var(--fg-2);
+    }
+
+    /* Timeline */
+    .tl { display: grid; grid-template-columns: repeat(5, 1fr); gap: 28px; border-top: 2px solid var(--border); }
+    .tl-item { position: relative; padding-top: 44px; display: flex; flex-direction: column; gap: 14px; }
+    .tl-item::before {
+      content: "";
+      position: absolute;
+      top: -9px;
+      left: 0;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .tl-when { font: 500 22px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+    .tl-item .c { font-size: 22px; }
+    .tl-item p { font-size: 25px; line-height: 1.45; color: var(--fg-2); }
+
+    /* Checklist */
+    ul.check { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 28px 64px; }
+    ul.check li {
+      position: relative;
+      padding-left: 64px;
+      font-size: 29px;
+      line-height: 1.45;
+      color: var(--fg-2);
+    }
+    ul.check li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 4px;
+      width: 32px;
+      height: 32px;
+      border: 2px solid var(--accent);
+      border-radius: var(--radius-sm);
+    }
+    ul.check li b {
+      display: block;
+      font: 500 22px/1.2 var(--font-mono);
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .gate { display: flex; gap: 16px; }
+    .pill {
+      font: 500 22px/1 var(--font-mono);
+      letter-spacing: 0.06em;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      color: var(--fg-2);
+    }
+    .pill.ok { color: var(--success); border-color: rgba(21, 190, 83, 0.4); background: rgba(21, 190, 83, 0.12); }
+    .pill.bad { color: #b0174a; border-color: rgba(234, 34, 97, 0.35); background: rgba(234, 34, 97, 0.08); }
+
+    .quote {
+      font-family: var(--font-display);
+      font-weight: 300;
+      font-size: 88px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: #fff;
+      max-width: 22ch;
+    }
+    .speaker {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 32px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      max-width: 720px;
+    }
+    .speaker-name { font: 300 36px/1.2 var(--font-display); letter-spacing: -0.01em; color: #fff; }
+    .speaker-role { font: 400 24px/1.4 var(--font-body); color: rgba(255, 255, 255, 0.8); }
+    .speaker-mail { font: 400 22px/1.4 var(--font-mono); color: var(--accent-soft); }
+    .links { display: flex; gap: 64px; font: 400 26px/1.4 var(--font-mono); color: rgba(255, 255, 255, 0.8); }
+    .links span { display: block; font-size: 22px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-soft); margin-bottom: 8px; }
+
+    /* Speaker notes — hidden on the slide; press N to toggle the panel */
+    .notes { display: none !important; }
+    .notes-panel {
+      position: fixed;
+      left: 24px;
+      right: 24px;
+      bottom: 24px;
+      max-height: 40vh;
+      overflow-y: auto;
+      display: none;
+      padding: 20px 24px;
+      background: rgba(13, 37, 61, 0.96);
+      color: var(--ink-fg);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--elev-raised);
+      font: 300 16px/1.6 var(--font-body);
+      z-index: 1001;
+    }
+    .notes-panel.open { display: block; }
+    .notes-panel p + p { margin-top: 8px; }
+    .notes-panel .notes-title { display: block; margin-bottom: 8px; font: 500 12px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-soft); }
+    @media print { .notes-panel { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="deck-shell">
+    <div class="deck-stage" id="deck-stage">
+
+      <!-- 01 Cover -->
+      <section class="slide active s dark center" data-screen-label="01 Capa">
+        <div class="stack" style="gap: 40px;">
+          <span class="eyebrow">Palestra · BMAD-METHOD v6.10</span>
+          <h1 class="cover-title">Squad agêntica: do primeiro comando ao dia a dia</h1>
+          <p class="lede">Como montar e operar um time de agentes de IA com o BMAD: instalação, base do projeto e rotina de desenvolvimento.</p>
+          <div class="speaker">
+            <span class="speaker-name">Anderson Gutierres</span>
+            <span class="speaker-role">Forward Deployed Engineer</span>
+          </div>
+        </div>
+        <div class="foot"><span>github.com/bmad-code-org/BMAD-METHOD · Licença MIT</span><span>01 / 29</span></div>
+        <aside class="notes"><p>Abertura (~1 min). Apresente-se e diga o objetivo: sair daqui sabendo instalar o BMAD, montar a base de um projeto e operar o dia a dia com uma squad de agentes.</p><p>Combine o formato: perguntas no final, mas pode interromper se algo não ficar claro.</p><p>Tudo o que vou mostrar é da versão 6.10 — se vocês viram material antigo com .bmad-core ou Gems, muita coisa mudou.</p></aside>
+      </section>
+
+      <!-- 02 Problem -->
+      <section class="slide s" data-screen-label="02 Problema">
+        <div class="head">
+          <span class="eyebrow">O problema</span>
+          <h2 class="h">Um assistente sozinho escreve código, mas não sustenta um projeto</h2>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <span class="tag">Onde um chat genérico vai bem</span>
+            <ul class="list">
+              <li>Escrever funções isoladas</li>
+              <li>Corrigir erros de compilação</li>
+              <li>Refatorar trechos de código</li>
+              <li>Acelerar protótipos</li>
+            </ul>
+          </div>
+          <div class="card raised">
+            <span class="tag">Onde ele se perde</span>
+            <ul class="list neg">
+              <li>O contexto some entre sessões</li>
+              <li>Decisões de arquitetura mudam a cada prompt</li>
+              <li>Sem critério de aceite, sem estratégia de testes</li>
+              <li>Ninguém lembra por que algo foi decidido</li>
+            </ul>
+          </div>
+        </div>
+        <p class="body">O problema não é o modelo. <strong>É a falta de estrutura em volta dele.</strong></p>
+        <div class="foot"><span>Por quê</span><span>02 / 29</span></div>
+        <aside class="notes"><p>(~1,5 min) Pergunte: quem aqui já usa IA para codar? E quem já sentiu que o projeto desandou depois de algumas semanas?</p><p>Lado esquerdo: o chat genérico é ótimo em tarefas isoladas. Lado direito: o problema aparece quando o projeto cresce — o contexto some, decisões mudam a cada prompt, ninguém lembra o porquê.</p><p>Feche com a frase de baixo: o problema não é o modelo, é a falta de estrutura em volta dele. Essa é a ponte para o próximo slide.</p></aside>
+      </section>
+
+      <!-- 03 Concept -->
+      <section class="slide s" data-screen-label="03 Squad agentica">
+        <div class="head">
+          <span class="eyebrow">Conceito</span>
+          <h2 class="h">Squad agêntica é um time de papéis, não um chatbot</h2>
+        </div>
+        <div class="grid3">
+          <div class="card">
+            <span class="num">01</span>
+            <h3>Papéis</h3>
+            <p>Cada agente tem uma responsabilidade e um menu próprio de workflows: analista, PM, arquiteto, UX, dev.</p>
+          </div>
+          <div class="card">
+            <span class="num">02</span>
+            <h3>Artefatos</h3>
+            <p>Brief, PRD, arquitetura e stories ficam em arquivos versionados. Cada documento vira o contexto da fase seguinte.</p>
+          </div>
+          <div class="card">
+            <span class="num">03</span>
+            <h3>Gates</h3>
+            <p>Você revisa e aprova antes de avançar. Checagens como o readiness check e o code review seguram a qualidade.</p>
+          </div>
+        </div>
+        <p class="note">O BMAD-METHOD é uma implementação open source desse modelo. O humano continua decidindo; os agentes executam com contexto.</p>
+        <div class="foot"><span>Por quê</span><span>03 / 29</span></div>
+        <aside class="notes"><p>(~1,5 min) Defina squad agêntica com três palavras: papéis, artefatos e gates.</p><p>Papéis: cada agente tem um foco, como num time real. Artefatos: o que um agente produz vira o contexto do próximo — isso substitui a memória do chat. Gates: você aprova antes de avançar.</p><p>Reforce: o humano continua decidindo. O BMAD é uma implementação open source desse modelo, e é ela que vamos ver.</p></aside>
+      </section>
+
+      <!-- 04 Agents -->
+      <section class="slide s" data-screen-label="04 Agentes">
+        <div class="head">
+          <span class="eyebrow">A squad do BMAD</span>
+          <h2 class="h">Seis agentes, cada um invocado como skill</h2>
+        </div>
+        <table class="tbl">
+          <thead><tr><th style="width: 26%">Agente</th><th style="width: 34%">Skill</th><th>Faz o quê</th></tr></thead>
+          <tbody>
+            <tr><td>Mary · Analista</td><td><span class="c">bmad-agent-analyst</span></td><td>Brainstorming, pesquisa, product brief</td></tr>
+            <tr><td>John · PM</td><td><span class="c">bmad-agent-pm</span></td><td>PRD, épicos e stories, correção de rota</td></tr>
+            <tr><td>Winston · Arquiteto</td><td><span class="c">bmad-agent-architect</span></td><td>Arquitetura, readiness check</td></tr>
+            <tr><td>Sally · UX</td><td><span class="c">bmad-agent-ux-designer</span></td><td>Design de experiência</td></tr>
+            <tr><td>Amelia · Dev</td><td><span class="c">bmad-agent-dev</span></td><td>Sprint, stories, implementação, code review</td></tr>
+            <tr><td>Paige · Tech Writer</td><td><span class="c">bmad-agent-tech-writer</span></td><td>Documentação e diagramas</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Novidade da v6: não existe mais um Scrum Master separado, porque é a Dev quem prepara as stories. Os testes E2E saem de um workflow da Dev, e o Test Architect completo fica no módulo TEA.</p>
+        <div class="foot"><span>Por quê · fonte: docs/reference/agents.md (v6.10)</span><span>04 / 29</span></div>
+        <aside class="notes"><p>(~2 min) Passe rápido pela tabela, sem ler linha por linha. Destaque que cada agente é um skill que você chama pelo nome na IDE.</p><p>Mary pensa o problema, John escreve o PRD, Winston decide a arquitetura, Sally cuida de UX, Amelia implementa, Paige documenta.</p><p>Novidade para quem conhece a v4: não existe mais Scrum Master. A própria Dev prepara as stories. Testes E2E são um workflow da Dev; o Test Architect completo fica no módulo TEA.</p></aside>
+      </section>
+
+      <!-- 05 Phases -->
+      <section class="slide s" data-screen-label="05 Quatro fases">
+        <div class="head">
+          <span class="eyebrow">O mapa</span>
+          <h2 class="h">Quatro fases, e cada documento vira contexto da próxima</h2>
+        </div>
+        <div class="grid4">
+          <div class="phase opt">
+            <span class="tag">1 · Análise · opcional</span>
+            <h3>Entender o problema</h3>
+            <p>Brainstorming, pesquisa, product brief ou PRFAQ.</p>
+          </div>
+          <div class="phase">
+            <span class="tag">2 · Planejamento</span>
+            <h3>O que construir</h3>
+            <p>PRD com requisitos e, se houver interface, UX.</p>
+          </div>
+          <div class="phase">
+            <span class="tag">3 · Solução</span>
+            <h3>Como construir</h3>
+            <p>Arquitetura, épicos e stories, readiness check.</p>
+          </div>
+          <div class="phase">
+            <span class="tag">4 · Implementação</span>
+            <h3>Construir</h3>
+            <p>Uma story por vez: preparar, implementar, revisar.</p>
+          </div>
+        </div>
+        <div class="band">
+          <span class="tag">Quick Flow</span>
+          <span>Trilha paralela: <span class="c">bmad-quick-dev</span> pula as fases 1–3 em trabalhos pequenos e bem entendidos.</span>
+        </div>
+        <div class="foot"><span>Por quê · fonte: docs/reference/workflow-map.md</span><span>05 / 29</span></div>
+        <aside class="notes"><p>(~1,5 min) Este é o mapa da palestra inteira. Quatro fases: análise (opcional), planejamento, solução e implementação.</p><p>A ideia-chave: cada documento vira contexto da fase seguinte. O PRD diz ao arquiteto o que importa; a arquitetura diz à Dev que padrões seguir.</p><p>Mostre a faixa de baixo: para trabalho pequeno existe o Quick Flow, que pula as três primeiras fases. Voltamos nele mais tarde.</p></aside>
+      </section>
+
+      <!-- 06 Section 1 -->
+      <section class="slide s dark center" data-screen-label="06 Secao Primeiros passos">
+        <div class="stack" style="gap: 40px;">
+          <span class="sec-num">01</span>
+          <div class="rule"></div>
+          <h2 class="sec-title">Primeiros passos</h2>
+          <p class="lede">Instalar, perguntar ao <span class="c">bmad-help</span> e escolher a trilha certa.</p>
+        </div>
+        <div class="foot"><span>Squad agêntica com BMAD</span><span>06 / 29</span></div>
+        <aside class="notes"><p>Transição (~15 s). Agora vamos colocar a mão na massa: instalar, pedir orientação e escolher a trilha.</p></aside>
+      </section>
+
+      <!-- 07 Prerequisites -->
+      <section class="slide s" data-screen-label="07 Pre-requisitos">
+        <div class="head">
+          <span class="eyebrow">Antes de começar</span>
+          <h2 class="h">Cinco coisas antes do primeiro comando</h2>
+        </div>
+        <table class="tbl">
+          <thead><tr><th style="width: 30%">Item</th><th>Por quê</th></tr></thead>
+          <tbody>
+            <tr><td>Node.js 20.12+</td><td>Exigido pelo instalador, que roda via <span class="c">npx</span></td></tr>
+            <tr><td>Git</td><td>Artefatos e código viajam juntos no histórico</td></tr>
+            <tr><td>IDE com agente de IA</td><td>Claude Code, Cursor e outras. Para ver todas: <span class="c">npx bmad-method install --list-tools</span></td></tr>
+            <tr><td>uv (Python)</td><td>Workflows como PRD e arquitetura rodam scripts com <span class="c">uv run</span></td></tr>
+            <tr><td>Uma ideia pequena</td><td>O primeiro projeto é para aprender o fluxo, não para salvar o trimestre</td></tr>
+          </tbody>
+        </table>
+        <div class="foot"><span>01 · Primeiros passos</span><span>07 / 29</span></div>
+        <aside class="notes"><p>(~1 min) Cinco coisas. Node 20.12 ou superior, porque o instalador roda via npx. Git, porque artefatos e código andam juntos.</p><p>IDE com agente: Claude Code, Cursor e outras — o comando --list-tools mostra a lista completa.</p><p>O uv entra porque workflows como o PRD e a arquitetura rodam scripts Python com uv run — o próprio instalador avisa. E uma ideia pequena: o primeiro projeto é para aprender o fluxo, não para resolver o problema mais crítico da empresa.</p></aside>
+      </section>
+
+      <!-- 08 Install -->
+      <section class="slide s" data-screen-label="08 Instalacao">
+        <div class="head">
+          <span class="eyebrow">Instalação</span>
+          <h2 class="h">Um comando instala a squad dentro do seu repositório</h2>
+        </div>
+        <div class="grid2 wide-left">
+<div class="term"><span class="p">$</span> <span class="k">npx bmad-method install</span>
+
+<span class="m">◆ Diretório      →</span> ./api-tarefas
+<span class="m">◆ Módulos        →</span> BMad Method (bmm)
+<span class="m">◆ Tudo estável?  →</span> Sim
+<span class="m">◆ Ferramenta     →</span> claude-code
+<span class="m">◆ Config         →</span> nome, idioma, pasta</div>
+          <div class="stack">
+<div class="tree">api-tarefas/
+├─ <span class="a">_bmad/</span>         <span class="m">agentes, workflows</span>
+└─ <span class="a">_bmad-output/</span>  <span class="m">seus artefatos</span></div>
+            <p class="body">Na v6, os agentes e workflows são <strong>skills</strong> que a IDE reconhece pelo nome <span class="c">bmad-*</span>. No Claude Code, chame com barra: <span class="c">/bmad-help</span>.</p>
+          </div>
+        </div>
+        <div class="foot"><span>01 · Primeiros passos · fonte: docs/how-to/install-bmad.md</span><span>08 / 29</span></div>
+        <aside class="notes"><p>(~2 min) Um comando: npx bmad-method install. Ele pergunta o diretório, os módulos (escolha BMad Method), se quer as versões estáveis, a ferramenta e algumas configs como nome e idioma.</p><p>Resultado: duas pastas. _bmad tem os agentes e workflows; _bmad-output é onde os artefatos vão nascer.</p><p>Ponto importante: na v6 tudo roda como skill dentro da IDE. Os web bundles ainda existem, mas são opcionais.</p></aside>
+      </section>
+
+      <!-- 09 bmad-help -->
+      <section class="slide s" data-screen-label="09 bmad-help">
+        <div class="head">
+          <span class="eyebrow">Primeiro comando na IDE</span>
+          <h2 class="h">Travou? O bmad-help lê o projeto e diz o próximo passo</h2>
+        </div>
+        <div class="grid2 wide-left">
+<div class="term"><span class="p">›</span> <span class="k">/bmad-help</span> tenho uma ideia de API
+  de tarefas, por onde começo?
+
+<span class="m">→ trilha recomendada</span>
+<span class="m">→ primeira tarefa obrigatória</span>
+<span class="m">→ como segue o resto do processo</span></div>
+          <ul class="list">
+            <li>Inspeciona o que já foi feito no projeto</li>
+            <li>Mostra as opções dos módulos instalados</li>
+            <li>Recomenda a próxima tarefa obrigatória</li>
+            <li>Roda sozinho ao fim de cada workflow</li>
+          </ul>
+        </div>
+        <p class="note">Qual é o próximo passo? Essa foi a dúvida central do guia da comunidade na discussão #113, ainda na v4. Na v6, a resposta virou um skill.</p>
+        <div class="foot"><span>01 · Primeiros passos</span><span>09 / 29</span></div>
+        <aside class="notes"><p>(~2 min) Se tiverem que lembrar de um comando só, é este: bmad-help.</p><p>Ele olha o que já foi feito no projeto, sabe quais módulos estão instalados e recomenda o próximo passo. E roda sozinho no fim de cada workflow.</p><p>Conecte com a referência: a discussão #113 da comunidade era justamente gente perdida sobre qual o próximo passo. Na v6, essa resposta virou um skill.</p><p>No Claude Code os skills viram comandos com barra: /bmad-help, /bmad-prd e assim por diante. Em outras IDEs, chame pelo nome.</p></aside>
+      </section>
+
+      <!-- 10 Tracks -->
+      <section class="slide s" data-screen-label="10 Trilhas">
+        <div class="head">
+          <span class="eyebrow">Decisão inicial</span>
+          <h2 class="h">Escolha a trilha pelo tamanho do planejamento, não pela pressa</h2>
+        </div>
+        <table class="tbl">
+          <thead><tr><th style="width: 22%">Trilha</th><th style="width: 44%">Para quê</th><th>Documentos</th></tr></thead>
+          <tbody>
+            <tr><td>Quick Flow</td><td>Bugs, features simples, escopo claro (1–15 stories)</td><td>Só spec técnica</td></tr>
+            <tr><td>BMad Method</td><td>Produtos, plataformas, features complexas (10–50+)</td><td>PRD + arquitetura + UX</td></tr>
+            <tr><td>Enterprise</td><td>Compliance, sistemas multi-tenant (30+)</td><td>PRD + arquitetura + segurança + DevOps</td></tr>
+          </tbody>
+        </table>
+        <p class="note">As contagens de stories servem de orientação, não de regra (docs oficiais). Em projeto existente, comece com <span class="c">bmad-generate-project-context</span> para registrar as convenções que já existem.</p>
+        <div class="foot"><span>01 · Primeiros passos · fonte: docs/tutorials/getting-started.md</span><span>10 / 29</span></div>
+        <aside class="notes"><p>(~1,5 min) Antes de gerar qualquer documento, escolha a trilha. Quick Flow para bugs e features simples; BMad Method para produtos e features complexas; Enterprise quando há compliance ou multi-tenant.</p><p>Os números de stories são orientação, não regra — a própria documentação diz isso.</p><p>Para projeto existente há um caminho específico; vamos ver no fim da próxima parte.</p></aside>
+      </section>
+
+      <!-- 11 Section 2 -->
+      <section class="slide s dark center" data-screen-label="11 Secao Criar a base">
+        <div class="stack" style="gap: 40px;">
+          <span class="sec-num">02</span>
+          <div class="rule"></div>
+          <h2 class="sec-title">Criar a base</h2>
+          <p class="lede">O exemplo do começo ao fim: uma <strong>API REST de tarefas</strong> com tags e prazos, na trilha BMad Method.</p>
+        </div>
+        <div class="foot"><span>Squad agêntica com BMAD</span><span>11 / 29</span></div>
+        <aside class="notes"><p>Transição (~20 s). Vamos construir a base com um exemplo que vai até o fim: uma API REST de tarefas, com tags e prazos, na trilha BMad Method.</p></aside>
+      </section>
+
+      <!-- 12 Brief + PRD -->
+      <section class="slide s" data-screen-label="12 Brief e PRD">
+        <div class="head">
+          <span class="eyebrow">Fases 1 e 2 · um chat novo para cada uma</span>
+          <h2 class="h">Primeiro o problema, depois os requisitos: brief e PRD</h2>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <span class="tag">Analista · opcional</span>
+            <h3><span class="c">bmad-product-brief</span></h3>
+            <p>Uma API de tarefas para times pequenos, que permita criar, etiquetar e filtrar por prazo.</p>
+            <p><strong>Saída:</strong> brief.md + addendum.md</p>
+          </div>
+          <div class="card raised">
+            <span class="tag">PM · obrigatório</span>
+            <h3><span class="c">bmad-prd</span> → Create</h3>
+            <p>Uma descoberta guiada transforma o brief em requisitos, épicos e critérios de sucesso.</p>
+            <p><strong>Saída:</strong> prd.md, addendum.md, .memlog.md</p>
+          </div>
+        </div>
+        <p class="note">Revise o escopo no PRD, que é o momento mais barato de mudar. Se houver interface, rode <span class="c">bmad-ux</span> em seguida. A API do exemplo não tem interface, então pulamos esse passo.</p>
+        <div class="foot"><span>02 · Criar a base</span><span>12 / 29</span></div>
+        <aside class="notes"><p>(~2 min) Regra de ouro antes de tudo: um chat novo para cada workflow.</p><p>Primeiro o brief com a analista — opcional, mas útil quando o conceito ainda está solto. Depois o PRD com o PM, usando bmad-prd na intenção Create.</p><p>Enfatize: revise o escopo aqui. Mudar o PRD custa uma conversa; mudar código já escrito custa retrabalho. A API não tem interface, então pulamos o bmad-ux.</p></aside>
+      </section>
+
+      <!-- 13 Architecture -->
+      <section class="slide s" data-screen-label="13 Arquitetura">
+        <div class="head">
+          <span class="eyebrow">Fase 3 · Solução</span>
+          <h2 class="h">A arquitetura fixa as decisões que todos os agentes vão seguir</h2>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <span class="tag">Arquiteto · <span style="text-transform: none">bmad-architecture</span></span>
+            <ul class="list">
+              <li>Stack e versões</li>
+              <li>Modelo de dados: tarefa, tag, prazo</li>
+              <li>Padrões de API e de erros</li>
+              <li>Estratégia de testes</li>
+            </ul>
+            <p><strong>Saída:</strong> ARCHITECTURE-SPINE.md</p>
+          </div>
+          <div class="card tint">
+            <span class="tag">Recomendado</span>
+            <h3>project-context.md, a constituição do projeto</h3>
+            <p>Regras e convenções que todo workflow lê antes de agir. Você pode gerá-lo ao fim da arquitetura com <span class="c">bmad-generate-project-context</span> ou escrevê-lo à mão.</p>
+          </div>
+        </div>
+        <div class="foot"><span>02 · Criar a base · fonte: docs/reference/workflow-map.md</span><span>13 / 29</span></div>
+        <aside class="notes"><p>(~2 min) A arquitetura fixa as decisões que todo agente vai seguir: stack, modelo de dados, padrões de API e de erro, estratégia de testes.</p><p>Lado direito: o project-context.md é a constituição do projeto. Todo workflow lê esse arquivo antes de agir. Dá para gerar com bmad-generate-project-context ou escrever à mão.</p><p>Dica prática: coloque ali as convenções que você corrigiria num code review.</p></aside>
+      </section>
+
+      <!-- 14 Epics + readiness -->
+      <section class="slide s" data-screen-label="14 Epicos e readiness">
+        <div class="head">
+          <span class="eyebrow">Fase 3 · Solução</span>
+          <h2 class="h">Na v6, épicos e stories nascem depois da arquitetura</h2>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <span class="tag">PM · <span style="text-transform: none">bmad-create-epics-and-stories</span></span>
+            <p>Usa o PRD e a arquitetura juntos, então as stories já levam em conta o banco, os padrões de API e a stack.</p>
+            <p><strong>No exemplo:</strong><br />Épico 1: CRUD de tarefas<br />Épico 2: tags e filtro por prazo</p>
+          </div>
+          <div class="card raised">
+            <span class="tag">Gate · <span style="text-transform: none">bmad-check-implementation-readiness</span></span>
+            <p>Verifica se PRD, arquitetura e stories contam a mesma história antes do primeiro commit.</p>
+            <div class="gate"><span class="pill ok">PASS</span><span class="pill">CONCERNS</span><span class="pill bad">FAIL</span></div>
+            <p>Implemente com PASS, ou com CONCERNS que você leu e aceitou.</p>
+          </div>
+        </div>
+        <div class="foot"><span>02 · Criar a base</span><span>14 / 29</span></div>
+        <aside class="notes"><p>(~2 min) Mudança importante na v6: épicos e stories só depois da arquitetura. Assim as stories já sabem qual banco, quais padrões e qual stack usar.</p><p>No exemplo, dois épicos: CRUD de tarefas, e tags com filtro por prazo.</p><p>Depois o gate: o readiness check confere se PRD, arquitetura e stories contam a mesma história. Só implemente com PASS — ou com CONCERNS que você leu e aceitou.</p></aside>
+      </section>
+
+      <!-- 15 Repo tree -->
+      <section class="slide s" data-screen-label="15 Repositorio">
+        <div class="head">
+          <span class="eyebrow">Resultado</span>
+          <h2 class="h">Ao fim da base, o plano inteiro está versionado no Git</h2>
+        </div>
+        <div class="grid2 wide-left">
+<div class="tree tree-sm">api-tarefas/
+├─ .claude/skills/  <span class="m">← 46 skills</span>
+├─ _bmad/
+└─ _bmad-output/
+   ├─ planning-artifacts/
+   │  ├─ briefs/…/brief.md
+   │  ├─ prds/…/prd.md
+   │  ├─ architecture/…/ARCHITECTURE-SPINE.md
+   │  └─ epics.md
+   ├─ implementation-artifacts/
+   │  ├─ sprint-status.yaml
+   │  └─ 1-1-criar-tarefa.md
+   └─ project-context.md</div>
+          <div class="stack">
+            <p class="lede">Os artefatos são texto: dá para revisar em PR, e qualquer agente consegue ler em um chat novo.</p>
+            <p class="body"><strong>O contexto sai da sua cabeça e vai para o repositório.</strong></p>
+            <p class="note">Estrutura conferida numa instalação real da v6.10 com Claude Code. Os “…” são pastas datadas por execução.</p>
+          </div>
+        </div>
+        <div class="foot"><span>02 · Criar a base</span><span>15 / 29</span></div>
+        <aside class="notes"><p>(~1 min) Mostre a árvore. Ao fim da base, o plano inteiro está versionado no Git.</p><p>São arquivos de texto: dá para revisar em PR, e qualquer agente num chat novo consegue ler.</p><p>Frase para fixar: o contexto sai da sua cabeça e vai para o repositório.</p></aside>
+      </section>
+
+      <!-- Brownfield A: onboarding -->
+      <section class="slide s" data-screen-label="16 Brownfield onboarding">
+        <div class="head">
+          <span class="eyebrow">Projeto existente · brownfield</span>
+          <h2 class="h">No código existente, mostre à squad como o projeto já funciona</h2>
+        </div>
+        <div class="grid3">
+          <div class="card">
+            <span class="num">01</span>
+            <h3>Limpe o plano antigo</h3>
+            <p>Arquive PRDs, épicos e stories já concluídos para que nenhum agente trate um plano velho como atual.</p>
+          </div>
+          <div class="card raised">
+            <span class="num">02</span>
+            <h3>Gere o contexto do projeto</h3>
+            <p><span class="c">bmad-generate-project-context</span></p>
+            <p>Lê o código e registra stack, padrões, nomes e testes no project-context.md.</p>
+          </div>
+          <div class="card">
+            <span class="num">03</span>
+            <h3>Documente o estado atual</h3>
+            <p><span class="c">bmad-document-project</span></p>
+            <p>Se a documentação não existe ou está desatualizada, gera a do estado atual em docs/.</p>
+          </div>
+        </div>
+        <p class="note">Na dúvida, pergunte: <span class="c">bmad-help tenho uma API existente, por onde começo?</span> Você pode rodar o document-project a qualquer momento, até no meio do projeto.</p>
+        <div class="foot"><span>02 · Criar a base · fonte: docs/how-to/established-projects.md</span><span>16 / 29</span></div>
+        <aside class="notes"><p>(~2 min) E se o projeto já existe? Primeiro, ensine a squad como o código é hoje.</p><p>Passo 1: arquive planos antigos já concluídos — um agente pode tratar um PRD velho como atual. Passo 2: bmad-generate-project-context registra stack e convenções. Passo 3: se a documentação estiver ausente ou desatualizada, bmad-document-project.</p><p>Lembre que dá para perguntar ao bmad-help em linguagem natural, e que o document-project pode rodar a qualquer momento.</p></aside>
+      </section>
+
+      <!-- Brownfield B: choose path -->
+      <section class="slide s" data-screen-label="17 Brownfield caminhos">
+        <div class="head">
+          <span class="eyebrow">Projeto existente · brownfield</span>
+          <h2 class="h">No brownfield, o tamanho da mudança define o caminho</h2>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <span class="tag">Mudança pequena</span>
+            <h3><span class="c">bmad-quick-dev</span></h3>
+            <ul class="list">
+              <li>Detecta a stack e os padrões do código</li>
+              <li>Pergunta se deve seguir as convenções atuais</li>
+              <li>Gera a spec, implementa e revisa</li>
+            </ul>
+          </div>
+          <div class="card raised">
+            <span class="tag">Mudança grande</span>
+            <h3>BMad Method, com o rigor necessário</h3>
+            <ul class="list">
+              <li>O PRD parte da documentação existente</li>
+              <li>A arquitetura escaneia o código antes de decidir</li>
+              <li>UX só se houver tela nova ou padrão novo</li>
+            </ul>
+          </div>
+        </div>
+        <p class="note">Código fora das boas práticas? Você escolhe entre manter as convenções e criar novas. O BMAD oferece a modernização, mas não a impõe.</p>
+        <div class="foot"><span>02 · Criar a base · fonte: established-projects-faq.md</span><span>17 / 29</span></div>
+        <aside class="notes"><p>(~1,5 min) No brownfield, o tamanho da mudança decide o caminho.</p><p>Mudança pequena: bmad-quick-dev. Ele detecta a stack, percebe as convenções e pergunta se deve segui-las.</p><p>Mudança grande: o BMad Method completo, garantindo que o PRD parta da documentação existente e que a arquitetura escaneie o código antes de decidir. Feche: o BMAD oferece modernizar, mas não impõe.</p></aside>
+      </section>
+
+      <!-- 16 Section 3 -->
+      <section class="slide s dark center" data-screen-label="18 Secao Dia a dia">
+        <div class="stack" style="gap: 40px;">
+          <span class="sec-num">03</span>
+          <div class="rule"></div>
+          <h2 class="sec-title">Operar no dia a dia</h2>
+          <p class="lede">Uma story por vez. <strong>Um chat novo para cada workflow.</strong></p>
+        </div>
+        <div class="foot"><span>Squad agêntica com BMAD</span><span>18 / 29</span></div>
+        <aside class="notes"><p>Transição (~15 s). Com a base pronta, como fica o dia a dia? Duas regras: uma story por vez e um chat novo para cada workflow.</p></aside>
+      </section>
+
+      <!-- 17 Cycle -->
+      <section class="slide s" data-screen-label="19 Ciclo da story">
+        <div class="head">
+          <span class="eyebrow">Fase 4 · tudo com a Dev (Amelia)</span>
+          <h2 class="h">O ciclo: preparar, implementar, revisar e repetir</h2>
+        </div>
+        <div class="once"><span class="tag">Uma vez</span><span><span class="c">bmad-sprint-planning</span> cria o sprint-status.yaml com todos os épicos e stories</span></div>
+        <div class="flow">
+          <div class="card">
+            <span class="num">1</span>
+            <h3><span class="c">bmad-create-story</span></h3>
+            <p>Gera o arquivo da story com requisitos, critérios de aceite e contexto.</p>
+          </div>
+          <div class="arrow" aria-hidden="true">→</div>
+          <div class="card raised">
+            <span class="num">2</span>
+            <h3><span class="c">bmad-dev-story</span></h3>
+            <p>Implementa a story de ponta a ponta: código e testes.</p>
+          </div>
+          <div class="arrow" aria-hidden="true">→</div>
+          <div class="card">
+            <span class="num">3</span>
+            <h3><span class="c">bmad-code-review</span></h3>
+            <p>Revisão adversarial: aprova ou pede mudanças.</p>
+          </div>
+        </div>
+        <div class="loop"><span>↻ Story aprovada, próxima story</span><span>Fim do épico: <span class="c">bmad-retrospective</span></span></div>
+        <div class="foot"><span>03 · Dia a dia</span><span>19 / 29</span></div>
+        <aside class="notes"><p>(~2,5 min) Uma vez por projeto: bmad-sprint-planning, que cria o sprint-status.yaml.</p><p>Depois o ciclo, todo com a Dev: create-story gera o arquivo da story com critérios de aceite; dev-story implementa com testes; code-review faz uma revisão adversarial e aprova ou pede mudanças.</p><p>Story aprovada, próxima. No fim de cada épico, a retrospectiva.</p></aside>
+      </section>
+
+      <!-- 18 Typical day -->
+      <section class="slide s" data-screen-label="20 Um dia tipico">
+        <div class="head">
+          <span class="eyebrow">Rotina</span>
+          <h2 class="h">Num dia com a squad, o humano decide e os agentes executam</h2>
+        </div>
+        <div class="tl">
+          <div class="tl-item">
+            <span class="tl-when">Início</span>
+            <span class="c" style="align-self: flex-start">bmad-sprint-status</span>
+            <p>Onde paramos? O que vem a seguir?</p>
+          </div>
+          <div class="tl-item">
+            <span class="tl-when">Chat novo</span>
+            <span class="c" style="align-self: flex-start">bmad-create-story</span>
+            <p>Você revisa os critérios de aceite.</p>
+          </div>
+          <div class="tl-item">
+            <span class="tl-when">Chat novo</span>
+            <span class="c" style="align-self: flex-start">bmad-dev-story</span>
+            <p>Você acompanha e responde dúvidas.</p>
+          </div>
+          <div class="tl-item">
+            <span class="tl-when">Chat novo</span>
+            <span class="c" style="align-self: flex-start">bmad-code-review</span>
+            <p>Você lê os achados e decide.</p>
+          </div>
+          <div class="tl-item">
+            <span class="tl-when">Fechamento</span>
+            <span class="c" style="align-self: flex-start">git commit</span>
+            <p>Story concluída; a próxima entra na fila.</p>
+          </div>
+        </div>
+        <p class="note">Sequência ilustrativa. O ritmo depende do tamanho de cada story, e a regra fixa é um chat novo por workflow.</p>
+        <div class="foot"><span>03 · Dia a dia</span><span>20 / 29</span></div>
+        <aside class="notes"><p>(~2 min) Conte como um dia real. De manhã, sprint-status para saber onde parou. Chat novo, create-story, e você revisa os critérios.</p><p>Chat novo, dev-story, e você acompanha e responde dúvidas. Chat novo, code-review, e você decide sobre os achados. Commit, e a próxima story entra na fila.</p><p>Deixe claro que é ilustrativo: o ritmo depende do tamanho das stories. O papel humano é decidir em cada ponto.</p></aside>
+      </section>
+
+      <!-- 19 When plans change -->
+      <section class="slide s" data-screen-label="21 Quando algo muda">
+        <div class="head">
+          <span class="eyebrow">Fora do roteiro</span>
+          <h2 class="h">Quando o plano muda, cada situação tem a sua ferramenta</h2>
+        </div>
+        <div class="grid3">
+          <div class="card">
+            <span class="tag">Mudança grande</span>
+            <h3><span class="c">bmad-correct-course</span></h3>
+            <p>Mudança significativa no meio do sprint. O resultado é um plano atualizado ou redirecionado.</p>
+          </div>
+          <div class="card">
+            <span class="tag">Ajuste pequeno</span>
+            <h3><span class="c">bmad-quick-dev</span></h3>
+            <p>Bug ou ajuste fora do backlog. Vai da intenção à spec e ao código revisado, com poucos checkpoints.</p>
+          </div>
+          <div class="card tint">
+            <span class="tag">Novo na 6.10</span>
+            <h3><span class="c">bmad-dev-auto</span></h3>
+            <p>Uma iteração sem supervisão, pensada para orquestradores como o módulo opcional bmad-loop.</p>
+          </div>
+        </div>
+        <div class="foot"><span>03 · Dia a dia · fonte: CHANGELOG v6.10.0</span><span>21 / 29</span></div>
+        <aside class="notes"><p>(~2 min) Quando o plano muda: mudança grande no meio do sprint, bmad-correct-course. Ajuste pequeno fora do backlog, bmad-quick-dev.</p><p>Novo na 6.10: bmad-dev-auto, uma iteração sem supervisão pensada para orquestradores como o módulo bmad-loop — que é opcional.</p><p>Sugestão: só experimente o modo autônomo depois de dominar o ciclo manual.</p></aside>
+      </section>
+
+      <!-- 20 Pitfalls -->
+      <section class="slide s" data-screen-label="22 Armadilhas">
+        <div class="head">
+          <span class="eyebrow">Armadilhas</span>
+          <h2 class="h">Cinco erros que viram vibe coding com passos extras</h2>
+        </div>
+        <table class="tbl">
+          <thead><tr><th style="width: 46%">Erro</th><th>Correção</th></tr></thead>
+          <tbody>
+            <tr><td>Pedir código à Dev sem PRD e arquitetura</td><td>Escolha a trilha. O Quick Flow existe para o que é pequeno</td></tr>
+            <tr><td>Reusar o mesmo chat para vários workflows</td><td>Um chat novo por workflow, porque o contexto está nos arquivos</td></tr>
+            <tr><td>Aprovar artefatos sem ler</td><td>Os gates só funcionam se alguém ler o que eles produzem</td></tr>
+            <tr><td>Stories grandes, misturando épicos</td><td>Uma story é uma entrega pequena e testável</td></tr>
+            <tr><td>Pular o readiness check</td><td>Rode <span class="c">bmad-check-implementation-readiness</span> antes do sprint</td></tr>
+          </tbody>
+        </table>
+        <div class="foot"><span>03 · Dia a dia</span><span>22 / 29</span></div>
+        <aside class="notes"><p>(~2 min) Cinco erros comuns. Leia o erro e deixe a plateia adivinhar a correção antes de mostrar.</p><p>O mais frequente: pular o planejamento e pedir código direto à Dev — aí o BMAD vira vibe coding com passos extras.</p><p>Reforce o segundo: reusar o chat. O contexto certo está nos arquivos, não na conversa.</p></aside>
+      </section>
+
+      <!-- Section 4 -->
+      <section class="slide s dark center" data-screen-label="23 Secao Simulacao">
+        <div class="stack" style="gap: 40px;">
+          <span class="sec-num">04</span>
+          <div class="rule"></div>
+          <h2 class="sec-title">Simulação: do PRD ao primeiro commit</h2>
+          <p class="lede">A API de tarefas passando pela squad inteira. As falas dos agentes são <strong>ilustrativas</strong>.</p>
+        </div>
+        <div class="foot"><span>Squad agêntica com BMAD</span><span>23 / 29</span></div>
+        <aside class="notes"><p>Transição (~20 s). Agora juntamos tudo: vamos acompanhar a API de tarefas do PRD até o primeiro commit, passando pelos gates. Avise que as respostas dos agentes são um exemplo, não uma execução real.</p></aside>
+      </section>
+
+      <!-- Simulação 1: PRD -->
+      <section class="slide s" data-screen-label="24 Simulacao PRD">
+        <div class="head">
+          <span class="eyebrow">Simulação 1/4 · API de tarefas · saídas ilustrativas</span>
+          <h2 class="h">O PRD nasce de uma conversa: o PM pergunta antes de escrever</h2>
+        </div>
+        <div class="grid2 wide-left">
+<div class="term"><span class="p">›</span> <span class="k">bmad-prd</span>
+<span class="m">PM ▸</span> Create, Update ou Validate?
+<span class="p">›</span> Create. API de tarefas para times
+  pequenos, com tags e prazos.
+<span class="m">PM ▸</span> Quem usa e o que dói hoje?
+<span class="p">›</span> Devs que perdem prazos em planilha.
+<span class="m">PM ▸</span> O filtro por prazo usa o fuso
+  do usuário ou do servidor?</div>
+<div class="tree"><span class="m">prd.md · trecho</span>
+## Requisitos funcionais
+FR-01 Criar, editar e excluir tarefa
+FR-02 Etiquetar tarefa com tags
+FR-03 Filtrar por tag
+FR-04 Filtrar por prazo (vencidas,
+      hoje, próximos 7 dias)
+## Fora do escopo (v1)
+- Usuários e permissões</div>
+        </div>
+        <div class="foot"><span>04 · Simulação</span><span>24 / 29</span></div>
+        <aside class="notes"><p>(~1,5 min) Primeiro passo da simulação: o PRD.</p><p>Mostre que o PM não sai escrevendo: ele pergunta a intenção, o público e a dor. Repare na última pergunta, sobre fuso horário: é o tipo de detalhe que vira bug se ninguém decidir agora.</p><p>À direita, o resultado: requisitos numerados e, tão importante quanto, o que fica fora do escopo da v1.</p></aside>
+      </section>
+
+      <!-- Simulação 2: readiness -->
+      <section class="slide s" data-screen-label="25 Simulacao readiness">
+        <div class="head">
+          <span class="eyebrow">Simulação 2/4 · API de tarefas · saídas ilustrativas</span>
+          <h2 class="h">O readiness check pega a lacuna antes de virar código</h2>
+        </div>
+        <div class="grid2 wide-left">
+<div class="term"><span class="p">›</span> <span class="k">bmad-check-implementation-readiness</span>
+<span class="m">▸</span> Resultado: CONCERNS
+<span class="m">▸</span> FR-04 não define o fuso dos prazos
+<span class="m">▸</span> Story 2.3 sem critério de aceite
+  para "próximos 7 dias"
+<span class="p">›</span> Fuso do usuário via header
+  X-Timezone. Atualize PRD e story.
+<span class="m">▸</span> (chat novo, nova checagem)
+<span class="m">▸</span> Resultado: PASS</div>
+          <div class="card raised">
+            <span class="tag">O que aconteceu</span>
+            <div class="gate"><span class="pill">CONCERNS</span><span class="pill ok">PASS</span></div>
+            <p>A checagem cruzou PRD, arquitetura e stories e achou uma decisão que ninguém tinha tomado.</p>
+            <p>Você decidiu, o PRD foi atualizado com <span class="c">bmad-prd</span> → Update, e a segunda rodada passou.</p>
+          </div>
+        </div>
+        <div class="foot"><span>04 · Simulação</span><span>25 / 29</span></div>
+        <aside class="notes"><p>(~1,5 min) Aqui o gate mostra valor: o readiness check voltou CONCERNS porque o fuso horário do filtro por prazo nunca foi decidido.</p><p>Quem decide é você. A decisão volta para o PRD (intenção Update) e para a story, e só então a checagem passa.</p><p>Frase para fixar: essa lacuna custou uma conversa. Descoberta em produção, custaria um bug de prazo errado para todos os usuários.</p></aside>
+      </section>
+
+      <!-- Simulação 3: story 1.1 -->
+      <section class="slide s" data-screen-label="26 Simulacao story">
+        <div class="head">
+          <span class="eyebrow">Simulação 3/4 · API de tarefas · saídas ilustrativas</span>
+          <h2 class="h">Story 1.1: a Dev recebe um arquivo, não um histórico de chat</h2>
+        </div>
+        <div class="grid2">
+<div class="tree"><span class="m">1-1-criar-tarefa.md</span>
+Status: ready-for-dev
+## Story
+Como usuário da API, quero criar
+uma tarefa, para registrar um prazo.
+## Acceptance Criteria
+1. POST /tasks retorna 201 e o id
+2. title vazio retorna 422
+3. due_date aceita data ISO 8601</div>
+<div class="term"><span class="p">›</span> <span class="k">bmad-create-story</span>
+<span class="m">▸</span> 1-1-criar-tarefa.md
+<span class="m">▸</span> Status: ready-for-dev
+
+<span class="p">›</span> (chat novo) <span class="k">bmad-dev-story</span>
+<span class="m">▸</span> Implementando AC 1, 2 e 3
+<span class="m">▸</span> Testes dos ACs passando
+<span class="m">▸</span> Status: review</div>
+        </div>
+        <div class="foot"><span>04 · Simulação</span><span>26 / 29</span></div>
+        <aside class="notes"><p>(~2 min) À esquerda, o arquivo da story que o create-story gerou: história, critérios de aceite e, no arquivo real, notas de arquitetura e referências. Esse é o contexto inteiro que a Dev precisa.</p><p>À direita, o fluxo: create-story deixa a story em ready-for-dev; num chat novo, dev-story implementa contra os três critérios, escreve os testes e move a story para review.</p><p>Reforce: a Dev não precisa do histórico da conversa com o PM. Está tudo no arquivo.</p></aside>
+      </section>
+
+      <!-- Simulação 4: review + commit -->
+      <section class="slide s" data-screen-label="27 Simulacao review">
+        <div class="head">
+          <span class="eyebrow">Simulação 4/4 · API de tarefas · saídas ilustrativas</span>
+          <h2 class="h">O code review tria os achados, e você decide o que entra</h2>
+        </div>
+        <div class="grid2 wide-left">
+<div class="term"><span class="p">›</span> (chat novo) <span class="k">bmad-code-review</span>
+<span class="m">▸</span> Corrigir: due_date no passado é
+  aceito sem aviso
+<span class="m">▸</span> Fora do escopo: paginação em
+  GET /tasks
+<span class="p">›</span> Corrija o primeiro; o outro vai
+  para o backlog.
+<span class="m">▸</span> Status: done
+<span class="p">$</span> git commit -m "feat: story 1.1"</div>
+<div class="tree"><span class="m">sprint-status.yaml · trecho</span>
+development_status:
+  epic-1: in-progress
+  1-1-criar-tarefa: <span class="a">done</span>
+  1-2-editar-tarefa: backlog
+  1-3-excluir-tarefa: backlog
+  epic-2: backlog</div>
+        </div>
+        <div class="foot"><span>04 · Simulação</span><span>27 / 29</span></div>
+        <aside class="notes"><p>(~1,5 min) Último passo da simulação. O code review roda num chat novo e separa o que pertence à story do que não pertence.</p><p>Você decide: corrige o achado da story agora e manda a paginação para o backlog, em vez de transformar a story numa faxina geral.</p><p>Story em done, sprint-status atualizado, commit feito. Feche: esse ciclo se repete para a 1.2, a 1.3 e assim por diante.</p></aside>
+      </section>
+
+      <!-- 21 Checklist -->
+      <section class="slide s" data-screen-label="28 Checklist">
+        <div class="head">
+          <span class="eyebrow">Para levar</span>
+          <h2 class="h">Checklist do primeiro dia</h2>
+        </div>
+        <ul class="check">
+          <li><b>SETUP</b>Node.js 20.12+, Git e a IDE com IA aberta no repositório</li>
+          <li><b>INSTALAR</b><span class="c">npx bmad-method install</span> com o módulo BMad Method</li>
+          <li><b>ORIENTAR</b><span class="c">bmad-help</span> para saber qual trilha seguir e por onde começar</li>
+          <li><b>PLANEJAR</b>PRD e arquitetura lidos e aprovados por você</li>
+          <li><b>EXECUTAR</b>Sprint planning e a primeira story passando pelo ciclo completo</li>
+          <li><b>FECHAR</b>Commit feito, com a próxima story já na fila</li>
+        </ul>
+        <div class="foot"><span>Resumo</span><span>28 / 29</span></div>
+        <aside class="notes"><p>(~1 min) Checklist para levar: setup, instalar, orientar com bmad-help, planejar com PRD e arquitetura aprovados, executar a primeira story pelo ciclo completo e fechar com commit.</p><p>Sugira que tirem foto deste slide.</p></aside>
+      </section>
+
+      <!-- 22 Closing -->
+      <section class="slide s dark center" data-screen-label="29 Encerramento">
+        <div class="stack" style="gap: 56px;">
+          <span class="eyebrow">Obrigado · perguntas?</span>
+          <p class="quote">Planejar com agentes é barato. Corrigir sem plano, não.</p>
+          <div class="speaker">
+            <span class="speaker-name">Anderson Gutierres</span>
+            <span class="speaker-role">Forward Deployed Engineer</span>
+            <span class="speaker-mail">anderson.gutierres@br.experian.com</span>
+          </div>
+          <div class="links">
+            <div><span>Docs</span>docs.bmad-method.org</div>
+            <div><span>Código</span>github.com/bmad-code-org/BMAD-METHOD</div>
+            <div><span>Comunidade</span>discord.gg/gk8jAdXWmj</div>
+          </div>
+        </div>
+        <div class="foot"><span>Squad agêntica com BMAD v6.10</span><span>29 / 29</span></div>
+        <aside class="notes"><p>(~30 s + perguntas) Feche com a frase: planejar com agentes é barato; corrigir sem plano, não.</p><p>Aponte os links: documentação, repositório e Discord da comunidade.</p><p>Abra para perguntas.</p></aside>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Speaker notes panel (press N). Reads the active slide's <aside class="notes">. -->
+  <div class="notes-panel" id="notes-panel" role="complementary" aria-label="Notas do apresentador"></div>
+  <script>
+    (function () {
+      var panel = document.getElementById('notes-panel');
+      function render() {
+        if (!panel.classList.contains('open')) return;
+        var active = document.querySelector('.slide.active');
+        var notes = active && active.querySelector('.notes');
+        var label = active ? active.getAttribute('data-screen-label') : '';
+        panel.innerHTML = '<span class="notes-title">Notas · ' + label + '</span>' + (notes ? notes.innerHTML : '');
+      }
+      function onNotesKey(e) {
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        if (String(e.key).toLowerCase() !== 'n' || e.__odNotesHandled) return;
+        e.__odNotesHandled = true;
+        panel.classList.toggle('open');
+        render();
+      }
+      window.addEventListener('keydown', onNotesKey, true);
+      document.addEventListener('keydown', onNotesKey, true);
+      var mo = new MutationObserver(render);
+      document.querySelectorAll('.slide').forEach(function (el) { mo.observe(el, { attributes: true, attributeFilter: ['class'] }); });
+    })();
+  </script>
+
+  <!-- Framework chrome — DO NOT EDIT below this line. -->
+  <nav class="deck-counter" role="navigation" aria-label="Deck navigation">
+    <button type="button" id="deck-prev" aria-label="Previous slide">‹</button>
+    <span class="deck-count"><span id="deck-cur">01</span> <span class="total">/ <span id="deck-total">01</span></span></span>
+    <button type="button" id="deck-next" aria-label="Next slide">›</button>
+  </nav>
+  <div class="deck-hint">← / → · space · R reset</div>
+
+  <script>
+    (function () {
+      var stage = document.getElementById('deck-stage');
+      var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+      var prev = document.getElementById('deck-prev');
+      var next = document.getElementById('deck-next');
+      var cur = document.getElementById('deck-cur');
+      var total = document.getElementById('deck-total');
+      var STORE = 'deck:idx:' + (location.pathname || '/');
+      var idx = 0;
+
+      // ---- scale-to-fit ---------------------------------------------------
+      // The stage is 1920×1080 and sits at .deck-shell's (0, 0) in normal
+      // block flow — the shell is intentionally NOT a grid/flex container,
+      // so the stage's natural top-left is (0, 0). We scale via transform
+      // with transform-origin:top-left, then translate by the remainder to
+      // center the scaled box in the viewport. This survives nested
+      // transforms (e.g. when the OD viewer wraps the iframe in its own
+      // scale wrapper at zoom != 100%).
+      function fit() {
+        var sw = window.innerWidth;
+        var sh = window.innerHeight;
+        var pad = 32;
+        var s = Math.min((sw - pad) / 1920, (sh - pad) / 1080);
+        if (!isFinite(s) || s <= 0) s = 1;
+        var tx = (sw - 1920 * s) / 2;
+        var ty = (sh - 1080 * s) / 2;
+        stage.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + s + ')';
+      }
+
+      // ---- navigation -----------------------------------------------------
+      function pad2(n) { return (n < 10 ? '0' : '') + n; }
+      function paint() {
+        slides.forEach(function (el, i) { el.classList.toggle('active', i === idx); });
+        if (cur) cur.textContent = pad2(idx + 1);
+        if (total) total.textContent = pad2(slides.length);
+        if (prev) prev.toggleAttribute('disabled', idx <= 0);
+        if (next) next.toggleAttribute('disabled', idx >= slides.length - 1);
+        postDeckState();
+      }
+      function go(i) {
+        idx = Math.max(0, Math.min(slides.length - 1, i));
+        paint();
+        try { localStorage.setItem(STORE, String(idx)); } catch (_) {}
+      }
+      var OD_DECK_PROTOCOL_VERSION = 1;
+      function postDeckState() {
+        try {
+          window.parent.postMessage({
+            type: 'od:slide-state',
+            protocolVersion: OD_DECK_PROTOCOL_VERSION,
+            active: idx,
+            count: slides.length
+          }, '*');
+        } catch (_) {}
+      }
+      function announceDeckProtocol() {
+        try {
+          window.parent.postMessage({
+            type: 'od:deck-ready',
+            protocolVersion: OD_DECK_PROTOCOL_VERSION,
+            capabilities: ["absolute-navigation","state-events"]
+          }, '*');
+        } catch (_) {}
+      }
+      window.addEventListener('message', function (event) {
+        var data = event && event.data;
+        if (!data || data.type !== 'od:slide') return;
+        if (data.protocolVersion != null && data.protocolVersion !== OD_DECK_PROTOCOL_VERSION) return;
+        var target = idx;
+        if (data.action === 'go') {
+          if (typeof data.index !== 'number' || !isFinite(data.index)) return;
+          target = Math.floor(data.index);
+        } else if (data.action === 'next') target = idx + 1;
+        else if (data.action === 'prev') target = idx - 1;
+        else if (data.action === 'first') target = 0;
+        else if (data.action === 'last') target = slides.length - 1;
+        else return;
+        go(target);
+      });
+      function onKey(e) {
+        if (e.__odDeckKeyHandled) return;
+        var t = e.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+        if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+        if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.__odDeckKeyHandled = true; e.preventDefault(); go(idx + 1); }
+        else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.__odDeckKeyHandled = true; e.preventDefault(); go(idx - 1); }
+        else if (e.key === 'Home' || String(e.key).toLowerCase() === 'r') { e.__odDeckKeyHandled = true; e.preventDefault(); go(0); }
+        else if (e.key === 'End') { e.__odDeckKeyHandled = true; e.preventDefault(); go(slides.length - 1); }
+      }
+      // Capture phase + listen on both targets — inside the OD iframe,
+      // focus may be on window OR document; a single non-capture listener
+      // silently misses presses.
+      window.addEventListener('keydown', onKey, true);
+      document.addEventListener('keydown', onKey, true);
+      if (prev) prev.addEventListener('click', function () { go(idx - 1); });
+      if (next) next.addEventListener('click', function () { go(idx + 1); });
+      document.addEventListener('click', function (e) {
+        if (e.defaultPrevented) return;
+        if (e.button !== undefined && e.button !== 0) return;
+        if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+        var t = e.target;
+        while (t && t !== document.body && t !== document.documentElement) {
+          var tag = String(t.tagName || '').toUpperCase();
+          if (
+            tag === 'A' ||
+            tag === 'BUTTON' ||
+            tag === 'INPUT' ||
+            tag === 'TEXTAREA' ||
+            tag === 'SELECT' ||
+            t.isContentEditable ||
+            t.getAttribute('role') === 'button' ||
+            t.getAttribute('role') === 'link'
+          ) return;
+          t = t.parentElement;
+        }
+        focusDeck();
+        if (e.clientX < window.innerWidth / 2) go(idx - 1);
+        else go(idx + 1);
+      }, true);
+
+      // Auto-focus body so arrow keys work without an initial click.
+      document.body.setAttribute('tabindex', '-1');
+      document.body.style.outline = 'none';
+      function focusDeck() { try { window.focus(); document.body.focus({ preventScroll: true }); } catch (_) {} }
+      document.addEventListener('mousedown', focusDeck);
+      window.addEventListener('load', focusDeck);
+
+      // Restore last position.
+      try {
+        var saved = parseInt(localStorage.getItem(STORE) || '0', 10);
+        if (!isNaN(saved) && saved >= 0 && saved < slides.length) idx = saved;
+      } catch (_) {}
+
+      window.addEventListener('resize', fit);
+      announceDeckProtocol();
+      fit();
+      paint();
+      focusDeck();
+    })();
+  </script>
+</body>
+</html>

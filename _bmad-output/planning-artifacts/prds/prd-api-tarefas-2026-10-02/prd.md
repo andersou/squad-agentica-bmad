@@ -68,7 +68,7 @@ O dev pode criar uma tarefa informando título, prazo e, se quiser, tags.
 **Consequências (testáveis):**
 - Uma criação válida retorna 201 com o identificador da tarefa criada.
 - Título ausente ou vazio retorna 422, e nenhuma tarefa é criada.
-- Prazo ausente ou fora do formato de data ISO 8601 retorna 422, e nenhuma tarefa é criada.
+- Prazo ausente ou fora do formato de data ISO 8601 `YYYY-MM-DD` (sem hora) retorna 422, e nenhuma tarefa é criada.
 - Um prazo no passado é aceito, e a tarefa já nasce vencida. Isso permite trazer as tarefas atrasadas da planilha.
 - A tarefa nasce não concluída.
 
@@ -167,7 +167,7 @@ O dev pode combinar o filtro por tag (FR-6) com uma janela de prazo (FR-7) na me
 - **Notificações e lembretes de prazo:** ficam para os próximos passos da visão (§1).
 - **Fuso por time ou por requisição:** a v1 usa um fuso fixo (`America/Sao_Paulo`).
 - **Subtarefas e tarefas recorrentes.**
-- **Importação da planilha:** não está planejada; ver §8.
+- **Importação da planilha:** fora da v1; a migração é manual ou por um script descartável.
 
 ## 7. Métricas de sucesso
 
@@ -184,4 +184,4 @@ O dev pode combinar o filtro por tag (FR-6) com uma janela de prazo (FR-7) na me
 
 ## 8. Questões em aberto
 
-1. Como o time-piloto leva as tarefas atuais da planilha para a API? Manualmente, com um script descartável ou com uma importação na v1? Responsável: Anderson. Rever antes de quebrar os épicos.
+Nenhuma. A questão sobre levar as tarefas da planilha para a API foi resolvida na quebra em épicos (2026-10-02): a importação fica fora da v1, e a migração é manual ou por um script descartável.

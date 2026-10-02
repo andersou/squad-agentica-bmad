@@ -108,13 +108,13 @@ CREATE TABLE IF NOT EXISTS task_tags (
 | Editar e concluir (FR-3, FR-5) | `PATCH /tasks/{id}` | 200 + tarefa | 404, 422 |
 | Excluir (FR-4) | `DELETE /tasks/{id}` | 204, sem corpo | 404 |
 
-  A tarefa sempre tem a forma `{"id": int, "title": str, "due_date": "YYYY-MM-DD", "tags": [str], "done": bool}`, e `tags` aparece desde a story 1.1, mesmo que vazia. `?tag=` e `?due=` aceitam um valor cada e podem ser combinados (interseção). Toda lista vem ordenada por `due_date` crescente e, em empate, por `id` crescente. Do PRD foram adotados: `POST /tasks` com 201 e 422, os campos `title` e `due_date`, e a ausência de paginação.
+  A tarefa sempre tem a forma `{"id": int, "title": str, "due_date": "YYYY-MM-DD", "tags": [str], "done": bool}`, e `tags` aparece desde a story 1.1, mesmo que vazia. `?tag=` e `?due=` aceitam um valor cada e podem ser combinados (interseção); repetir um deles na mesma chamada → 422 com `field` igual ao nome do parâmetro (emenda de 2026-10-02, retro da v1). `id` de path vai até `2**63 - 1`; acima disso → 422 `field: "id"`. Toda lista vem ordenada por `due_date` crescente e, em empate, por `id` crescente. Do PRD foram adotados: `POST /tasks` com 201 e 422, os campos `title` e `due_date`, e a ausência de paginação.
 
 ### AD-7 — Envelope de erro único, com códigos fechados
 
 - **Binds:** NFR-3, todos os FRs com caminho de erro
 - **Prevents:** o 422 padrão do FastAPI (`{"detail": [...]}`) em uma rota e um formato próprio em outra, ou `field` derivado de jeitos diferentes.
-- **Rule:** todo erro sai como `{"error": {"code", "field", "message"}}`. Há três handlers globais em `main.py`: `RequestValidationError`, o `HTTPException` **do Starlette** (para pegar também a rota inexistente e o 405) e `Exception`. Os códigos são só estes:
+- **Rule:** todo erro sai como `{"error": {"code", "field", "message"}}`. Há três handlers globais em `main.py` (o código `http_error` foi acrescentado na emenda de 2026-10-02, retro da v1): `RequestValidationError`, o `HTTPException` **do Starlette** (para pegar também a rota inexistente e o 405) e `Exception`. Os códigos são só estes:
 
 | Status | `code` | `field` |
 | --- | --- | --- |
@@ -122,6 +122,7 @@ CREATE TABLE IF NOT EXISTS task_tags (
 | 404 (tarefa) | `not_found` | `"id"` |
 | 404 (rota) | `not_found` | `null` |
 | 405 | `method_not_allowed` | `null` |
+| outro status HTTP (mantido) | `http_error` | `null` |
 | 500 | `internal_error` | `null` |
 
   Toda regra que gera um 422, inclusive a de tag vazia, fica em validadores Pydantic, nunca em `if` dentro da rota. O `message` é montado pelo handler, em português, a partir de `code` e `field`. Os testes conferem `code` e `field`, nunca o texto de `message`.
@@ -154,7 +155,7 @@ CREATE TABLE IF NOT EXISTS task_tags (
   - ativa `PRAGMA foreign_keys = ON`;
   - garante o esquema do AD-5.
 
-  A `api` recebe uma conexão por requisição, por meio de uma dependência `get_db()` com `yield` que a fecha no fim. As rotas são `def`, não `async def`. Toda escrita que toca mais de uma linha, como uma tarefa e suas tags, roda dentro de `with conn:`, em uma única transação.
+  A `api` recebe uma conexão por requisição, por meio de uma dependência `get_db()` com `yield` que a fecha no fim. As rotas são `def`, não `async def`. Toda escrita que toca mais de uma linha, como uma tarefa e suas tags, roda dentro de `with conn:`, em uma única transação. Uma escrita que primeiro confere se a linha existe abre a transação com `BEGIN IMMEDIATE`, e a conferência, a escrita e a releitura ficam dentro dela (emenda de 2026-10-02, retro da v1).
 
 ## Consistency Conventions
 

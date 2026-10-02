@@ -21,7 +21,7 @@ def window_bounds(window: str, today: date) -> tuple[str | None, str]:
         "today": (today, today),
         "next7": (today + day, today + 7 * day),
     }[window]
-    return (start and start.isoformat()), end.isoformat()
+    return (start.isoformat() if start else None), end.isoformat()
 
 
 def normalize_tags(tags: list[str]) -> list[str]:

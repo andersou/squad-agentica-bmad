@@ -4,7 +4,8 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Response
+from fastapi.exceptions import RequestValidationError
 from pydantic import (
     AfterValidator,
     BaseModel,
@@ -72,8 +73,8 @@ def get_db() -> Iterator[sqlite3.Connection]:
 
 
 Db = Annotated[sqlite3.Connection, Depends(get_db)]
-# Alias "id" faz o 422 de path sair com field "id" (AD-7).
-TaskId = Annotated[int, Path(alias="id")]
+# Alias "id" faz o 422 de path sair com field "id" (AD-7); `le` evita OverflowError → 500.
+TaskId = Annotated[int, Path(alias="id", le=2**63 - 1)]  # acima disso o sqlite3 estoura
 
 router = APIRouter()
 
@@ -86,11 +87,24 @@ def create_task(body: TaskCreate, conn: Db):
 
 @router.get("/tasks", response_model=list[Task])
 def list_tasks(
+    request: Request,
     conn: Db,
     now: Annotated[datetime, Depends(domain.now)],
     tag: Annotated[Tag | None, Query()] = None,
     due: Due | None = None,
 ):
+    # Parâmetro repetido é ambíguo: 422 em vez de valer o último (AD-6).
+    for name in ("tag", "due"):
+        if len(request.query_params.getlist(name)) > 1:
+            raise RequestValidationError(
+                [
+                    {
+                        "loc": ("query", name),
+                        "msg": "parâmetro repetido",
+                        "type": "value_error",
+                    }
+                ]
+            )
     if due is None:
         return repo.list_tasks(conn, tag=tag)
     start, end = domain.window_bounds(due.value, domain.today(now))
@@ -107,9 +121,10 @@ def get_task(task_id: TaskId, conn: Db):
 
 @router.patch("/tasks/{id}", response_model=Task)
 def patch_task(task_id: TaskId, body: TaskUpdate, conn: Db):
-    if not repo.update_task(conn, task_id, body.model_dump(exclude_unset=True)):
+    task = repo.update_task(conn, task_id, body.model_dump(exclude_unset=True))
+    if task is None:
         raise HTTPException(404, detail="task_not_found")
-    return repo.get_task(conn, task_id)
+    return task
 
 
 @router.delete("/tasks/{id}", status_code=204)

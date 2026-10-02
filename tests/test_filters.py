@@ -108,3 +108,14 @@ def test_tag_and_due_intersect(client, set_now, tag):
     create(client, "fora da janela", "2026-10-05", ["backend"])
     assert due(client, "overdue", tag=tag) == [hit]
     assert hit["tags"] == ["api", "backend"]
+
+
+@pytest.mark.parametrize(
+    "query, field",
+    [("due=today&due=overdue", "due"), ("tag=a&tag=b", "tag")],
+)
+def test_repeated_query_param(client, query, field):
+    resp = client.get(f"/tasks?{query}")
+    assert resp.status_code == 422
+    assert resp.json()["error"]["code"] == "validation_error"
+    assert resp.json()["error"]["field"] == field

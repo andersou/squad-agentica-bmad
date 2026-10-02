@@ -150,8 +150,8 @@ Nenhuma dependência nova (AD-1). Só stdlib (`datetime`, `timedelta`, `zoneinfo
 
 Revisão de código (2026-10-02): ACs 1-10 atendidos; `uv run pytest` 77 passed; `ruff check`/`format --check` limpos; relógio só em `domain.now()`. Nenhum achado high/medium.
 
-- [ ] [Review][Patch] (low) `?due=` repetido (`?due=today&due=overdue`) é aceito silenciosamente com o último valor; AD-6 diz "um valor cada" mas não define erro — decidir se vira 422 [app/api.py:92]
-- [ ] [Review][Patch] (low) `(start and start.isoformat())` em `window_bounds` é idioma "esperto"; `start.isoformat() if start else None` lê melhor [app/domain.py:24]
+- [x] [Review][Patch] (low) **Resolvido na retro de 2026-10-02: agora dá 422 `field: "due"`.** `?due=` repetido (`?due=today&due=overdue`) é aceito silenciosamente com o último valor; AD-6 diz "um valor cada" mas não define erro — decidir se vira 422 [app/api.py:92]
+- [x] [Review][Patch] (low) **Resolvido na retro de 2026-10-02.** `(start and start.isoformat())` em `window_bounds` é idioma "esperto"; `start.isoformat() if start else None` lê melhor [app/domain.py:24]
 
 ## Dev Agent Record
 

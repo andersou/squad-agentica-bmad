@@ -53,10 +53,32 @@ development_status:
   1-1-criar-listar-e-consultar-tarefas: done
   1-2-editar-e-concluir-tarefa: done
   1-3-excluir-tarefa: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
 
   # Épico 2: Saber o que venceu e o que vence
   epic-2: done
   2-1-etiquetar-tarefas-e-filtrar-por-tag: done
   2-2-filtrar-por-janela-de-prazo-e-combinar-com-tag: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: done
+
+action_items:
+  - epic: 2
+    action: "Corrigir achados de severidade baixa dentro da própria story; workflow epico-dev-review corrige todos os achados com correção clara e para nos que exigem decisão"
+    owner: "Amelia (Desenvolvedora)"
+    status: done
+  - epic: 2
+    action: "Revisor confere cada AD explicitamente (lista de ADs no prompt do code review)"
+    owner: "Winston (Arquiteto)"
+    status: done
+  - epic: 2
+    action: "Fechar dívida da v1: id > 2^63 → 422, corrida no update_task, 4xx não-404/405 sem virar 500, idioma em window_bounds, ?due=/?tag= repetidos → 422, com testes"
+    owner: "Amelia (Desenvolvedora)"
+    status: done
+  - epic: 2
+    action: "Completar deferred-work.md com todos os achados adiados e marcar os fechados"
+    owner: "Paige (Redatora Técnica)"
+    status: done
+  - epic: 2
+    action: "Corrigir PRD (§8 importação decidida; FR1 YYYY-MM-DD) e registrar no AD-6 a regra de parâmetro repetido"
+    owner: "John (PM) / Winston (Arquiteto)"
+    status: done

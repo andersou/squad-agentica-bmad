@@ -70,7 +70,7 @@ curl -X POST http://<IP interno>:8000/tasks \
 # 422 {"error": {"code": "validation_error", "field": "title", "message": "Campo inválido: title"}}
 ```
 
-Códigos de erro: `validation_error` (422), `not_found` (404), `method_not_allowed` (405), `internal_error` (500).
+Códigos de erro: `validation_error` (422), `not_found` (404), `method_not_allowed` (405), `http_error` (outro status HTTP, mantido), `internal_error` (500). Repetir `?due=` ou `?tag=` na mesma chamada dá 422.
 
 ### Tags e prazos vencidos
 

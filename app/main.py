@@ -12,6 +12,7 @@ _MESSAGES = {
     "not_found": "Recurso não encontrado",
     "method_not_allowed": "Método não permitido",
     "internal_error": "Erro interno",
+    "http_error": "Requisição não atendida",
 }
 
 
@@ -44,8 +45,8 @@ def _http(request: Request, exc: HTTPException) -> JSONResponse:
     if exc.status_code == 404:
         field = "id" if exc.detail == "task_not_found" else None
         return _error(404, "not_found", field, exc.headers)
-    # ponytail: só 404/405 sobem do roteamento hoje; outros status viram 500.
-    return _error(500, "internal_error", None)
+    # Outros status mantêm o código HTTP; só falha não prevista vira 500.
+    return _error(exc.status_code, "http_error", None, exc.headers)
 
 
 @app.exception_handler(Exception)

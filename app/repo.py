@@ -40,22 +40,26 @@ def insert_task(
 _UPDATABLE = ("title", "due_date", "done")
 
 
-def update_task(conn: sqlite3.Connection, task_id: int, fields: dict) -> bool:
-    """Aplica só os campos enviados; devolve se a tarefa existe."""
+def update_task(conn: sqlite3.Connection, task_id: int, fields: dict) -> dict | None:
+    """Aplica só os campos enviados e devolve a tarefa atualizada (None se não existe).
+
+    Checagem, escrita e releitura na mesma transação: um DELETE concorrente não vira 500.
+    """
     cols = [
         c for c in _UPDATABLE if c in fields
     ]  # colunas da lista fixa, nunca do corpo
     with conn:
+        conn.execute("BEGIN IMMEDIATE")
         row = conn.execute("SELECT 1 FROM tasks WHERE id = ?", (task_id,))
         if row.fetchone() is None:
-            return False
+            return None
         if cols:
             sets = ", ".join(f"{c} = ?" for c in cols)
             vals = [int(fields[c]) if c == "done" else fields[c] for c in cols]
             conn.execute(f"UPDATE tasks SET {sets} WHERE id = ?", (*vals, task_id))
         if "tags" in fields:
             replace_tags(conn, task_id, fields["tags"])
-    return True
+        return get_task(conn, task_id)
 
 
 def replace_tags(conn: sqlite3.Connection, task_id: int, tags: list[str]) -> None:

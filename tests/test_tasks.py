@@ -323,3 +323,44 @@ def test_delete_cascades_tags(client):
     finally:
         conn.close()
     assert count == 0
+
+
+@pytest.mark.parametrize("method", ["get", "patch", "delete"])
+def test_task_id_overflow(client, method):
+    kwargs = {"json": {"done": True}} if method == "patch" else {}
+    resp = getattr(client, method)(f"/tasks/{2**63}", **kwargs)
+    assert_error(resp, 422, "validation_error", "id")
+
+
+def test_patch_deleted_during_update(client, monkeypatch):
+    """Exclusão concorrente entre a checagem e a releitura vira 404, não 500."""
+    from app import repo
+
+    task = create(client).json()
+    real_replace = repo.replace_tags
+
+    def delete_then_replace(conn, task_id, tags):
+        other = sqlite3.connect(conn.execute("PRAGMA database_list").fetchone()[2])
+        other.execute("PRAGMA busy_timeout = 0")
+        try:
+            # BEGIN IMMEDIATE segura o lock: o DELETE concorrente não entra no meio.
+            with pytest.raises(sqlite3.OperationalError):
+                other.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+        finally:
+            other.close()
+        real_replace(conn, task_id, tags)
+
+    monkeypatch.setattr(repo, "replace_tags", delete_then_replace)
+    resp = client.patch(f"/tasks/{task['id']}", json={"tags": ["a"]})
+    assert resp.status_code == 200
+    assert resp.json()["tags"] == ["a"]
+
+
+def test_other_http_status_kept():
+    from starlette.exceptions import HTTPException
+
+    from app.main import _http
+
+    resp = _http(None, HTTPException(409))
+    assert resp.status_code == 409
+    assert b'"code":"http_error"' in resp.body

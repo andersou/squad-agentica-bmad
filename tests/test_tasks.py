@@ -1,0 +1,151 @@
+import sqlite3
+from datetime import date, datetime
+
+import pytest
+from fastapi.testclient import TestClient
+
+from app import domain
+from app.main import app
+
+
+def create(client, title="Revisar PR", due_date="2026-10-10"):
+    return client.post("/tasks", json={"title": title, "due_date": due_date})
+
+
+def assert_error(resp, status, code, field):
+    assert resp.status_code == status
+    body = resp.json()
+    assert "detail" not in body
+    assert body["error"]["code"] == code
+    assert body["error"]["field"] == field
+    assert body["error"]["message"]
+
+
+def test_create_task(client):
+    resp = create(client)
+    assert resp.status_code == 201
+    body = resp.json()
+    assert isinstance(body.pop("id"), int)
+    assert body == {
+        "title": "Revisar PR",
+        "due_date": "2026-10-10",
+        "tags": [],
+        "done": False,
+    }
+
+
+@pytest.mark.parametrize("payload", [{}, {"title": ""}, {"title": "   "}])
+def test_create_invalid_title(client, payload):
+    resp = client.post("/tasks", json={**payload, "due_date": "2026-10-10"})
+    assert_error(resp, 422, "validation_error", "title")
+    assert client.get("/tasks").json() == []
+
+
+@pytest.mark.parametrize(
+    "due_date",
+    [None, "2026-02-30", "2026-10-02T00:00:00Z", "02/10/2026", 1790899200, "20261002"],
+)
+def test_create_invalid_due_date(client, due_date):
+    payload = {"title": "x"} | ({} if due_date is None else {"due_date": due_date})
+    assert_error(
+        client.post("/tasks", json=payload), 422, "validation_error", "due_date"
+    )
+    assert client.get("/tasks").json() == []
+
+
+def test_create_past_due_date(client):
+    resp = create(client, due_date="2020-01-01")
+    assert resp.status_code == 201
+    assert resp.json()["done"] is False
+
+
+@pytest.mark.parametrize("extra", [{"done": True}, {"tags": ["a"]}])
+def test_create_extra_field(client, extra):
+    payload = {"title": "x", "due_date": "2026-10-10"} | extra
+    assert_error(
+        client.post("/tasks", json=payload), 422, "validation_error", next(iter(extra))
+    )
+    assert client.get("/tasks").json() == []
+
+
+def test_create_invalid_body(client):
+    resp = client.post(
+        "/tasks", content="[", headers={"Content-Type": "application/json"}
+    )
+    assert resp.status_code == 422
+    assert resp.json()["error"]["code"] == "validation_error"
+
+
+def test_list_empty(client):
+    resp = client.get("/tasks")
+    assert resp.status_code == 200
+    assert resp.json() == []
+
+
+def test_list_order(client):
+    ids = [
+        create(client, t, d).json()["id"]
+        for t, d in [
+            ("c", "2026-12-01"),
+            ("a", "2026-10-05"),
+            ("b", "2026-10-05"),
+            ("z", "2026-01-01"),
+        ]
+    ]
+    got = [t["id"] for t in client.get("/tasks").json()]
+    assert got == [ids[3], ids[1], ids[2], ids[0]]
+
+
+def test_get_task(client):
+    task = create(client).json()
+    resp = client.get(f"/tasks/{task['id']}")
+    assert resp.status_code == 200
+    assert resp.json() == task
+
+
+def test_get_task_not_found(client):
+    assert_error(client.get("/tasks/999"), 404, "not_found", "id")
+
+
+def test_unknown_route(client):
+    assert_error(client.get("/nada"), 404, "not_found", None)
+
+
+def test_method_not_allowed(client):
+    resp = client.put("/tasks")
+    assert_error(resp, 405, "method_not_allowed", None)
+    assert "allow" in resp.headers
+
+
+def test_internal_error(client, monkeypatch):
+    def boom(conn):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr("app.repo.list_tasks", boom)
+    with TestClient(app, raise_server_exceptions=False) as c:
+        assert_error(c.get("/tasks"), 500, "internal_error", None)
+
+
+def test_persistence_and_schema(client, tmp_path):
+    task = create(client).json()
+    with TestClient(app) as other:
+        assert other.get(f"/tasks/{task['id']}").json() == task
+    conn = sqlite3.connect(tmp_path / "tasks.db")
+    names = {
+        r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    }
+    conn.close()
+    assert {"tasks", "task_tags"} <= names
+
+
+def test_today_uses_sao_paulo():
+    assert domain.today(datetime.fromisoformat("2026-10-03T01:00Z")) == date(
+        2026, 10, 2
+    )
+
+
+def test_set_now_overrides_clock(set_now):
+    set_now("2026-10-02T15:00Z")
+    assert app.dependency_overrides[domain.now]() == datetime.fromisoformat(
+        "2026-10-02T15:00Z"
+    )

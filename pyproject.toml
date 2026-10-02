@@ -1,0 +1,24 @@
+[project]
+name = "api-tarefas"
+version = "0.1.0"
+description = "API HTTP de tarefas com prazo e tags"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi==0.142.2",
+    "tzdata==2026.4",
+    "uvicorn==0.54.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+extend-exclude = [".claude", "_bmad", "_bmad-output", "docs"]
+
+[dependency-groups]
+dev = [
+    "httpx==0.28.1",
+    "pytest==9.1.1",
+    "ruff==0.16.10",
+]

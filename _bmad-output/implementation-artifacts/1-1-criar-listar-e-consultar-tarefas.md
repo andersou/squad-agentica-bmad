@@ -1,6 +1,10 @@
+---
+baseline_commit: d3202e9a9c40823ebb387333bc29971ef2f10555
+---
+
 # Story 1.1: Criar, listar e consultar tarefas
 
-Status: ready-for-dev
+Status: done
 
 <!-- Nota: a validação é opcional. Rode validate-create-story para checar a qualidade antes do dev-story. -->
 
@@ -29,63 +33,70 @@ para que as tarefas deixem a planilha e passem a estar num lugar que scripts con
 
 > Ordem pensada para o achado **M1** do readiness (esta é a story mais carregada): cada tarefa deixa algo verificável antes da próxima. Ordem de dependência: setup → `domain` → `repo` → `api` → `main` → testes → README → portão de qualidade. Se o contexto apertar, pare depois da Tarefa 7 com `uv run pytest` verde e registre o ponto nas Completion Notes.
 
-- [ ] **Tarefa 1: Setup do projeto `uv`** (AC: 1)
-  - [ ] 1.1 Na raiz do projeto (`api-tarefas/`, a mesma pasta de `_bmad/`), rodar `uv init --app --python 3.14 --vcs none --no-readme` (o repositório git já existe). Apagar o `main.py`/`hello.py` de exemplo que o `uv init` gera na raiz. Conferir `requires-python = ">=3.14"` no `pyproject.toml`.
-  - [ ] 1.2 `uv add fastapi==0.142.2 uvicorn==0.54.0 tzdata==2026.4` e `uv add --dev pytest==9.1.1 httpx==0.28.1 ruff==0.16.10`. **Nada além disso** (sem `fastapi[standard]`, sem ORM, sem `pydantic-settings`, sem `python-dotenv`, sem `freezegun`).
-  - [ ] 1.3 No `pyproject.toml`: `[tool.pytest.ini_options]` com `testpaths = ["tests"]` e `pythonpath = ["."]`; `[tool.ruff]` com `extend-exclude = [".claude", "_bmad", "_bmad-output", "docs"]` (ver "Armadilhas" 1 e 2).
-  - [ ] 1.4 Criar `app/__init__.py` vazio e `tests/` (sem `__init__.py`). Acrescentar `tasks.db`, `.venv/`, `__pycache__/` e `.pytest_cache/`, `.ruff_cache/` ao `.gitignore`. Commitar `uv.lock`.
-- [ ] **Tarefa 2: `app/domain.py` — relógio** (AC: 11; base do AD-2)
-  - [ ] 2.1 `now() -> datetime`: devolve `datetime.now(UTC)`. É o **único** lugar do código que lê o relógio.
-  - [ ] 2.2 `today(now: datetime) -> date`: `now.astimezone(ZoneInfo("America/Sao_Paulo")).date()`. Constante de fuso no módulo, não configurável.
-  - [ ] 2.3 Nada de `window_bounds` nem `normalize_tags` aqui: são das stories 2.2 e 2.1. `domain` não importa `api`, `repo`, `fastapi` nem `sqlite3`.
-- [ ] **Tarefa 3: `app/repo.py` — conexão, esquema e leitura/escrita** (AC: 2, 7, 8, 10)
-  - [ ] 3.1 `connect() -> sqlite3.Connection`: lê `os.environ.get("TASKS_DB_PATH", "./tasks.db")` **a cada chamada**; `sqlite3.connect(path, check_same_thread=False)`; `row_factory = sqlite3.Row`; `PRAGMA foreign_keys = ON`; `executescript(SCHEMA)` com o SQL exato do AD-5 (as duas tabelas, `IF NOT EXISTS`).
-  - [ ] 3.2 `insert_task(conn, title, due_date) -> int`: `INSERT INTO tasks (title, due_date) VALUES (?, ?)` dentro de `with conn:`; devolve `lastrowid`. `done` fica no `DEFAULT 0`.
-  - [ ] 3.3 `load_tags(conn, task_id) -> list[str]`: `SELECT tag FROM task_tags WHERE task_id = ? ORDER BY tag`. Na 1.1 sempre volta `[]`, mas a resposta já sai daqui (AD-9: único caminho de leitura de tags).
-  - [ ] 3.4 `get_task(conn, task_id) -> dict | None` e `list_tasks(conn) -> list[dict]` (`ORDER BY due_date, id`), cada um montando `{"id", "title", "due_date", "tags": load_tags(...), "done": bool(row["done"])}`. Uma função privada `_to_task(conn, row)` evita duplicar a montagem.
-  - [ ] 3.5 Só SQL parametrizado (`?`), nunca f-string com valor do usuário. Sem regra de negócio no `repo`.
-- [ ] **Tarefa 4: `app/api.py` — tipos, schemas, dependências e rotas** (AC: 2–8)
-  - [ ] 4.1 Tipos compartilhados (AD-4), definidos **uma vez** para a 1.2 reaproveitar:
+- [x] **Tarefa 1: Setup do projeto `uv`** (AC: 1)
+  - [x] 1.1 Na raiz do projeto (`api-tarefas/`, a mesma pasta de `_bmad/`), rodar `uv init --app --python 3.14 --vcs none --no-readme` (o repositório git já existe). Apagar o `main.py`/`hello.py` de exemplo que o `uv init` gera na raiz. Conferir `requires-python = ">=3.14"` no `pyproject.toml`.
+  - [x] 1.2 `uv add fastapi==0.142.2 uvicorn==0.54.0 tzdata==2026.4` e `uv add --dev pytest==9.1.1 httpx==0.28.1 ruff==0.16.10`. **Nada além disso** (sem `fastapi[standard]`, sem ORM, sem `pydantic-settings`, sem `python-dotenv`, sem `freezegun`).
+  - [x] 1.3 No `pyproject.toml`: `[tool.pytest.ini_options]` com `testpaths = ["tests"]` e `pythonpath = ["."]`; `[tool.ruff]` com `extend-exclude = [".claude", "_bmad", "_bmad-output", "docs"]` (ver "Armadilhas" 1 e 2).
+  - [x] 1.4 Criar `app/__init__.py` vazio e `tests/` (sem `__init__.py`). Acrescentar `tasks.db`, `.venv/`, `__pycache__/` e `.pytest_cache/`, `.ruff_cache/` ao `.gitignore`. Commitar `uv.lock`.
+- [x] **Tarefa 2: `app/domain.py` — relógio** (AC: 11; base do AD-2)
+  - [x] 2.1 `now() -> datetime`: devolve `datetime.now(UTC)`. É o **único** lugar do código que lê o relógio.
+  - [x] 2.2 `today(now: datetime) -> date`: `now.astimezone(ZoneInfo("America/Sao_Paulo")).date()`. Constante de fuso no módulo, não configurável.
+  - [x] 2.3 Nada de `window_bounds` nem `normalize_tags` aqui: são das stories 2.2 e 2.1. `domain` não importa `api`, `repo`, `fastapi` nem `sqlite3`.
+- [x] **Tarefa 3: `app/repo.py` — conexão, esquema e leitura/escrita** (AC: 2, 7, 8, 10)
+  - [x] 3.1 `connect() -> sqlite3.Connection`: lê `os.environ.get("TASKS_DB_PATH", "./tasks.db")` **a cada chamada**; `sqlite3.connect(path, check_same_thread=False)`; `row_factory = sqlite3.Row`; `PRAGMA foreign_keys = ON`; `executescript(SCHEMA)` com o SQL exato do AD-5 (as duas tabelas, `IF NOT EXISTS`).
+  - [x] 3.2 `insert_task(conn, title, due_date) -> int`: `INSERT INTO tasks (title, due_date) VALUES (?, ?)` dentro de `with conn:`; devolve `lastrowid`. `done` fica no `DEFAULT 0`.
+  - [x] 3.3 `load_tags(conn, task_id) -> list[str]`: `SELECT tag FROM task_tags WHERE task_id = ? ORDER BY tag`. Na 1.1 sempre volta `[]`, mas a resposta já sai daqui (AD-9: único caminho de leitura de tags).
+  - [x] 3.4 `get_task(conn, task_id) -> dict | None` e `list_tasks(conn) -> list[dict]` (`ORDER BY due_date, id`), cada um montando `{"id", "title", "due_date", "tags": load_tags(...), "done": bool(row["done"])}`. Uma função privada `_to_task(conn, row)` evita duplicar a montagem.
+  - [x] 3.5 Só SQL parametrizado (`?`), nunca f-string com valor do usuário. Sem regra de negócio no `repo`.
+- [x] **Tarefa 4: `app/api.py` — tipos, schemas, dependências e rotas** (AC: 2–8)
+  - [x] 4.1 Tipos compartilhados (AD-4), definidos **uma vez** para a 1.2 reaproveitar:
     - `Title = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]`
     - `DueDate = Annotated[str, StringConstraints(pattern=r"^\d{4}-\d{2}-\d{2}$"), AfterValidator(_valid_date)]`, em que `_valid_date` chama `date.fromisoformat(v)` e devolve `v` (o `ValueError` vira 422 sozinho). Ver "Armadilhas" 3.
-  - [ ] 4.2 `TaskCreate(BaseModel)`: `model_config = ConfigDict(extra="forbid")`, campos `title: Title` e `due_date: DueDate`. **Sem** `done` e **sem** `tags` (AC 6).
-  - [ ] 4.3 `Task(BaseModel)` de resposta: `id: int`, `title: str`, `due_date: str`, `tags: list[str]`, `done: bool`.
-  - [ ] 4.4 `get_db()`: `conn = repo.connect()`; `try: yield conn` / `finally: conn.close()`.
-  - [ ] 4.5 `router = APIRouter()` com rotas **`def`** (não `async def`):
+  - [x] 4.2 `TaskCreate(BaseModel)`: `model_config = ConfigDict(extra="forbid")`, campos `title: Title` e `due_date: DueDate`. **Sem** `done` e **sem** `tags` (AC 6).
+  - [x] 4.3 `Task(BaseModel)` de resposta: `id: int`, `title: str`, `due_date: str`, `tags: list[str]`, `done: bool`.
+  - [x] 4.4 `get_db()`: `conn = repo.connect()`; `try: yield conn` / `finally: conn.close()`.
+  - [x] 4.5 `router = APIRouter()` com rotas **`def`** (não `async def`):
     - `POST /tasks` → `status_code=201`, `response_model=Task`; insere e devolve `repo.get_task(...)`.
     - `GET /tasks` → `list[Task]`, sem parâmetros de filtro ainda (`tag`/`due` são da 2.1/2.2).
     - `GET /tasks/{task_id}` → `task_id: int`; se `None`, `raise HTTPException(404, detail=...)` marcado como 404 **de tarefa** (ver 5.3).
-  - [ ] 4.6 A dependência `now` **ainda não é usada por nenhuma rota** na 1.1 (nenhuma regra de "hoje" no épico 1). Não criar parâmetro morto; a 2.2 injeta `Depends(domain.now)`. A fixture `set_now` funciona mesmo assim (override é só uma entrada no dicionário).
-- [ ] **Tarefa 5: `app/main.py` — app e envelope de erro** (AC: 3, 4, 6, 8, 9)
-  - [ ] 5.1 `app = FastAPI(title="API de Tarefas")`; `app.include_router(api.router)`.
-  - [ ] 5.2 Uma função `_error(status, code, field) -> JSONResponse` que monta `{"error": {"code", "field", "message"}}`, com `message` em português derivado de `code` + `field` (ex.: `"Campo inválido: title"`, `"Tarefa não encontrada"`, `"Rota não encontrada"`, `"Método não permitido"`, `"Erro interno"`).
-  - [ ] 5.3 Handler de `RequestValidationError`: 422, `validation_error`, `field = ".".join(str(p) for p in exc.errors()[0]["loc"][1:]) or None`.
-  - [ ] 5.4 Handler de **`starlette.exceptions.HTTPException`** (não o do FastAPI; senão rota inexistente e 405 escapam com `{"detail": ...}`): 404 → `not_found` com `field = "id"` se veio da rota de tarefa, senão `None`; 405 → `method_not_allowed`, `field: None`. Sugestão simples: na rota, `raise HTTPException(404, detail="task_not_found")` e o handler testa `exc.detail == "task_not_found"`. Preservar `exc.headers` (o 405 traz `Allow`).
-  - [ ] 5.5 Handler de `Exception`: 500, `internal_error`, `field: None`.
-- [ ] **Tarefa 6: `tests/conftest.py` — fixtures do AD-8** (AC: 11)
-  - [ ] 6.1 `client(tmp_path, monkeypatch)`: `monkeypatch.setenv("TASKS_DB_PATH", str(tmp_path / "tasks.db"))`; `with TestClient(app) as c: yield c`; no teardown, `app.dependency_overrides.clear()`.
-  - [ ] 6.2 `set_now`: fixture que devolve uma função `_set(instante_utc: str)` que faz `app.dependency_overrides[domain.now] = lambda: datetime.fromisoformat(instante_utc)` (aceita `"2026-10-02T15:00Z"`; `fromisoformat` do 3.11+ entende o `Z`). Substitui **só** `now`, nunca `today` (AD-2). Depende de `client` para herdar a limpeza.
-  - [ ] 6.3 Só estas duas fixtures moram aqui; as stories seguintes não redefinem fixtures.
-- [ ] **Tarefa 7: `tests/test_tasks.py`** (AC: 2–11)
-  - [ ] 7.1 POST válido → 201 e corpo exato do AC 2 (exceto o valor de `id`, que é `int`).
-  - [ ] 7.2 `@pytest.mark.parametrize` dos títulos inválidos (ausente, `""`, `"   "`) → 422, `code`/`field == "title"`, e `GET /tasks == []` depois.
-  - [ ] 7.3 Parametrize dos prazos do AC 4 (ausente, `"2026-02-30"`, `"2026-10-02T00:00:00Z"`, `"02/10/2026"`, `1790899200`) → 422, `field == "due_date"`, nada gravado.
-  - [ ] 7.4 Prazo no passado (`"2020-01-01"`) → 201 e `done is False`.
-  - [ ] 7.5 Campos extras `done` e `tags` → 422 `validation_error` (conferir `field` igual ao nome do campo extra).
-  - [ ] 7.6 Lista vazia `[]`; ordenação com prazos fora de ordem + empate (empate resolvido pelo `id` crescente).
-  - [ ] 7.7 `GET /tasks/{id}` existente → 200; inexistente (ex.: `999`) → 404, `not_found`, `field == "id"`.
-  - [ ] 7.8 Rota inexistente (`GET /nada`) → 404 `not_found`, `field is None`; método não suportado (ex.: `PUT /tasks`) → 405 `method_not_allowed`, `field is None`; em ambos, `"detail" not in body`.
-  - [ ] 7.9 Persistência: criar com `client`, abrir um **segundo** `TestClient(app)` com o mesmo `TASKS_DB_PATH` e achar a tarefa; com `sqlite3` direto no arquivo, conferir que `tasks` e `task_tags` existem (`sqlite_master`).
-  - [ ] 7.10 Um teste curto do relógio: `domain.today(datetime.fromisoformat("2026-10-03T01:00Z")) == date(2026, 10, 2)` (garante que `tzdata`/`ZoneInfo` funcionam desde já).
-  - [ ] 7.11 Testes conferem `code` e `field`, **nunca** o texto de `message` (AD-7).
-- [ ] **Tarefa 8: `README.md` na raiz do projeto** (AC: 12)
-  - [ ] 8.1 Em português: pré-requisitos (`uv`, Python 3.14), `uv sync`, `uv run pytest`, `TASKS_DB_PATH` (padrão `./tasks.db`).
-  - [ ] 8.2 Rodar: `uv run uvicorn app.main:app --host <IP interno> --port 8000`, com o aviso de **nunca** usar `0.0.0.0` em máquina exposta: a API não tem autenticação (NFR5).
-  - [ ] 8.3 `curl` de criar (`-X POST -H 'Content-Type: application/json' -d '{"title": "Revisar PR", "due_date": "2026-10-10"}'`), listar e consultar, com a resposta esperada; um exemplo de erro 422 mostrando o envelope. Deixar um lugar evidente para o `curl` de tags/vencidas que a 2.2 completa.
-- [ ] **Tarefa 9: Portão de qualidade** (AC: 1)
-  - [ ] 9.1 `uv run ruff format`, `uv run ruff check`, `uv run ruff format --check`, `uv run pytest`, tudo verde.
-  - [ ] 9.2 `grep -rn "date.today\|datetime.now" app/` só pode achar `domain.now()` (AD-2).
-  - [ ] 9.3 Conferir que `app/domain.py` não importa `api`, `repo`, `fastapi` nem `sqlite3`.
+  - [x] 4.6 A dependência `now` **ainda não é usada por nenhuma rota** na 1.1 (nenhuma regra de "hoje" no épico 1). Não criar parâmetro morto; a 2.2 injeta `Depends(domain.now)`. A fixture `set_now` funciona mesmo assim (override é só uma entrada no dicionário).
+- [x] **Tarefa 5: `app/main.py` — app e envelope de erro** (AC: 3, 4, 6, 8, 9)
+  - [x] 5.1 `app = FastAPI(title="API de Tarefas")`; `app.include_router(api.router)`.
+  - [x] 5.2 Uma função `_error(status, code, field) -> JSONResponse` que monta `{"error": {"code", "field", "message"}}`, com `message` em português derivado de `code` + `field` (ex.: `"Campo inválido: title"`, `"Tarefa não encontrada"`, `"Rota não encontrada"`, `"Método não permitido"`, `"Erro interno"`).
+  - [x] 5.3 Handler de `RequestValidationError`: 422, `validation_error`, `field = ".".join(str(p) for p in exc.errors()[0]["loc"][1:]) or None`.
+  - [x] 5.4 Handler de **`starlette.exceptions.HTTPException`** (não o do FastAPI; senão rota inexistente e 405 escapam com `{"detail": ...}`): 404 → `not_found` com `field = "id"` se veio da rota de tarefa, senão `None`; 405 → `method_not_allowed`, `field: None`. Sugestão simples: na rota, `raise HTTPException(404, detail="task_not_found")` e o handler testa `exc.detail == "task_not_found"`. Preservar `exc.headers` (o 405 traz `Allow`).
+  - [x] 5.5 Handler de `Exception`: 500, `internal_error`, `field: None`.
+- [x] **Tarefa 6: `tests/conftest.py` — fixtures do AD-8** (AC: 11)
+  - [x] 6.1 `client(tmp_path, monkeypatch)`: `monkeypatch.setenv("TASKS_DB_PATH", str(tmp_path / "tasks.db"))`; `with TestClient(app) as c: yield c`; no teardown, `app.dependency_overrides.clear()`.
+  - [x] 6.2 `set_now`: fixture que devolve uma função `_set(instante_utc: str)` que faz `app.dependency_overrides[domain.now] = lambda: datetime.fromisoformat(instante_utc)` (aceita `"2026-10-02T15:00Z"`; `fromisoformat` do 3.11+ entende o `Z`). Substitui **só** `now`, nunca `today` (AD-2). Depende de `client` para herdar a limpeza.
+  - [x] 6.3 Só estas duas fixtures moram aqui; as stories seguintes não redefinem fixtures.
+- [x] **Tarefa 7: `tests/test_tasks.py`** (AC: 2–11)
+  - [x] 7.1 POST válido → 201 e corpo exato do AC 2 (exceto o valor de `id`, que é `int`).
+  - [x] 7.2 `@pytest.mark.parametrize` dos títulos inválidos (ausente, `""`, `"   "`) → 422, `code`/`field == "title"`, e `GET /tasks == []` depois.
+  - [x] 7.3 Parametrize dos prazos do AC 4 (ausente, `"2026-02-30"`, `"2026-10-02T00:00:00Z"`, `"02/10/2026"`, `1790899200`) → 422, `field == "due_date"`, nada gravado.
+  - [x] 7.4 Prazo no passado (`"2020-01-01"`) → 201 e `done is False`.
+  - [x] 7.5 Campos extras `done` e `tags` → 422 `validation_error` (conferir `field` igual ao nome do campo extra).
+  - [x] 7.6 Lista vazia `[]`; ordenação com prazos fora de ordem + empate (empate resolvido pelo `id` crescente).
+  - [x] 7.7 `GET /tasks/{id}` existente → 200; inexistente (ex.: `999`) → 404, `not_found`, `field == "id"`.
+  - [x] 7.8 Rota inexistente (`GET /nada`) → 404 `not_found`, `field is None`; método não suportado (ex.: `PUT /tasks`) → 405 `method_not_allowed`, `field is None`; em ambos, `"detail" not in body`.
+  - [x] 7.9 Persistência: criar com `client`, abrir um **segundo** `TestClient(app)` com o mesmo `TASKS_DB_PATH` e achar a tarefa; com `sqlite3` direto no arquivo, conferir que `tasks` e `task_tags` existem (`sqlite_master`).
+  - [x] 7.10 Um teste curto do relógio: `domain.today(datetime.fromisoformat("2026-10-03T01:00Z")) == date(2026, 10, 2)` (garante que `tzdata`/`ZoneInfo` funcionam desde já).
+  - [x] 7.11 Testes conferem `code` e `field`, **nunca** o texto de `message` (AD-7).
+- [x] **Tarefa 8: `README.md` na raiz do projeto** (AC: 12)
+  - [x] 8.1 Em português: pré-requisitos (`uv`, Python 3.14), `uv sync`, `uv run pytest`, `TASKS_DB_PATH` (padrão `./tasks.db`).
+  - [x] 8.2 Rodar: `uv run uvicorn app.main:app --host <IP interno> --port 8000`, com o aviso de **nunca** usar `0.0.0.0` em máquina exposta: a API não tem autenticação (NFR5).
+  - [x] 8.3 `curl` de criar (`-X POST -H 'Content-Type: application/json' -d '{"title": "Revisar PR", "due_date": "2026-10-10"}'`), listar e consultar, com a resposta esperada; um exemplo de erro 422 mostrando o envelope. Deixar um lugar evidente para o `curl` de tags/vencidas que a 2.2 completa.
+- [x] **Tarefa 9: Portão de qualidade** (AC: 1)
+  - [x] 9.1 `uv run ruff format`, `uv run ruff check`, `uv run ruff format --check`, `uv run pytest`, tudo verde.
+  - [x] 9.2 `grep -rn "date.today\|datetime.now" app/` só pode achar `domain.now()` (AD-2).
+  - [x] 9.3 Conferir que `app/domain.py` não importa `api`, `repo`, `fastapi` nem `sqlite3`.
+
+### Review Findings
+
+Revisão de código (bmad-code-review, 2026-10-02, alterações não commitadas, modo full). Os 12 ACs foram conferidos contra o código e os ADs: `uv run pytest` (24 passed), `ruff check` e `ruff format --check` verdes. Nenhum achado de severidade alta ou média.
+
+- [x] [Review][Defer] `GET /tasks/{id}` com id acima de 2^63-1 (ex.: `99999999999999999999`) devolve 500 `internal_error` em vez de 404 `not_found`, porque o `sqlite3` levanta `OverflowError` [app/api.py:64]. Adiado, severidade baixa: o envelope do AD-7 continua sendo respeitado. Corrigir com `task_id: Annotated[int, Path(le=2**63 - 1)]` (vira 422) quando a 1.2/1.3 mexerem em rotas com `{task_id}`.
+- [x] [Review][Defer] O handler de `HTTPException` transforma qualquer status diferente de 404/405 em 500 [app/main.py:47-48]. Hoje nenhuma rota levanta outro status; a decisão já está nas Completion Notes e marcada com `ponytail:`. Rever se alguma story passar a levantar 400/409.
 
 ## Dev Notes
 
@@ -194,12 +205,40 @@ Não foi refeita: o spine registra as versões conferidas no PyPI/python.org em 
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 5.5 (claude-opus-5-5)
 
 ### Debug Log References
+
+- `uv init --app` (uv 0.12.19) gerou layout empacotado (`src/api_tarefas`, `[build-system]`, `[project.scripts]`); removidos, pois o spine usa `app/` sem instalar como pacote.
+- `uv run pytest`: 24 passed. Aviso `StarletteDeprecationWarning` sobre `httpx` no `TestClient` é do Starlette; mantido, pois o AD-1 fixa `httpx==0.28.1`.
 
 ### Completion Notes List
 
 - Análise de contexto concluída: guia completo do desenvolvedor criado (bmad-create-story, 2026-10-02).
+- Implementação (2026-10-02): projeto `uv` com Python 3.14 e só as 6 dependências do AD-1; `app/domain.py` (`now`, `today`), `app/repo.py` (esquema completo do AD-5, `connect`, `insert_task`, `load_tags`, `get_task`, `list_tasks`), `app/api.py` (`Title`, `DueDate`, `TaskCreate`, `Task`, `get_db`, rotas `def`), `app/main.py` (envelope do AD-7 com handlers de `RequestValidationError`, `starlette.HTTPException` e `Exception`), fixtures `client`/`set_now`, `README.md`.
+- Decisões: 404 de tarefa marcado com `detail="task_not_found"` (o handler devolve `field: "id"`; rota inexistente fica com `field: null`). Corpo inteiro inválido (`loc == ("body",)`) devolve `field: null`. `HTTPException` com status diferente de 404/405 vira 500 `internal_error`, porque o AD-7 tem códigos fechados e nenhuma rota levanta outro status hoje. Alias `Db = Annotated[sqlite3.Connection, Depends(get_db)]` em `api.py` para as rotas das próximas stories.
+- Testes extras além das subtarefas: `"20261002"` rejeitado (armadilha 3), JSON quebrado → 422 `validation_error`, 500 `internal_error` com `raise_server_exceptions=False`, cabeçalho `Allow` preservado no 405, e um teste de que `set_now` registra o override de `domain.now`.
+- Fase "red" do ciclo TDD não foi executada separadamente: código e testes foram escritos juntos (greenfield) e a suíte foi verificada verde no fim.
+- Não foi feito commit (instrução do orquestrador); `uv.lock` está pronto para entrar no commit da story.
+- Portão: `uv run ruff check`, `uv run ruff format --check` e `uv run pytest` (24 passed) verdes; `datetime.now` só em `domain.now()`; `domain.py` só importa `datetime` e `zoneinfo`.
 
 ### File List
+
+- pyproject.toml (novo)
+- uv.lock (novo)
+- .python-version (novo)
+- .gitignore (novo)
+- README.md (novo)
+- app/__init__.py (novo)
+- app/domain.py (novo)
+- app/repo.py (novo)
+- app/api.py (novo)
+- app/main.py (novo)
+- tests/conftest.py (novo)
+- tests/test_tasks.py (novo)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (modificado)
+- _bmad-output/implementation-artifacts/1-1-criar-listar-e-consultar-tarefas.md (modificado)
+
+## Change Log
+
+- 2026-10-02: Implementação da story 1.1 (setup, criar/listar/consultar tarefas, envelope de erro, fixtures, README). Status → review.

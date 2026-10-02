@@ -52,7 +52,7 @@ development_status:
   epic-1: in-progress
   1-1-criar-listar-e-consultar-tarefas: done
   1-2-editar-e-concluir-tarefa: done
-  1-3-excluir-tarefa: ready-for-dev
+  1-3-excluir-tarefa: done
   epic-1-retrospective: optional
 
   # Épico 2: Saber o que venceu e o que vence

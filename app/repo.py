@@ -77,3 +77,10 @@ def get_task(conn: sqlite3.Connection, task_id: int) -> dict | None:
 def list_tasks(conn: sqlite3.Connection) -> list[dict]:
     rows = conn.execute("SELECT * FROM tasks ORDER BY due_date, id").fetchall()
     return [_to_task(conn, r) for r in rows]
+
+
+def delete_task(conn: sqlite3.Connection, task_id: int) -> bool:
+    """Exclui a tarefa (tags caem pelo ON DELETE CASCADE); devolve se existia."""
+    with conn:
+        cur = conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    return cur.rowcount == 1

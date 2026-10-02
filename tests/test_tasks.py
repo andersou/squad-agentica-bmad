@@ -216,3 +216,27 @@ def test_patch_not_found(client):
     assert_error(
         client.patch("/tasks/999", json={"done": True}), 404, "not_found", "id"
     )
+
+
+def test_delete_task(client):
+    gone = create(client, title="Engano").json()
+    kept = create(client, title="Fica").json()
+    resp = client.delete(f"/tasks/{gone['id']}")
+    assert resp.status_code == 204
+    assert resp.content == b""
+    assert_error(client.get(f"/tasks/{gone['id']}"), 404, "not_found", "id")
+    assert client.get("/tasks").json() == [kept]
+
+
+def test_delete_not_found(client):
+    assert_error(client.delete("/tasks/999"), 404, "not_found", "id")
+    task = create(client).json()
+    assert client.delete(f"/tasks/{task['id']}").status_code == 204
+    assert_error(client.delete(f"/tasks/{task['id']}"), 404, "not_found", "id")
+
+
+@pytest.mark.parametrize("method", ["get", "patch", "delete"])
+def test_invalid_task_id(client, method):
+    kwargs = {"json": {"done": True}} if method == "patch" else {}
+    resp = getattr(client, method)("/tasks/abc", **kwargs)
+    assert_error(resp, 422, "validation_error", "id")

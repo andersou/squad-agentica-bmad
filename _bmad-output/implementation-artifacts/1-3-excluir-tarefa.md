@@ -1,6 +1,9 @@
+---
+baseline_commit: 703c4e9c1ba3c1740b119f313513358938f41254
+---
 # Story 1.3: Excluir tarefa
 
-Status: ready-for-dev
+Status: done
 
 <!-- Nota: a validação é opcional. Rode validate-create-story para checar a qualidade antes do dev-story. -->
 
@@ -20,21 +23,27 @@ para que ela não polua as listagens.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: `repo.delete_task` (AC: 1, 3)**
-  - [ ] 1.1 Em `app/repo.py`, criar `delete_task(conn, task_id) -> bool` que executa `DELETE FROM tasks WHERE id = ?` dentro de `with conn:` e devolve `cursor.rowcount == 1`.
-  - [ ] 1.2 Não apagar `task_tags` à mão: o `ON DELETE CASCADE` do AD-5 faz isso, desde que a conexão venha de `repo.connect()` (que ativa `PRAGMA foreign_keys = ON`, AD-10).
-- [ ] **Task 2: rota `DELETE /tasks/{id}` (AC: 1, 3, 4)**
-  - [ ] 2.1 Em `app/api.py`, adicionar a rota `def` (não `async def`) `DELETE /tasks/{task_id}` com `status_code=204`, recebendo a conexão por `Depends(get_db)`, com o mesmo nome/tipo de parâmetro de path usado no `GET`/`PATCH /tasks/{id}` (para o `field` sair `"id"`).
-  - [ ] 2.2 Se `delete_task` devolver `False`, levantar o 404 de tarefa **pelo mesmo helper/mecanismo** que o `GET /tasks/{id}` da 1.1 usa (o que produz `field: "id"`). Não criar outro.
-  - [ ] 2.3 No sucesso, devolver `Response(status_code=204)` (ou equivalente que garanta corpo vazio). Não declarar `response_model`.
-- [ ] **Task 3: testes em `tests/test_tasks.py` (AC: 1, 2, 3, 4)**
-  - [ ] 3.1 Teste: cria duas tarefas, exclui uma → 204 e `response.content == b""`; `GET /tasks/{id}` → 404 `not_found`/`id`; `GET /tasks` traz só a outra.
-  - [ ] 3.2 Teste: `DELETE` em `id` inexistente (ex.: 999) → 404 `not_found`/`id`; segundo `DELETE` no mesmo `id` já excluído → 404 `not_found`/`id`.
-  - [ ] 3.3 Teste: `DELETE /tasks/abc` → 422 `validation_error`/`id`.
-  - [ ] 3.4 Usar só a fixture `client` de `tests/conftest.py`; conferir `code` e `field`, nunca o texto de `message` (AD-7, AD-8).
-- [ ] **Task 4: regressão e qualidade (AC: 5)**
-  - [ ] 4.1 Procurar nos testes da 1.1 algum caso que use `DELETE /tasks/{id}` como exemplo de 405; se existir, trocar por outro método não suportado (ex.: `PUT /tasks/{id}` ou `DELETE /tasks`) para manter a cobertura do 405.
-  - [ ] 4.2 Rodar `uv run ruff check`, `uv run ruff format --check` e `uv run pytest`.
+- [x] **Task 1: `repo.delete_task` (AC: 1, 3)**
+  - [x] 1.1 Em `app/repo.py`, criar `delete_task(conn, task_id) -> bool` que executa `DELETE FROM tasks WHERE id = ?` dentro de `with conn:` e devolve `cursor.rowcount == 1`.
+  - [x] 1.2 Não apagar `task_tags` à mão: o `ON DELETE CASCADE` do AD-5 faz isso, desde que a conexão venha de `repo.connect()` (que ativa `PRAGMA foreign_keys = ON`, AD-10).
+- [x] **Task 2: rota `DELETE /tasks/{id}` (AC: 1, 3, 4)**
+  - [x] 2.1 Em `app/api.py`, adicionar a rota `def` (não `async def`) `DELETE /tasks/{task_id}` com `status_code=204`, recebendo a conexão por `Depends(get_db)`, com o mesmo nome/tipo de parâmetro de path usado no `GET`/`PATCH /tasks/{id}` (para o `field` sair `"id"`).
+  - [x] 2.2 Se `delete_task` devolver `False`, levantar o 404 de tarefa **pelo mesmo helper/mecanismo** que o `GET /tasks/{id}` da 1.1 usa (o que produz `field: "id"`). Não criar outro.
+  - [x] 2.3 No sucesso, devolver `Response(status_code=204)` (ou equivalente que garanta corpo vazio). Não declarar `response_model`.
+- [x] **Task 3: testes em `tests/test_tasks.py` (AC: 1, 2, 3, 4)**
+  - [x] 3.1 Teste: cria duas tarefas, exclui uma → 204 e `response.content == b""`; `GET /tasks/{id}` → 404 `not_found`/`id`; `GET /tasks` traz só a outra.
+  - [x] 3.2 Teste: `DELETE` em `id` inexistente (ex.: 999) → 404 `not_found`/`id`; segundo `DELETE` no mesmo `id` já excluído → 404 `not_found`/`id`.
+  - [x] 3.3 Teste: `DELETE /tasks/abc` → 422 `validation_error`/`id`.
+  - [x] 3.4 Usar só a fixture `client` de `tests/conftest.py`; conferir `code` e `field`, nunca o texto de `message` (AD-7, AD-8).
+- [x] **Task 4: regressão e qualidade (AC: 5)**
+  - [x] 4.1 Procurar nos testes da 1.1 algum caso que use `DELETE /tasks/{id}` como exemplo de 405; se existir, trocar por outro método não suportado (ex.: `PUT /tasks/{id}` ou `DELETE /tasks`) para manter a cobertura do 405.
+  - [x] 4.2 Rodar `uv run ruff check`, `uv run ruff format --check` e `uv run pytest`.
+
+### Review Findings
+
+Revisão de código (2026-10-02): todos os ACs atendidos; `uv run pytest` 47 passando; `ruff check` e `ruff format --check` limpos. Sem achados high/medium.
+
+- [x] [Review][Defer] `id` fora do intervalo de INTEGER do SQLite (ex.: `/tasks/99999999999999999999`) dá 500 `internal_error` em vez de 404/422 [app/api.py:80] — deferred, pre-existing (GET/PATCH da 1.1/1.2 têm o mesmo comportamento; o envelope do AD-7 é respeitado)
 
 ## Dev Notes
 
@@ -94,10 +103,30 @@ para que ela não polua as listagens.
 
 ### Agent Model Used
 
+Claude Opus 5.5 (claude-opus-5-5)
+
 ### Debug Log References
+
+- Antes da mudança, `GET /tasks/abc` devolvia 422 com `field: "task_id"` (nome do parâmetro Python), violando o AD-7.
 
 ### Completion Notes List
 
 - Análise de contexto concluída: guia de implementação criado pelo create-story (inteligência de story anterior e de git indisponível: greenfield, stories 1.1/1.2 em criação paralela).
 
+- `repo.delete_task`: um único `DELETE ... WHERE id = ?` dentro de `with conn:`; `rowcount == 1` decide entre 204 e 404 (sem SELECT antes). As tags caem pelo `ON DELETE CASCADE` (PRAGMA ativado em `connect()`).
+- Rota `DELETE /tasks/{id}` síncrona, `status_code=204`, devolve `Response(status_code=204)` (corpo vazio). O 404 reaproveita o mecanismo existente `HTTPException(404, detail="task_not_found")`, que o handler de `app/main.py` transforma em `field: "id"`.
+- Decisão (AC 4 / questão em aberto 2): a 1.1 deixava o 422 de path com `field: "task_id"`. Em vez de copiar esse comportamento, corrigi na raiz para cumprir o AD-7: criei `TaskId = Annotated[int, Path(alias="id")]` em `app/api.py` e as rotas `GET`/`PATCH`/`DELETE` passaram a usar `/tasks/{id}`. O nome Python `task_id` foi mantido; o contrato externo não muda, exceto que o `field` do 422 agora sai `"id"`, como manda o AD-7.
+- Task 4.1: o teste de 405 da 1.1 usa `PUT /tasks`, e não `DELETE`, então nada precisou ser trocado.
+- Testes novos em `tests/test_tasks.py`: `test_delete_task`, `test_delete_not_found` e `test_invalid_task_id` (parametrizado com GET/PATCH/DELETE em `/tasks/abc`). Resultado: `uv run pytest` com 47 testes passando; `ruff check` e `ruff format --check` limpos.
+
 ### File List
+
+- app/repo.py
+- app/api.py
+- tests/test_tasks.py
+- _bmad-output/implementation-artifacts/1-3-excluir-tarefa.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+
+### Change Log
+
+- 2026-10-02: Implementada a exclusão de tarefa (`DELETE /tasks/{id}`, 204/404/422). O parâmetro de path agora usa `alias="id"`, para que o 422 saia com `field: "id"` também em GET e PATCH.

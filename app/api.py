@@ -3,7 +3,7 @@ from collections.abc import Iterator
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path, Response
 from pydantic import (
     AfterValidator,
     BaseModel,
@@ -60,6 +60,8 @@ def get_db() -> Iterator[sqlite3.Connection]:
 
 
 Db = Annotated[sqlite3.Connection, Depends(get_db)]
+# Alias "id" faz o 422 de path sair com field "id" (AD-7).
+TaskId = Annotated[int, Path(alias="id")]
 
 router = APIRouter()
 
@@ -74,16 +76,23 @@ def list_tasks(conn: Db):
     return repo.list_tasks(conn)
 
 
-@router.get("/tasks/{task_id}", response_model=Task)
-def get_task(task_id: int, conn: Db):
+@router.get("/tasks/{id}", response_model=Task)
+def get_task(task_id: TaskId, conn: Db):
     task = repo.get_task(conn, task_id)
     if task is None:
         raise HTTPException(404, detail="task_not_found")
     return task
 
 
-@router.patch("/tasks/{task_id}", response_model=Task)
-def patch_task(task_id: int, body: TaskUpdate, conn: Db):
+@router.patch("/tasks/{id}", response_model=Task)
+def patch_task(task_id: TaskId, body: TaskUpdate, conn: Db):
     if not repo.update_task(conn, task_id, body.model_dump(exclude_unset=True)):
         raise HTTPException(404, detail="task_not_found")
     return repo.get_task(conn, task_id)
+
+
+@router.delete("/tasks/{id}", status_code=204)
+def delete_task(task_id: TaskId, conn: Db):
+    if not repo.delete_task(conn, task_id):
+        raise HTTPException(404, detail="task_not_found")
+    return Response(status_code=204)

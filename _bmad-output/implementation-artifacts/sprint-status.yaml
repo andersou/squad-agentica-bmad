@@ -49,7 +49,7 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # Épico 1: Registrar e manter tarefas
-  epic-1: in-progress
+  epic-1: done
   1-1-criar-listar-e-consultar-tarefas: done
   1-2-editar-e-concluir-tarefa: done
   1-3-excluir-tarefa: done

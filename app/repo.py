@@ -90,7 +90,12 @@ def get_task(conn: sqlite3.Connection, task_id: int) -> dict | None:
     return _to_task(conn, row) if row else None
 
 
-def list_tasks(conn: sqlite3.Connection, tag: str | None = None) -> list[dict]:
+def list_tasks(
+    conn: sqlite3.Connection,
+    tag: str | None = None,
+    window: tuple[str | None, str] | None = None,
+) -> list[dict]:
+    """`window` = limites inclusivos prontos de `domain.window_bounds` (AD-3)."""
     conds, params = [], []
     if tag is not None:
         # EXISTS, nunca JOIN: a tarefa volta uma vez e com todas as tags (AD-9).
@@ -99,6 +104,14 @@ def list_tasks(conn: sqlite3.Connection, tag: str | None = None) -> list[dict]:
             " WHERE tt.task_id = tasks.id AND tt.tag = ?)"
         )
         params.append(tag)
+    if window is not None:
+        start, end = window
+        conds.append("done = 0")
+        if start is not None:
+            conds.append("due_date >= ?")
+            params.append(start)
+        conds.append("due_date <= ?")
+        params.append(end)
     where = f" WHERE {' AND '.join(conds)}" if conds else ""
     rows = conn.execute(
         f"SELECT * FROM tasks{where} ORDER BY due_date, id", params

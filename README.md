@@ -74,5 +74,30 @@ Códigos de erro: `validation_error` (422), `not_found` (404), `method_not_allow
 
 ### Tags e prazos vencidos
 
-<!-- Completar nas stories 2.1 e 2.2: curl de criar tarefa com tag e de listar as vencidas (?due=overdue). -->
-_Em breve: criar tarefa com tags e listar as vencidas._
+Criar uma tarefa com tags e prazo (tags são normalizadas: sem espaços nas pontas e em minúsculas):
+
+```bash
+curl -X POST http://<IP interno>:8000/tasks \
+  -H 'Content-Type: application/json' \
+  -d '{"title": "Corrigir deploy", "due_date": "2026-10-01", "tags": ["Backend"]}'
+# 201 {"id": 2, "title": "Corrigir deploy", "due_date": "2026-10-01", "tags": ["backend"], "done": false}
+```
+
+Listar as vencidas:
+
+```bash
+curl "http://<IP interno>:8000/tasks?due=overdue"
+# 200 [{"id": 2, "title": "Corrigir deploy", "due_date": "2026-10-01", "tags": ["backend"], "done": false}]
+```
+
+Janelas de `?due=` (só tarefas não concluídas; "hoje" é a data em `America/Sao_Paulo`):
+
+- `overdue`: prazo antes de hoje;
+- `today`: prazo hoje;
+- `next7`: prazo de amanhã até hoje + 7 dias.
+
+Filtrar por tag (`?tag=backend`) e combinar com uma janela (interseção):
+
+```bash
+curl "http://<IP interno>:8000/tasks?tag=backend&due=overdue"
+```

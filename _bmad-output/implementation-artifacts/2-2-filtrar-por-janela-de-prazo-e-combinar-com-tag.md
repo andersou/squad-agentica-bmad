@@ -1,6 +1,10 @@
+---
+baseline_commit: bdf21d2a6172de6e2ee7c81f8f917c5588a3c27c
+---
+
 # Story 2.2: Filtrar por janela de prazo e combinar com tag
 
-Status: ready-for-dev
+Status: done
 
 <!-- Nota: a validação é opcional. Rode validate-create-story para um controle de qualidade antes do dev-story. -->
 
@@ -27,31 +31,31 @@ Cenário-base dos ACs 1 a 3: relógio fixado com `set_now("2026-10-02T15:00Z")` 
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: `domain.window_bounds` (AC: 1, 2, 3, 9)**
-  - [ ] 1.1 Em `app/domain.py`, implementar `window_bounds(window, today) -> tuple[str | None, str]` com a tabela do AD-3: `overdue` = (None, hoje − 1), `today` = (hoje, hoje), `next7` = (hoje + 1, hoje + 7). Devolver texto `YYYY-MM-DD` (`date.isoformat()`), usando `timedelta`. Sem IO, sem chamar relógio.
-  - [ ] 1.2 Conferir que `now()` e `today(now)` (entregues na 1.1, AD-2) existem e que `today` usa `now.astimezone(ZoneInfo("America/Sao_Paulo")).date()`. Se a 1.1 não os entregou, criá-los aqui exatamente como o AD-2 descreve.
-- [ ] **Task 2: parâmetro `due` na rota de listagem (AC: 1-4, 6, 8)**
-  - [ ] 2.1 Em `app/api.py`, definir (se ainda não existir) o enum `Due(str, Enum)` com `overdue | today | next7` (AD-4).
-  - [ ] 2.2 Em `GET /tasks`, adicionar `due: Due | None = None` como query param e `now: datetime = Depends(domain.now)`. Quando `due` vier, calcular `start, end = domain.window_bounds(due, domain.today(now))` e passar ao `repo`. A rota continua `def` (AD-10).
-  - [ ] 2.3 Não validar `due` com `if` na rota: o 422 vem do Pydantic, e o handler do AD-7 gera `field: "due"` a partir de `loc = ("query", "due")`.
-- [ ] **Task 3: filtro no `repo` combinável com tag (AC: 1-3, 5, 7, 9)**
-  - [ ] 3.1 Estender a função de listagem do `repo` (a mesma que a 2.1 usa para `tag`) com `start: str | None` e `end: str | None`, ou um parâmetro que indique janela ativa. Montar o `WHERE` com parâmetros `?`: com janela ativa, sempre `done = 0`, mais `due_date >= ?` se `start` não for `None` e `due_date <= ?` se `end` não for `None`.
-  - [ ] 3.2 Manter o filtro de tag da 2.1 (`EXISTS (SELECT 1 FROM task_tags ...)`) e combinar com `AND` na mesma consulta (FR8). Nunca `JOIN` na consulta principal (AD-9).
-  - [ ] 3.3 Manter `ORDER BY due_date, id` e carregar as tags por `repo.load_tags` (AD-6, AD-9).
-  - [ ] 3.4 Sem `?due=`, a listagem não ganha `done = 0`: `GET /tasks` e `GET /tasks?tag=` continuam trazendo concluídas (regressão de FR2/FR6).
-- [ ] **Task 4: testes em `tests/test_filters.py` (AC: 1-7; NFR2)**
-  - [ ] 4.1 Usar só as fixtures `client` e `set_now` do `tests/conftest.py` (AD-8). Não criar outra forma de fixar relógio ou banco; não editar o `conftest`, a menos que `set_now` falte (ver Questões).
-  - [ ] 4.2 Helper local mínimo para criar tarefas via `POST /tasks` e concluir via `PATCH`; conferir resultados pelos `due_date` (ou ids) e pela ordem.
-  - [ ] 4.3 Teste do cenário-base para `overdue`, `today` e `next7` (AC 1-3), cobrindo ontem, hoje, amanhã, hoje + 7, hoje + 8 e a concluída. Pode ser `pytest.mark.parametrize` por janela.
-  - [ ] 4.4 Teste da virada com `set_now(datetime(2026, 10, 3, 1, 0, tzinfo=UTC))` (AC 4): 10-02 em `today` e fora de `overdue`.
-  - [ ] 4.5 Teste de concluir/desmarcar (AC 5).
-  - [ ] 4.6 Teste de `?due=semana` (e `?due=`, vazio) → 422 com `code == "validation_error"` e `field == "due"`; conferir só `code` e `field`, nunca `message` (AC 6, AD-7).
-  - [ ] 4.7 Teste de `?tag=backend&due=overdue` (AC 7), com uma tarefa vencida sem `backend`, uma com `backend` + outra tag (conferir que vem com todas as tags) e uma com `backend` fora da janela. Incluir `?tag=Backend` para confirmar que a normalização vale na combinação.
-- [ ] **Task 5: README (AC: 10)**
-  - [ ] 5.1 Em `README.md`, adicionar dois `curl` copiáveis: criar tarefa com `tags` e `due_date`, e `curl "http://<host>:8000/tasks?due=overdue"`. Opcionalmente o exemplo combinado `?tag=backend&due=overdue` e uma linha explicando as três janelas e o fuso `America/Sao_Paulo`. Texto em português.
-- [ ] **Task 6: verificação final (AC: 8, 9)**
-  - [ ] 6.1 `grep -rnE "date\.today|datetime\.now|datetime\.utcnow|time\.time" app/` só pode apontar para `domain.now()`.
-  - [ ] 6.2 `uv run ruff check`, `uv run ruff format --check` e `uv run pytest` passando (suíte inteira, incluindo épico 1 e 2.1).
+- [x] **Task 1: `domain.window_bounds` (AC: 1, 2, 3, 9)**
+  - [x] 1.1 Em `app/domain.py`, implementar `window_bounds(window, today) -> tuple[str | None, str]` com a tabela do AD-3: `overdue` = (None, hoje − 1), `today` = (hoje, hoje), `next7` = (hoje + 1, hoje + 7). Devolver texto `YYYY-MM-DD` (`date.isoformat()`), usando `timedelta`. Sem IO, sem chamar relógio.
+  - [x] 1.2 Conferir que `now()` e `today(now)` (entregues na 1.1, AD-2) existem e que `today` usa `now.astimezone(ZoneInfo("America/Sao_Paulo")).date()`. Se a 1.1 não os entregou, criá-los aqui exatamente como o AD-2 descreve.
+- [x] **Task 2: parâmetro `due` na rota de listagem (AC: 1-4, 6, 8)**
+  - [x] 2.1 Em `app/api.py`, definir (se ainda não existir) o enum `Due(str, Enum)` com `overdue | today | next7` (AD-4).
+  - [x] 2.2 Em `GET /tasks`, adicionar `due: Due | None = None` como query param e `now: datetime = Depends(domain.now)`. Quando `due` vier, calcular `start, end = domain.window_bounds(due, domain.today(now))` e passar ao `repo`. A rota continua `def` (AD-10).
+  - [x] 2.3 Não validar `due` com `if` na rota: o 422 vem do Pydantic, e o handler do AD-7 gera `field: "due"` a partir de `loc = ("query", "due")`.
+- [x] **Task 3: filtro no `repo` combinável com tag (AC: 1-3, 5, 7, 9)**
+  - [x] 3.1 Estender a função de listagem do `repo` (a mesma que a 2.1 usa para `tag`) com `start: str | None` e `end: str | None`, ou um parâmetro que indique janela ativa. Montar o `WHERE` com parâmetros `?`: com janela ativa, sempre `done = 0`, mais `due_date >= ?` se `start` não for `None` e `due_date <= ?` se `end` não for `None`.
+  - [x] 3.2 Manter o filtro de tag da 2.1 (`EXISTS (SELECT 1 FROM task_tags ...)`) e combinar com `AND` na mesma consulta (FR8). Nunca `JOIN` na consulta principal (AD-9).
+  - [x] 3.3 Manter `ORDER BY due_date, id` e carregar as tags por `repo.load_tags` (AD-6, AD-9).
+  - [x] 3.4 Sem `?due=`, a listagem não ganha `done = 0`: `GET /tasks` e `GET /tasks?tag=` continuam trazendo concluídas (regressão de FR2/FR6).
+- [x] **Task 4: testes em `tests/test_filters.py` (AC: 1-7; NFR2)**
+  - [x] 4.1 Usar só as fixtures `client` e `set_now` do `tests/conftest.py` (AD-8). Não criar outra forma de fixar relógio ou banco; não editar o `conftest`, a menos que `set_now` falte (ver Questões).
+  - [x] 4.2 Helper local mínimo para criar tarefas via `POST /tasks` e concluir via `PATCH`; conferir resultados pelos `due_date` (ou ids) e pela ordem.
+  - [x] 4.3 Teste do cenário-base para `overdue`, `today` e `next7` (AC 1-3), cobrindo ontem, hoje, amanhã, hoje + 7, hoje + 8 e a concluída. Pode ser `pytest.mark.parametrize` por janela.
+  - [x] 4.4 Teste da virada com `set_now(datetime(2026, 10, 3, 1, 0, tzinfo=UTC))` (AC 4): 10-02 em `today` e fora de `overdue`.
+  - [x] 4.5 Teste de concluir/desmarcar (AC 5).
+  - [x] 4.6 Teste de `?due=semana` (e `?due=`, vazio) → 422 com `code == "validation_error"` e `field == "due"`; conferir só `code` e `field`, nunca `message` (AC 6, AD-7).
+  - [x] 4.7 Teste de `?tag=backend&due=overdue` (AC 7), com uma tarefa vencida sem `backend`, uma com `backend` + outra tag (conferir que vem com todas as tags) e uma com `backend` fora da janela. Incluir `?tag=Backend` para confirmar que a normalização vale na combinação.
+- [x] **Task 5: README (AC: 10)**
+  - [x] 5.1 Em `README.md`, adicionar dois `curl` copiáveis: criar tarefa com `tags` e `due_date`, e `curl "http://<host>:8000/tasks?due=overdue"`. Opcionalmente o exemplo combinado `?tag=backend&due=overdue` e uma linha explicando as três janelas e o fuso `America/Sao_Paulo`. Texto em português.
+- [x] **Task 6: verificação final (AC: 8, 9)**
+  - [x] 6.1 `grep -rnE "date\.today|datetime\.now|datetime\.utcnow|time\.time" app/` só pode apontar para `domain.now()`.
+  - [x] 6.2 `uv run ruff check`, `uv run ruff format --check` e `uv run pytest` passando (suíte inteira, incluindo épico 1 e 2.1).
 
 ## Dev Notes
 
@@ -142,16 +146,45 @@ Nenhuma dependência nova (AD-1). Só stdlib (`datetime`, `timedelta`, `zoneinfo
 - [Source: _bmad-output/planning-artifacts/implementation-readiness-report-2026-10-02.md] (FR3/FR7/FR8/NFR2 cobertos na 2.2; m1 sobre `set_now`)
 - [Source: _bmad-output/planning-artifacts/architecture/architecture-api-tarefas-2026-10-02/reviews/review-adversarial.md#H1, #H3, #H9]
 
+### Review Findings
+
+Revisão de código (2026-10-02): ACs 1-10 atendidos; `uv run pytest` 77 passed; `ruff check`/`format --check` limpos; relógio só em `domain.now()`. Nenhum achado high/medium.
+
+- [ ] [Review][Patch] (low) `?due=` repetido (`?due=today&due=overdue`) é aceito silenciosamente com o último valor; AD-6 diz "um valor cada" mas não define erro — decidir se vira 422 [app/api.py:92]
+- [ ] [Review][Patch] (low) `(start and start.isoformat())` em `window_bounds` é idioma "esperto"; `start.isoformat() if start else None` lê melhor [app/domain.py:24]
+
 ## Dev Agent Record
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 5.5 (claude-opus-5-5)
 
 ### Debug Log References
+
+- Red: 9 testes novos falhando antes da implementação. Green: `uv run pytest` 77 passed (1 aviso conhecido `StarletteDeprecationWarning`, já citado nos Dev Notes); `ruff check` e `ruff format --check` limpos.
+- `grep -rnE "date\.today|datetime\.now|datetime\.utcnow|time\.time" app/` só aponta `app/domain.py:9` (`domain.now()`).
 
 ### Completion Notes List
 
 - Análise de contexto concluída: guia completo para o dev criado. Inteligência de stories anteriores indisponível (criadas em paralelo, sem código).
+- Código real lido antes de começar: `domain.now`/`domain.today` (AD-2), `repo.list_tasks(conn, tag=...)` com `EXISTS` (2.1) e `set_now` no `conftest` (aceita texto ISO) já existiam; `conftest.py` não foi alterado.
+- `domain.window_bounds(window, today)` recebe o valor textual da janela (`due.value`) para o `domain` não importar o enum do `api`; devolve limites inclusivos `YYYY-MM-DD`, com `None` no início de `overdue`.
+- `Due(str, Enum)` em `app/api.py`; `GET /tasks` ganhou `due: Due | None` e `now: Depends(domain.now)`. Valor inválido ou vazio dá 422 `field: "due"` pelo handler global, sem `if` na rota.
+- `repo.list_tasks` ganhou `window: tuple[str | None, str] | None` (mesma função, sem segunda listagem): com janela, `done = 0` + `due_date >= ?` (se houver início) + `due_date <= ?`, combinados por `AND` com o `EXISTS` de tag. Sem janela, nada muda (concluídas continuam na listagem e no `?tag=`).
+- Testes em `tests/test_filters.py`: três janelas no cenário-base (ontem, hoje, amanhã, hoje+7, hoje+8, concluída), virada `2026-10-03T01:00Z`, concluir/desmarcar, `?due=semana` e `?due=` vazio (422), `?tag=backend|Backend&due=overdue`.
+- README: seção "Tags e prazos vencidos" preenchida com `curl` de criar tarefa com tag/prazo, `?due=overdue`, explicação das janelas/fuso e exemplo combinado.
+- Questão 1 (`?due=` repetido): mantido o comportamento padrão do FastAPI (último valor), sem teste, como a story propõe.
 
 ### File List
+
+- app/domain.py
+- app/api.py
+- app/repo.py
+- tests/test_filters.py
+- README.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+- _bmad-output/implementation-artifacts/2-2-filtrar-por-janela-de-prazo-e-combinar-com-tag.md
+
+### Change Log
+
+- 2026-10-02: Implementado `?due=overdue|today|next7` em `GET /tasks`, combinável com `?tag=`; testes de FR7/FR8/NFR2 e `curl` no README. Status → review.

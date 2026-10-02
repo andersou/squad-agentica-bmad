@@ -1,6 +1,7 @@
 import sqlite3
 from collections.abc import Iterator
-from datetime import date
+from datetime import date, datetime
+from enum import Enum
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
@@ -30,6 +31,12 @@ DueDate = Annotated[
 # Item valida sozinho para o 422 sair com field "tags.N"; a lista deduplica e ordena (AD-9).
 Tag = Annotated[str, AfterValidator(lambda v: domain.normalize_tags([v])[0])]
 Tags = Annotated[list[Tag], AfterValidator(domain.normalize_tags)]
+
+
+class Due(str, Enum):
+    overdue = "overdue"
+    today = "today"
+    next7 = "next7"
 
 
 class TaskCreate(BaseModel):
@@ -78,8 +85,16 @@ def create_task(body: TaskCreate, conn: Db):
 
 
 @router.get("/tasks", response_model=list[Task])
-def list_tasks(conn: Db, tag: Annotated[Tag | None, Query()] = None):
-    return repo.list_tasks(conn, tag=tag)
+def list_tasks(
+    conn: Db,
+    now: Annotated[datetime, Depends(domain.now)],
+    tag: Annotated[Tag | None, Query()] = None,
+    due: Due | None = None,
+):
+    if due is None:
+        return repo.list_tasks(conn, tag=tag)
+    start, end = domain.window_bounds(due.value, domain.today(now))
+    return repo.list_tasks(conn, tag=tag, window=(start, end))
 
 
 @router.get("/tasks/{id}", response_model=Task)

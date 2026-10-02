@@ -830,12 +830,12 @@
             <span class="tag">Analista · opcional</span>
             <h3><span class="c">bmad-product-brief</span></h3>
             <p>Uma API de tarefas para times pequenos, que permita criar, etiquetar e filtrar por prazo.</p>
-            <p><strong>Saída:</strong> brief.md + addendum.md</p>
+            <p><strong>Saída:</strong> brief.md, addendum.md, .memlog.md</p>
           </div>
           <div class="card raised">
             <span class="tag">PM · obrigatório</span>
             <h3><span class="c">bmad-prd</span> → Create</h3>
-            <p>Uma descoberta guiada transforma o brief em requisitos, épicos e critérios de sucesso.</p>
+            <p>Uma descoberta guiada transforma o brief em requisitos testáveis, métricas de sucesso e escopo da v1.</p>
             <p><strong>Saída:</strong> prd.md, addendum.md, .memlog.md</p>
           </div>
         </div>
@@ -881,7 +881,7 @@
           <div class="card">
             <span class="tag">PM · <span style="text-transform: none">bmad-create-epics-and-stories</span></span>
             <p>Usa o PRD e a arquitetura juntos, então as stories já levam em conta o banco, os padrões de API e a stack.</p>
-            <p><strong>No exemplo:</strong><br />Épico 1: CRUD de tarefas<br />Épico 2: tags e filtro por prazo</p>
+            <p><strong>No exemplo (epics.md real):</strong><br />Épico 1: Registrar e manter tarefas · 3 stories<br />Épico 2: Saber o que venceu e o que vence · 2 stories</p>
           </div>
           <div class="card raised">
             <span class="tag">Gate · <span style="text-transform: none">bmad-check-implementation-readiness</span></span>
@@ -891,7 +891,7 @@
           </div>
         </div>
         <div class="foot"><span>02 · Criar a base</span><span>14 / 30</span></div>
-        <aside class="notes"><p>(~2 min) Mudança importante na v6: épicos e stories só depois da arquitetura. Assim as stories já sabem qual banco, quais padrões e qual stack usar.</p><p>No exemplo, dois épicos: CRUD de tarefas, e tags com filtro por prazo.</p><p>Depois o gate: o readiness check confere se PRD, arquitetura e stories contam a mesma história. Só implemente com PASS — ou com CONCERNS que você leu e aceitou.</p></aside>
+        <aside class="notes"><p>(~2 min) Mudança importante na v6: épicos e stories só depois da arquitetura. Assim as stories já sabem qual banco, quais padrões e qual stack usar.</p><p>No exemplo real, dois épicos com nome de resultado, não de tecnologia: "Registrar e manter tarefas" (stories 1.1 a 1.3) e "Saber o que venceu e o que vence" (2.1 e 2.2). Repare que o épico 2 é o valor central do produto, e só depende do épico 1.</p><p>Depois o gate: o readiness check confere se PRD, arquitetura e stories contam a mesma história. Só implemente com PASS — ou com CONCERNS que você leu e aceitou.</p></aside>
       </section>
 
       <!-- 15 Repo tree -->
@@ -912,7 +912,7 @@
    │  └─ epics.md
    ├─ implementation-artifacts/
    │  ├─ sprint-status.yaml
-   │  └─ 1-1-criar-tarefa.md
+   │  └─ 1-1-criar-listar-e-consultar-tarefas.md
    └─ project-context.md</div>
           <div class="stack">
             <p class="lede">Os artefatos são texto: dá para revisar em PR, e qualquer agente consegue ler em um chat novo.</p>
@@ -1119,16 +1119,16 @@
           <span class="sec-num">04</span>
           <div class="rule"></div>
           <h2 class="sec-title">Simulação: do PRD ao primeiro commit</h2>
-          <p class="lede">A API de tarefas passando pela squad inteira. A arquitetura é <strong>saída real</strong>; as demais falas são <strong>ilustrativas</strong>.</p>
+          <p class="lede">A API de tarefas passando pela squad inteira. O PRD e a arquitetura são <strong>saídas reais</strong>; as conversas são <strong>ilustrativas</strong>.</p>
         </div>
         <div class="foot"><span>Squad agêntica com BMAD</span><span>23 / 30</span></div>
-        <aside class="notes"><p>Transição (~20 s). Agora juntamos tudo: vamos acompanhar a API de tarefas do PRD até o primeiro commit, passando pelos gates. Avise que as respostas dos agentes são um exemplo, com uma exceção: o slide de arquitetura saiu de uma execução real do bmad-architecture.</p></aside>
+        <aside class="notes"><p>Transição (~20 s). Agora juntamos tudo: vamos acompanhar a API de tarefas do PRD até o primeiro commit, passando pelos gates. Avise que as respostas dos agentes são um exemplo, com uma exceção: o trecho do PRD e o slide de arquitetura saíram de uma execução real.</p></aside>
       </section>
 
       <!-- Simulação 1: PRD -->
       <section class="slide s" data-screen-label="24 Simulacao PRD">
         <div class="head">
-          <span class="eyebrow">Simulação 1/5 · API de tarefas · saídas ilustrativas</span>
+          <span class="eyebrow">Simulação 1/5 · conversa ilustrativa · prd.md real</span>
           <h2 class="h">O PRD nasce de uma conversa: o PM pergunta antes de escrever</h2>
         </div>
         <div class="grid2 wide-left">
@@ -1140,18 +1140,20 @@
 <span class="p">›</span> Devs que perdem prazos em planilha.
 <span class="m">PM ▸</span> O filtro por prazo usa o fuso
   do usuário ou do servidor?</div>
-<div class="tree"><span class="m">prd.md · trecho</span>
-## Requisitos funcionais
-FR-01 Criar, editar e excluir tarefa
-FR-02 Etiquetar tarefa com tags
-FR-03 Filtrar por tag
-FR-04 Filtrar por prazo (vencidas,
-      hoje, próximos 7 dias)
-## Fora do escopo (v1)
-- Usuários e permissões</div>
+<div class="tree tree-sm"><span class="m">prd.md · trecho real</span>
+## 3. Glossário
+Hoje: data corrente em America/Sao_Paulo
+## 4. Funcionalidades
+FR-1 Criar tarefa       FR-5 Etiquetar
+FR-2 Listar/consultar   FR-6 Filtrar tag
+FR-3 Editar             FR-7 Janela prazo
+FR-4 Excluir            FR-8 Tag + janela
+## 6.2 Fora da v1
+- Usuários, autenticação e permissões
+- Paginação (vai para o backlog)</div>
         </div>
         <div class="foot"><span>04 · Simulação</span><span>24 / 30</span></div>
-        <aside class="notes"><p>(~1,5 min) Primeiro passo da simulação: o PRD.</p><p>Mostre que o PM não sai escrevendo: ele pergunta a intenção, o público e a dor. Repare na última pergunta, sobre fuso horário: é o tipo de detalhe que vira bug se ninguém decidir agora.</p><p>À direita, o resultado: requisitos numerados e, tão importante quanto, o que fica fora do escopo da v1.</p></aside>
+        <aside class="notes"><p>(~1,5 min) Primeiro passo da simulação: o PRD. A conversa à esquerda é ilustrativa; o trecho à direita é do prd.md real, gerado a partir do brief.</p><p>Mostre que o PM não sai escrevendo: ele pergunta a intenção, o público e a dor. Repare na última pergunta, sobre fuso horário: no PRD real ela virou definição no Glossário — "hoje" é a data em America/Sao_Paulo. É o tipo de detalhe que vira bug se ninguém decidir agora.</p><p>À direita: oito requisitos, cada um com consequências testáveis no arquivo, e, tão importante quanto, o que fica fora da v1.</p></aside>
       </section>
 
       <!-- Simulação 2: arquitetura (saída real) -->
@@ -1216,7 +1218,7 @@ FR-04 Filtrar por prazo (vencidas,
         <div class="grid2 wide-left">
 <div class="term"><span class="p">›</span> <span class="k">bmad-check-implementation-readiness</span>
 <span class="m">▸</span> Resultado: CONCERNS
-<span class="m">▸</span> Story 2.3 sem critério de aceite
+<span class="m">▸</span> Story 2.2 sem critério de aceite
   para "próximos 7 dias"
 <span class="m">▸</span> Limites da janela não batem
   com o AD-3 da arquitetura
@@ -1232,36 +1234,37 @@ FR-04 Filtrar por prazo (vencidas,
           </div>
         </div>
         <div class="foot"><span>04 · Simulação</span><span>26 / 30</span></div>
-        <aside class="notes"><p>(~1,5 min) Aqui o gate mostra valor: o readiness check voltou CONCERNS porque a story 2.3 não tinha critério de aceite para "próximos 7 dias", e o rascunho dela contradizia os limites do AD-3 que acabamos de ver.</p><p>Quem decide é você. A decisão volta para a story, e só então a checagem passa.</p><p>Frase para fixar: essa lacuna custou uma conversa. Descoberta em produção, custaria um filtro de prazo errado para todos os usuários.</p></aside>
+        <aside class="notes"><p>(~1,5 min) Aqui o gate mostra valor: o readiness check voltou CONCERNS porque a story 2.2 não tinha critério de aceite para "próximos 7 dias", e o rascunho dela contradizia os limites do AD-3 que acabamos de ver.</p><p>Quem decide é você. A decisão volta para a story, e só então a checagem passa.</p><p>Frase para fixar: essa lacuna custou uma conversa. Descoberta em produção, custaria um filtro de prazo errado para todos os usuários.</p></aside>
       </section>
 
       <!-- Simulação 4: story 1.1 -->
       <section class="slide s" data-screen-label="27 Simulacao story">
         <div class="head">
-          <span class="eyebrow">Simulação 4/5 · API de tarefas · saídas ilustrativas</span>
+          <span class="eyebrow">Simulação 4/5 · story do epics.md real · execução ilustrativa</span>
           <h2 class="h">Story 1.1: a Dev recebe um arquivo, não um histórico de chat</h2>
         </div>
         <div class="grid2">
-<div class="tree"><span class="m">1-1-criar-tarefa.md</span>
+<div class="tree tree-sm"><span class="m">1-1-criar-listar-e-consultar-tarefas.md</span>
 Status: ready-for-dev
 ## Story
-Como usuário da API, quero criar
-uma tarefa, para registrar um prazo.
-## Acceptance Criteria
-1. POST /tasks retorna 201 e o id
-2. title vazio retorna 422
-3. due_date aceita data ISO 8601</div>
+Como dev do time-piloto, quero criar uma
+tarefa com título e prazo e depois
+listá-la ou consultá-la.
+## Critérios de aceite (3 de 12)
+1. POST /tasks → 201 + tarefa
+2. title vazio → 422 validation_error
+3. prazo no passado → 201</div>
 <div class="term"><span class="p">›</span> <span class="k">bmad-create-story</span>
-<span class="m">▸</span> 1-1-criar-tarefa.md
+<span class="m">▸</span> 1-1-criar-listar-e-consultar-tarefas.md
 <span class="m">▸</span> Status: ready-for-dev
 
 <span class="p">›</span> (chat novo) <span class="k">bmad-dev-story</span>
-<span class="m">▸</span> Implementando AC 1, 2 e 3
+<span class="m">▸</span> Implementando os 12 critérios
 <span class="m">▸</span> Testes dos ACs passando
 <span class="m">▸</span> Status: review</div>
         </div>
         <div class="foot"><span>04 · Simulação</span><span>27 / 30</span></div>
-        <aside class="notes"><p>(~2 min) À esquerda, o arquivo da story que o create-story gerou: história, critérios de aceite e, no arquivo real, notas de arquitetura e referências. Esse é o contexto inteiro que a Dev precisa.</p><p>À direita, o fluxo: create-story deixa a story em ready-for-dev; num chat novo, dev-story implementa contra os três critérios, escreve os testes e move a story para review.</p><p>Reforce: a Dev não precisa do histórico da conversa com o PM. Está tudo no arquivo.</p></aside>
+        <aside class="notes"><p>(~2 min) À esquerda, o arquivo da story que o create-story gerou: história, critérios de aceite e, no arquivo real, notas de arquitetura e referências. Esse é o contexto inteiro que a Dev precisa.</p><p>Repare no critério 3: ele vem do PRD, que aceita prazo no passado de propósito, para trazer as tarefas atrasadas da planilha.</p><p>À direita, o fluxo: create-story deixa a story em ready-for-dev; num chat novo, dev-story implementa contra os 12 critérios da story (no slide, só 3), escreve os testes e move a story para review.</p><p>Reforce: a Dev não precisa do histórico da conversa com o PM. Está tudo no arquivo.</p></aside>
       </section>
 
       <!-- Simulação 5: review + commit -->
@@ -1272,24 +1275,24 @@ uma tarefa, para registrar um prazo.
         </div>
         <div class="grid2 wide-left">
 <div class="term"><span class="p">›</span> (chat novo) <span class="k">bmad-code-review</span>
-<span class="m">▸</span> Corrigir: due_date no passado é
-  aceito sem aviso
+<span class="m">▸</span> Corrigir: title vazio devolve o
+  422 padrão do FastAPI (fere AD-7)
 <span class="m">▸</span> Fora do escopo: paginação em
   GET /tasks
 <span class="p">›</span> Corrija o primeiro; o outro vai
   para o backlog.
 <span class="m">▸</span> Status: done
 <span class="p">$</span> git commit -m "feat: story 1.1"</div>
-<div class="tree"><span class="m">sprint-status.yaml · trecho</span>
+<div class="tree tree-sm"><span class="m">sprint-status.yaml · trecho</span>
 development_status:
   epic-1: in-progress
-  1-1-criar-tarefa: <span class="a">done</span>
-  1-2-editar-tarefa: backlog
+  1-1-criar-listar-e-consultar-tarefas: <span class="a">done</span>
+  1-2-editar-e-concluir-tarefa: backlog
   1-3-excluir-tarefa: backlog
   epic-2: backlog</div>
         </div>
         <div class="foot"><span>04 · Simulação</span><span>28 / 30</span></div>
-        <aside class="notes"><p>(~1,5 min) Último passo da simulação. O code review roda num chat novo e separa o que pertence à story do que não pertence.</p><p>Você decide: corrige o achado da story agora e manda a paginação para o backlog, em vez de transformar a story numa faxina geral.</p><p>Story em done, sprint-status atualizado, commit feito. Feche: esse ciclo se repete para a 1.2, a 1.3 e assim por diante.</p></aside>
+        <aside class="notes"><p>(~1,5 min) Último passo da simulação. O code review roda num chat novo e separa o que pertence à story do que não pertence.</p><p>O primeiro achado é real para a story: o erro tem que sair no envelope do AD-7. O segundo, a paginação, o próprio PRD já tinha deixado fora da v1.</p><p>Você decide: corrige o achado da story agora e manda a paginação para o backlog, em vez de transformar a story numa faxina geral.</p><p>Story em done, sprint-status atualizado, commit feito. Feche: esse ciclo se repete para a 1.2, a 1.3 e assim por diante.</p></aside>
       </section>
 
       <!-- 21 Checklist -->

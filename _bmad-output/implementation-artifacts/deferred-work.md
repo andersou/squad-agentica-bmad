@@ -6,3 +6,7 @@
 ## Deferred from: code review of 1-3-excluir-tarefa (2026-10-02)
 
 - `id` de path maior que o INTEGER de 64 bits do SQLite gera OverflowError → 500 `internal_error` em GET/PATCH/DELETE `/tasks/{id}`. Correção possível: `Path(alias="id", ge=1, le=2**63-1)` no `TaskId` (vira 422 `field: "id"`).
+
+## Deferred from: code review of 2-1-etiquetar-tarefas-e-filtrar-por-tag (2026-10-02)
+
+- `update_task` confere a existência com `SELECT` fora da transação (o sqlite3 só abre `BEGIN` implícito antes de DML); um `DELETE` concorrente entre a checagem e o `replace_tags` gera `IntegrityError` de FK → 500 em vez de 404. Correção possível: `conn.execute("BEGIN IMMEDIATE")` no início ou tratar `IntegrityError` como 404.

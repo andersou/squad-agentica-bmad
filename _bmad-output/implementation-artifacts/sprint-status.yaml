@@ -56,7 +56,7 @@ development_status:
   epic-1-retrospective: optional
 
   # Épico 2: Saber o que venceu e o que vence
-  epic-2: in-progress
+  epic-2: done
   2-1-etiquetar-tarefas-e-filtrar-por-tag: done
   2-2-filtrar-por-janela-de-prazo-e-combinar-com-tag: done
   epic-2-retrospective: optional

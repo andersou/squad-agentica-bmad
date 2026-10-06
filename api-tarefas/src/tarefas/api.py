@@ -5,7 +5,7 @@ from collections.abc import Iterator
 from datetime import date
 from typing import Annotated
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException, Path, Response
 from pydantic import (
     AfterValidator,
     BaseModel,
@@ -49,6 +49,7 @@ Tags = Annotated[
     list[Annotated[str, StringConstraints(strip_whitespace=True, max_length=50)]],
     AfterValidator(normalizar_tags),
 ]
+Id = Annotated[int, Path(ge=-(2**63), le=2**63 - 1)]
 
 
 class TarefaCriar(BaseModel):
@@ -67,3 +68,10 @@ def criar_tarefa(dados: TarefaCriar, conn: Conexao) -> Tarefa:
 @app.get("/tarefas")
 def listar_tarefas(conn: Conexao) -> list[Tarefa]:
     return repo.listar(conn)
+
+
+@app.delete("/tarefas/{id}", status_code=204)
+def excluir_tarefa(id: Id, conn: Conexao) -> Response:
+    if not repo.excluir(conn, id):
+        raise HTTPException(404, "tarefa não encontrada")
+    return Response(status_code=204)

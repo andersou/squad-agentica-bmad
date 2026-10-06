@@ -224,6 +224,71 @@ def test_persistencia(client):
     )
 
 
+def _linhas_tag(id):
+    conn = sqlite3.connect(os.environ["TAREFAS_DB"])
+    try:
+        return conn.execute(
+            "SELECT count(*) FROM tarefa_tag WHERE tarefa_id = ?", (id,)
+        ).fetchone()[0]
+    finally:
+        conn.close()
+
+
+def test_excluir(client):
+    excluida = client.post(
+        "/tarefas", json={"titulo": "x", "prazo": "2026-10-06", "tags": ["a", "b"]}
+    ).json()["id"]
+    outra = client.post(
+        "/tarefas", json={"titulo": "y", "prazo": "2026-10-07", "tags": ["a"]}
+    ).json()
+    assert _linhas_tag(excluida) == 2
+    r = client.delete(f"/tarefas/{excluida}")
+    assert r.status_code == 204
+    assert r.content == b""
+    assert client.get("/tarefas").json() == [outra]
+    assert _linhas_tag(excluida) == 0
+
+
+def test_excluir_inexistente(client):
+    id = client.post("/tarefas", json={"titulo": "x", "prazo": "2026-10-06"}).json()[
+        "id"
+    ]
+    assert client.delete(f"/tarefas/{id}").status_code == 204
+    outra = client.post("/tarefas", json={"titulo": "y", "prazo": "2026-10-07"}).json()
+    for alvo in (id, 999):
+        r = client.delete(f"/tarefas/{alvo}")
+        assert r.status_code == 404
+        assert r.json() == {"detail": "tarefa não encontrada"}
+    assert client.get("/tarefas").json() == [outra]
+
+
+@pytest.mark.parametrize(
+    "id, status",
+    [
+        (2**63, 422),
+        (-(2**63) - 1, 422),
+        ("abc", 422),
+        ("1.5", 422),
+        (2**63 - 1, 404),
+        (-(2**63), 404),
+    ],
+)
+def test_excluir_id_limites(client, id, status):
+    r = client.delete(f"/tarefas/{id}")
+    assert r.status_code == status
+    assert "detail" in r.json()
+
+
+def test_repo_excluir_inexistente(client):
+    outra = client.post("/tarefas", json={"titulo": "y", "prazo": "2026-10-07"}).json()
+    conn = sqlite3.connect(os.environ["TAREFAS_DB"])
+    try:
+        assert repo.excluir(conn, outra["id"] + 1) is False
+    finally:
+        conn.close()
+    assert client.get("/tarefas").json() == [outra]
+
+
 def _imports(modulo):
     arvore = ast.parse((SRC / f"{modulo}.py").read_text())
     nomes = set()

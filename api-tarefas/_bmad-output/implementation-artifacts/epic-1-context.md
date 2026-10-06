@@ -46,7 +46,7 @@ Dar ao dev do time-piloto o CRUD completo de tarefas: criar com título, prazo e
   - O POST não aceita `concluida`.
   - No PATCH, todo campo é opcional e `null` dá 422. `{}` devolve 200 com a tarefa inalterada, e `tags: []` limpa a lista.
   - A validação (422) vem antes da busca do id (404).
-  - O `id` de path é declarado com `le=2**63-1`.
+  - O `id` de path é declarado com `ge=-2**63` e `le=2**63-1` (alias `api.Id`, criado na 1.3).
 - **Tags:** `domain.norm_tag(s)` = `s.strip().casefold()`. `domain.normalizar_tags(lista)` apara, levanta `ValueError` para tag vazia e remove duplicadas por `norm_tag`, mantendo a primeira grafia. O schema chama `normalizar_tags` num validator. O repo grava `nome_norm` com `norm_tag`. Nenhuma outra camada faz `lower` ou `casefold`. As tags voltam em ordem de inserção (`ORDER BY rowid`).
 - **Tipo entre camadas:** `domain.Tarefa` é uma dataclass (`id: int, titulo: str, prazo: date, tags: list[str], concluida: bool`) e o único tipo que o repo devolve. O repo nunca devolve `sqlite3.Row` nem dict. As conversões 0/1 e ISO ficam dentro do repo.
 - **Assinaturas do repo:** toda função recebe `conn` como primeiro argumento.

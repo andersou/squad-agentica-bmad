@@ -36,6 +36,12 @@ def criar(
     return Tarefa(cur.lastrowid, titulo, prazo, list(tags), False)
 
 
+def excluir(conn: sqlite3.Connection, id: int) -> bool:
+    with conn:
+        cur = conn.execute("DELETE FROM tarefa WHERE id = ?", (id,))
+    return cur.rowcount > 0
+
+
 def listar(conn: sqlite3.Connection) -> list[Tarefa]:
     tarefas = {}
     for id, titulo, prazo, concluida, nome in conn.execute(

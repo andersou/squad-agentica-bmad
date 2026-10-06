@@ -6,10 +6,16 @@ from datetime import date
 from typing import Annotated
 
 from fastapi import Depends, FastAPI
-from pydantic import BaseModel, BeforeValidator, ConfigDict, StringConstraints
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    StringConstraints,
+)
 
 from tarefas import repo
-from tarefas.domain import Tarefa
+from tarefas.domain import Tarefa, normalizar_tags
 
 app = FastAPI(title="api-tarefas")
 
@@ -39,6 +45,10 @@ Prazo = Annotated[date, BeforeValidator(_prazo_iso)]
 Titulo = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)
 ]
+Tags = Annotated[
+    list[Annotated[str, StringConstraints(strip_whitespace=True, max_length=50)]],
+    AfterValidator(normalizar_tags),
+]
 
 
 class TarefaCriar(BaseModel):
@@ -46,11 +56,12 @@ class TarefaCriar(BaseModel):
 
     titulo: Titulo
     prazo: Prazo
+    tags: Tags = []
 
 
 @app.post("/tarefas", status_code=201)
 def criar_tarefa(dados: TarefaCriar, conn: Conexao) -> Tarefa:
-    return repo.criar(conn, dados.titulo, dados.prazo, [])
+    return repo.criar(conn, dados.titulo, dados.prazo, dados.tags)
 
 
 @app.get("/tarefas")

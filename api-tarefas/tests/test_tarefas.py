@@ -97,8 +97,117 @@ def test_listar_ordenado_por_prazo_e_id(client):
     assert [t["id"] for t in r.json()] == [ids["a"], ids["b1"], ids["b2"], ids["c"]]
 
 
+def test_tags_normalizadas(client):
+    r = client.post(
+        "/tarefas",
+        json={
+            "titulo": "x",
+            "prazo": "2026-10-06",
+            "tags": ["Backend", " api ", "backend"],
+        },
+    )
+    assert r.status_code == 201
+    assert r.json()["tags"] == ["Backend", "api"]
+    assert [t["tags"] for t in client.get("/tarefas").json()] == [["Backend", "api"]]
+
+
+@pytest.mark.parametrize("extra", [{}, {"tags": []}])
+def test_sem_tags(client, extra):
+    r = client.post("/tarefas", json={"titulo": "x", "prazo": "2026-10-06", **extra})
+    assert r.status_code == 201
+    assert r.json()["tags"] == []
+    assert [t["tags"] for t in client.get("/tarefas").json()] == [[]]
+
+
+def test_tag_com_50_caracteres_e_aceita(client):
+    r = client.post(
+        "/tarefas",
+        json={"titulo": "x", "prazo": "2026-10-06", "tags": [" " + "a" * 50 + " "]},
+    )
+    assert r.status_code == 201
+    assert r.json()["tags"] == ["a" * 50]
+    assert [t["tags"] for t in client.get("/tarefas").json()] == [["a" * 50]]
+
+
+@pytest.mark.parametrize(
+    "tags",
+    [[""], ["   "], [" " + "a" * 51 + " "], "backend", [1], [None], None],
+)
+def test_tags_invalidas(client, tags):
+    r = client.post(
+        "/tarefas", json={"titulo": "x", "prazo": "2026-10-06", "tags": tags}
+    )
+    assert r.status_code == 422
+    assert "detail" in r.json()
+    assert client.get("/tarefas").json() == []
+
+
+def test_tags_comparadas_com_casefold(client):
+    r = client.post(
+        "/tarefas",
+        json={"titulo": "x", "prazo": "2026-10-06", "tags": ["Straße", "STRASSE"]},
+    )
+    assert r.status_code == 201
+    assert r.json()["tags"] == ["Straße"]
+    assert [t["tags"] for t in client.get("/tarefas").json()] == [["Straße"]]
+
+
+def test_listar_tags_de_varias_tarefas(client):
+    ids = {}
+    for nome, prazo, tags in [
+        ("A", "2026-10-20", ["x"]),
+        ("B", "2026-10-01", []),
+        ("C", "2026-10-10", ["y", "z"]),
+    ]:
+        ids[nome] = client.post(
+            "/tarefas", json={"titulo": nome, "prazo": prazo, "tags": tags}
+        ).json()["id"]
+    assert [(t["id"], t["tags"]) for t in client.get("/tarefas").json()] == [
+        (ids["B"], []),
+        (ids["C"], ["y", "z"]),
+        (ids["A"], ["x"]),
+    ]
+
+
+def test_banco_da_story_1_1_ganha_tarefa_tag(client):
+    conn = sqlite3.connect(os.environ["TAREFAS_DB"])
+    try:
+        with conn:
+            conn.execute(
+                "CREATE TABLE tarefa("
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                "titulo TEXT NOT NULL, "
+                "prazo TEXT NOT NULL, "
+                "concluida INTEGER NOT NULL DEFAULT 0)"
+            )
+            conn.execute(
+                "INSERT INTO tarefa(titulo, prazo) VALUES ('antiga', '2026-10-01')"
+            )
+    finally:
+        conn.close()
+    r = client.post(
+        "/tarefas", json={"titulo": "nova", "prazo": "2026-10-06", "tags": ["a"]}
+    )
+    assert r.status_code == 201
+    assert [t["tags"] for t in client.get("/tarefas").json()] == [[], ["a"]]
+
+
+def test_criar_atomico_com_tags_colidindo(client):
+    conn = sqlite3.connect(os.environ["TAREFAS_DB"])
+    try:
+        conn.execute("PRAGMA foreign_keys=ON")
+        repo.criar_schema(conn)
+        with pytest.raises(sqlite3.IntegrityError):
+            repo.criar(conn, "x", date(2026, 10, 6), ["a", "A"])
+    finally:
+        conn.close()
+    assert client.get("/tarefas").json() == []
+
+
 def test_persistencia(client):
-    criada = client.post("/tarefas", json={"titulo": "x", "prazo": "2026-10-06"}).json()
+    criada = client.post(
+        "/tarefas", json={"titulo": "x", "prazo": "2026-10-06", "tags": ["b", "a"]}
+    ).json()
     conn = sqlite3.connect(os.environ["TAREFAS_DB"])
     try:
         tarefas = repo.listar(conn)
@@ -110,7 +219,7 @@ def test_persistencia(client):
         criada["id"],
         "x",
         date(2026, 10, 6),
-        [],
+        ["b", "a"],
         False,
     )
 
@@ -137,14 +246,7 @@ def test_camadas():
     assert not any(
         n == "tarefas.api" or n.startswith("tarefas.api.") for n in _imports("repo")
     )
-
-
-def test_criar_com_tags_falha_ate_story_1_2(client):
-    conn = sqlite3.connect(os.environ["TAREFAS_DB"])
-    try:
-        repo.criar_schema(conn)
-        with pytest.raises(NotImplementedError):
-            repo.criar(conn, "x", date(2026, 10, 6), ["a"])
-    finally:
-        conn.close()
-    assert client.get("/tarefas").json() == []
+    for modulo in ("api", "repo"):
+        texto = (SRC / f"{modulo}.py").read_text().lower()
+        for proibido in ("lower(", "upper(", "casefold", "nocase"):
+            assert proibido not in texto, (modulo, proibido)

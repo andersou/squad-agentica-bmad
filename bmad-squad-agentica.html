@@ -489,7 +489,7 @@
       color: var(--fg-2);
     }
     .pill.ok { color: var(--success); border-color: rgba(21, 190, 83, 0.4); background: rgba(21, 190, 83, 0.12); }
-    /* Simulação · arquitetura real */
+    /* Na prática · arquitetura real */
     .arch-grid { display: grid; grid-template-columns: 600px 1fr; gap: 64px; align-items: start; }
     .arch-left { display: flex; flex-direction: column; gap: 20px; }
     .arch-svg { width: 100%; height: auto; display: block; }
@@ -617,7 +617,7 @@
         </div>
         <p class="body">O problema não é o modelo. <strong>É a falta de estrutura em volta dele.</strong></p>
         <div class="foot"><span>Por quê</span><span>02 / 30</span></div>
-        <aside class="notes"><p>(~1,5 min) Pergunte: quem aqui já usa IA para codar? E quem já sentiu que o projeto desandou depois de algumas semanas?</p><p>Lado esquerdo: o chat genérico é ótimo em tarefas isoladas. Lado direito: o problema aparece quando o projeto cresce — o contexto some, decisões mudam a cada prompt, ninguém lembra o porquê.</p><p>Feche com a frase de baixo: o problema não é o modelo, é a falta de estrutura em volta dele. Essa é a ponte para o próximo slide.</p></aside>
+        <aside class="notes"><p>(~1,5 min) Pergunte: quem aqui já usa IA para codar? E quem já sentiu que o projeto desandou depois de algumas semanas?</p><p>Lado esquerdo: o chat genérico é ótimo em tarefas isoladas. Lado direito: o problema aparece quando o projeto cresce — o contexto some, decisões mudam a cada prompt, ninguém lembra o porquê.</p><p>Feche com a frase de baixo: o problema não é o modelo, é a falta de estrutura em volta dele.</p></aside>
       </section>
 
       <!-- 03 Concept -->
@@ -665,9 +665,9 @@
             <tr><td>Paige · Tech Writer</td><td><span class="c">bmad-agent-tech-writer</span></td><td>Documentação e diagramas</td></tr>
           </tbody>
         </table>
-        <p class="note">Novidade da v6: não existe mais um Scrum Master separado, porque é a Dev quem prepara as stories. Os testes E2E saem de um workflow da Dev, e o Test Architect completo fica no módulo TEA.</p>
+        <p class="note">Novidade da v6: não existe mais Scrum Master separado; é a Dev quem prepara as stories.</p>
         <div class="foot"><span>Por quê · fonte: docs/reference/agents.md (v6.10)</span><span>04 / 30</span></div>
-        <aside class="notes"><p>(~2 min) Passe rápido pela tabela, sem ler linha por linha. Destaque que cada agente é um skill que você chama pelo nome na IDE.</p><p>Mary pensa o problema, John escreve o PRD, Winston decide a arquitetura, Sally cuida de UX, Amelia implementa, Paige documenta.</p><p>Novidade para quem conhece a v4: não existe mais Scrum Master. A própria Dev prepara as stories. Testes E2E são um workflow da Dev; o Test Architect completo fica no módulo TEA.</p></aside>
+        <aside class="notes"><p>(~2 min) Passe rápido pela tabela, sem ler linha por linha. Destaque que cada agente é um skill que você chama pelo nome na IDE.</p><p>Mary pensa o problema, John escreve o PRD, Winston decide a arquitetura, Sally cuida de UX, Amelia implementa, Paige documenta.</p><p>Novidade para quem conhece a v4: não existe mais Scrum Master. A própria Dev prepara as stories. Testes E2E são um workflow da Dev; o Test Architect completo fica no módulo TEA.</p><p>Feche: são seis papéis, e cada um é um skill que você chama pelo nome.</p></aside>
       </section>
 
       <!-- 05 Phases -->
@@ -760,7 +760,7 @@
           </div>
         </div>
         <div class="foot"><span>01 · Primeiros passos · fonte: docs/how-to/install-bmad.md</span><span>08 / 30</span></div>
-        <aside class="notes"><p>(~2 min) Um comando: npx bmad-method install. Ele pergunta o diretório, os módulos (escolha BMad Method), se quer as versões estáveis, a ferramenta e algumas configs como nome e idioma.</p><p>Resultado: duas pastas. _bmad tem os agentes e workflows; _bmad-output é onde os artefatos vão nascer.</p><p>Ponto importante: na v6 tudo roda como skill dentro da IDE. Os web bundles ainda existem, mas são opcionais.</p></aside>
+        <aside class="notes"><p>(~2 min) Um comando: npx bmad-method install. Ele pergunta o diretório, os módulos (escolha BMad Method), se quer as versões estáveis, a ferramenta e algumas configs como nome e idioma.</p><p>Resultado: duas pastas. _bmad tem os agentes e workflows; _bmad-output é onde os artefatos vão nascer.</p><p>Ponto importante: na v6 tudo roda como skill dentro da IDE. Feche: um comando, duas pastas, e a squad já está no repositório.</p></aside>
       </section>
 
       <!-- 09 bmad-help -->
@@ -780,12 +780,11 @@
             <li>Inspeciona o que já foi feito no projeto</li>
             <li>Mostra as opções dos módulos instalados</li>
             <li>Recomenda a próxima tarefa obrigatória</li>
-            <li>Roda sozinho ao fim de cada workflow</li>
+            <li>Roda sozinho ao fim dos workflows de planejamento</li>
           </ul>
         </div>
-        <p class="note">Qual é o próximo passo? Essa foi a dúvida central do guia da comunidade na discussão #113, ainda na v4. Na v6, a resposta virou um skill.</p>
         <div class="foot"><span>01 · Primeiros passos</span><span>09 / 30</span></div>
-        <aside class="notes"><p>(~2 min) Se tiverem que lembrar de um comando só, é este: bmad-help.</p><p>Ele olha o que já foi feito no projeto, sabe quais módulos estão instalados e recomenda o próximo passo. E roda sozinho no fim de cada workflow.</p><p>Conecte com a referência: a discussão #113 da comunidade era justamente gente perdida sobre qual o próximo passo. Na v6, essa resposta virou um skill.</p><p>No Claude Code os skills viram comandos com barra: /bmad-help, /bmad-prd e assim por diante. Em outras IDEs, chame pelo nome.</p></aside>
+        <aside class="notes"><p>(~1,5 min) Ele olha o que já foi feito no projeto, sabe quais módulos estão instalados e recomenda o próximo passo. E roda sozinho no fim dos workflows de planejamento.</p><p>Se tiverem que lembrar de um comando só, é este: bmad-help.</p></aside>
       </section>
 
       <!-- 10 Tracks -->
@@ -841,14 +840,14 @@
         </div>
         <p class="note">Revise o escopo no PRD, que é o momento mais barato de mudar. Se houver interface, rode <span class="c">bmad-ux</span> em seguida. A API do exemplo não tem interface, então pulamos esse passo.</p>
         <div class="foot"><span>02 · Criar a base</span><span>12 / 30</span></div>
-        <aside class="notes"><p>(~2 min) Regra de ouro antes de tudo: um chat novo para cada workflow.</p><p>Primeiro o brief com a analista — opcional, mas útil quando o conceito ainda está solto. Depois o PRD com o PM, usando bmad-prd na intenção Create.</p><p>Enfatize: revise o escopo aqui. Mudar o PRD custa uma conversa; mudar código já escrito custa retrabalho. A API não tem interface, então pulamos o bmad-ux.</p></aside>
+        <aside class="notes"><p>(~2 min) Regra de ouro antes de tudo: um chat novo para cada workflow.</p><p>Primeiro o brief com a analista — opcional, mas útil quando o conceito ainda está solto. Depois o PRD com o PM, usando bmad-prd na intenção Create.</p><p>Enfatize: revise o escopo aqui. A API não tem interface, então pulamos o bmad-ux.</p><p>Frase para fixar: mudar o PRD custa uma conversa; mudar código já escrito custa retrabalho.</p></aside>
       </section>
 
       <!-- 13 Architecture -->
       <section class="slide s" data-screen-label="13 Arquitetura">
         <div class="head">
           <span class="eyebrow">Fase 3 · Solução</span>
-          <h2 class="h">A arquitetura fixa as decisões que todos os agentes vão seguir</h2>
+          <h2 class="h">Arquitetura: stack, dados, erros e testes decididos uma vez só</h2>
         </div>
         <div class="grid2">
           <div class="card">
@@ -868,7 +867,7 @@
           </div>
         </div>
         <div class="foot"><span>02 · Criar a base · fonte: docs/reference/workflow-map.md</span><span>13 / 30</span></div>
-        <aside class="notes"><p>(~2 min) A arquitetura fixa as decisões que todo agente vai seguir: stack, modelo de dados, padrões de API e de erro, estratégia de testes.</p><p>Lado direito: o project-context.md é a constituição do projeto. Todo workflow lê esse arquivo antes de agir. Dá para gerar com bmad-generate-project-context ou escrever à mão.</p><p>Dica prática: coloque ali as convenções que você corrigiria num code review.</p></aside>
+        <aside class="notes"><p>(~1,5 min) A arquitetura fixa as decisões que todo agente vai seguir: stack, modelo de dados, padrões de API e de erro, estratégia de testes.</p><p>Lado direito: o project-context.md é a constituição do projeto. Todo workflow lê esse arquivo antes de agir. Dá para gerar com bmad-generate-project-context ou escrever à mão.</p><p>Dica prática: coloque ali as convenções que você corrigiria num code review.</p></aside>
       </section>
 
       <!-- 14 Epics + readiness -->
@@ -886,12 +885,12 @@
           <div class="card raised">
             <span class="tag">Gate · <span style="text-transform: none">bmad-check-implementation-readiness</span></span>
             <p>Verifica se PRD, arquitetura e stories contam a mesma história antes do primeiro commit.</p>
-            <div class="gate"><span class="pill ok">PASS</span><span class="pill">CONCERNS</span><span class="pill bad">FAIL</span></div>
-            <p>Implemente com PASS, ou com CONCERNS que você leu e aceitou.</p>
+            <div class="gate"><span class="pill ok">READY</span><span class="pill">NEEDS WORK</span><span class="pill bad">NOT READY</span></div>
+            <p>Implemente com READY, ou com ressalvas que você leu e aceitou.</p>
           </div>
         </div>
         <div class="foot"><span>02 · Criar a base</span><span>14 / 30</span></div>
-        <aside class="notes"><p>(~2 min) Mudança importante na v6: épicos e stories só depois da arquitetura. Assim as stories já sabem qual banco, quais padrões e qual stack usar.</p><p>No exemplo real, dois épicos com nome de resultado, não de tecnologia: "Registrar e manter tarefas" (stories 1.1 a 1.3) e "Saber o que venceu e o que vence" (2.1 e 2.2). Repare que o épico 2 é o valor central do produto, e só depende do épico 1.</p><p>Depois o gate: o readiness check confere se PRD, arquitetura e stories contam a mesma história. Só implemente com PASS — ou com CONCERNS que você leu e aceitou.</p></aside>
+        <aside class="notes"><p>(~2 min) Na v6, épicos e stories vêm depois da arquitetura, então as stories já nascem sabendo banco, padrões e stack.</p><p>No exemplo real, dois épicos com nome de resultado: "Registrar e manter tarefas" e "Saber o que venceu e o que vence".</p><p>Depois, o gate: o readiness check confere se PRD, arquitetura e stories contam a mesma história. Implemente com READY, ou com ressalvas que você leu e aceitou.</p></aside>
       </section>
 
       <!-- 15 Repo tree -->
@@ -910,10 +909,10 @@
    │  ├─ prds/…/prd.md
    │  ├─ architecture/…/ARCHITECTURE-SPINE.md
    │  └─ epics.md
-   ├─ implementation-artifacts/
+   ├─ implementation-artifacts/  <span class="m">← fase 4</span>
    │  ├─ sprint-status.yaml
    │  └─ 1-1-criar-listar-e-consultar-tarefas.md
-   └─ project-context.md</div>
+   └─ project-context.md  <span class="m">← opcional; não gerado aqui</span></div>
           <div class="stack">
             <p class="lede">Os artefatos são texto: dá para revisar em PR, e qualquer agente consegue ler em um chat novo.</p>
             <p class="body"><strong>O contexto sai da sua cabeça e vai para o repositório.</strong></p>
@@ -921,7 +920,7 @@
           </div>
         </div>
         <div class="foot"><span>02 · Criar a base</span><span>15 / 30</span></div>
-        <aside class="notes"><p>(~1 min) Mostre a árvore. Ao fim da base, o plano inteiro está versionado no Git.</p><p>São arquivos de texto: dá para revisar em PR, e qualquer agente num chat novo consegue ler.</p><p>Frase para fixar: o contexto sai da sua cabeça e vai para o repositório.</p></aside>
+        <aside class="notes"><p>(~1 min) Não leia a árvore. Pergunte: se você sair do projeto amanhã, de que o próximo agente precisa? Só do repositório.</p><p>Frase para fixar: o contexto sai da sua cabeça e vai para o repositório.</p></aside>
       </section>
 
       <!-- Brownfield A: onboarding -->
@@ -951,7 +950,7 @@
         </div>
         <p class="note">Na dúvida, pergunte: <span class="c">bmad-help tenho uma API existente, por onde começo?</span> Você pode rodar o document-project a qualquer momento, até no meio do projeto.</p>
         <div class="foot"><span>02 · Criar a base · fonte: docs/how-to/established-projects.md</span><span>16 / 30</span></div>
-        <aside class="notes"><p>(~2 min) E se o projeto já existe? Primeiro, ensine a squad como o código é hoje.</p><p>Passo 1: arquive planos antigos já concluídos — um agente pode tratar um PRD velho como atual. Passo 2: bmad-generate-project-context registra stack e convenções. Passo 3: se a documentação estiver ausente ou desatualizada, bmad-document-project.</p><p>Lembre que dá para perguntar ao bmad-help em linguagem natural, e que o document-project pode rodar a qualquer momento.</p></aside>
+        <aside class="notes"><p>(~1 min) E se o projeto já existe? Três verbos: arquivar o plano velho, gerar o contexto, documentar o estado atual.</p><p>Frase para fixar: antes de pedir mudança, ensine à squad como o código é hoje.</p></aside>
       </section>
 
       <!-- Brownfield B: choose path -->
@@ -982,7 +981,7 @@
         </div>
         <p class="note">Código fora das boas práticas? Você escolhe entre manter as convenções e criar novas. O BMAD oferece a modernização, mas não a impõe.</p>
         <div class="foot"><span>02 · Criar a base · fonte: established-projects-faq.md</span><span>17 / 30</span></div>
-        <aside class="notes"><p>(~1,5 min) No brownfield, o tamanho da mudança decide o caminho.</p><p>Mudança pequena: bmad-quick-dev. Ele detecta a stack, percebe as convenções e pergunta se deve segui-las.</p><p>Mudança grande: o BMad Method completo, garantindo que o PRD parta da documentação existente e que a arquitetura escaneie o código antes de decidir. Feche: o BMAD oferece modernizar, mas não impõe.</p></aside>
+        <aside class="notes"><p>(~1 min) No brownfield, o tamanho da mudança decide o caminho: pequena, bmad-quick-dev; grande, o BMad Method completo, partindo da documentação existente.</p><p>Feche: o BMAD oferece modernizar, mas não impõe.</p></aside>
       </section>
 
       <!-- 16 Section 3 -->
@@ -1025,52 +1024,14 @@
         </div>
         <div class="loop"><span>↻ Story aprovada, próxima story</span><span>Fim do épico: <span class="c">bmad-retrospective</span></span></div>
         <div class="foot"><span>03 · Dia a dia</span><span>19 / 30</span></div>
-        <aside class="notes"><p>(~2,5 min) Uma vez por projeto: bmad-sprint-planning, que cria o sprint-status.yaml.</p><p>Depois o ciclo, todo com a Dev: create-story gera o arquivo da story com critérios de aceite; dev-story implementa com testes; code-review faz uma revisão adversarial e aprova ou pede mudanças.</p><p>Story aprovada, próxima. No fim de cada épico, a retrospectiva.</p></aside>
+        <aside class="notes"><p>(~2 min) Uma vez por projeto: bmad-sprint-planning, que cria o sprint-status.yaml.</p><p>Depois o ciclo, todo com a Dev: create-story gera o arquivo da story com critérios de aceite; dev-story implementa com testes; code-review faz uma revisão adversarial e aprova ou pede mudanças.</p><p>Story aprovada, próxima. No fim de cada épico, a retrospectiva.</p></aside>
       </section>
 
-      <!-- 18 Typical day -->
-      <section class="slide s" data-screen-label="20 Um dia tipico">
-        <div class="head">
-          <span class="eyebrow">Rotina</span>
-          <h2 class="h">Num dia com a squad, o humano decide e os agentes executam</h2>
-        </div>
-        <div class="tl">
-          <div class="tl-item">
-            <span class="tl-when">Início</span>
-            <span class="c" style="align-self: flex-start">bmad-sprint-status</span>
-            <p>Onde paramos? O que vem a seguir?</p>
-          </div>
-          <div class="tl-item">
-            <span class="tl-when">Chat novo</span>
-            <span class="c" style="align-self: flex-start">bmad-create-story</span>
-            <p>Você revisa os critérios de aceite.</p>
-          </div>
-          <div class="tl-item">
-            <span class="tl-when">Chat novo</span>
-            <span class="c" style="align-self: flex-start">bmad-dev-story</span>
-            <p>Você acompanha e responde dúvidas.</p>
-          </div>
-          <div class="tl-item">
-            <span class="tl-when">Chat novo</span>
-            <span class="c" style="align-self: flex-start">bmad-code-review</span>
-            <p>Você lê os achados e decide.</p>
-          </div>
-          <div class="tl-item">
-            <span class="tl-when">Fechamento</span>
-            <span class="c" style="align-self: flex-start">git commit</span>
-            <p>Story concluída; a próxima entra na fila.</p>
-          </div>
-        </div>
-        <p class="note">Sequência ilustrativa. O ritmo depende do tamanho de cada story, e a regra fixa é um chat novo por workflow.</p>
-        <div class="foot"><span>03 · Dia a dia</span><span>20 / 30</span></div>
-        <aside class="notes"><p>(~2 min) Conte como um dia real. De manhã, sprint-status para saber onde parou. Chat novo, create-story, e você revisa os critérios.</p><p>Chat novo, dev-story, e você acompanha e responde dúvidas. Chat novo, code-review, e você decide sobre os achados. Commit, e a próxima story entra na fila.</p><p>Deixe claro que é ilustrativo: o ritmo depende do tamanho das stories. O papel humano é decidir em cada ponto.</p></aside>
-      </section>
-
-      <!-- 19 When plans change -->
-      <section class="slide s" data-screen-label="21 Quando algo muda">
+            <!-- 19 When plans change -->
+      <section class="slide s" data-screen-label="20 Quando algo muda">
         <div class="head">
           <span class="eyebrow">Fora do roteiro</span>
-          <h2 class="h">Quando o plano muda, cada situação tem a sua ferramenta</h2>
+          <h2 class="h">Fora do ciclo: mudança grande, ajuste pequeno e modo autônomo</h2>
         </div>
         <div class="grid3">
           <div class="card">
@@ -1089,12 +1050,12 @@
             <p>Uma iteração sem supervisão, pensada para orquestradores como o módulo opcional bmad-loop.</p>
           </div>
         </div>
-        <div class="foot"><span>03 · Dia a dia · fonte: CHANGELOG v6.10.0</span><span>21 / 30</span></div>
-        <aside class="notes"><p>(~2 min) Quando o plano muda: mudança grande no meio do sprint, bmad-correct-course. Ajuste pequeno fora do backlog, bmad-quick-dev.</p><p>Novo na 6.10: bmad-dev-auto, uma iteração sem supervisão pensada para orquestradores como o módulo bmad-loop — que é opcional.</p><p>Sugestão: só experimente o modo autônomo depois de dominar o ciclo manual.</p></aside>
+        <div class="foot"><span>03 · Dia a dia · fonte: CHANGELOG v6.10.0</span><span>20 / 30</span></div>
+        <aside class="notes"><p>(~1,5 min) Quando o plano muda: mudança grande no meio do sprint, bmad-correct-course. Ajuste pequeno fora do backlog, bmad-quick-dev.</p><p>Novo na 6.10: bmad-dev-auto, uma iteração sem supervisão pensada para orquestradores como o módulo bmad-loop — que é opcional.</p><p>Sugestão: só experimente o modo autônomo depois de dominar o ciclo manual.</p></aside>
       </section>
 
       <!-- 20 Pitfalls -->
-      <section class="slide s" data-screen-label="22 Armadilhas">
+      <section class="slide s" data-screen-label="21 Armadilhas">
         <div class="head">
           <span class="eyebrow">Armadilhas</span>
           <h2 class="h">Cinco erros que viram vibe coding com passos extras</h2>
@@ -1109,38 +1070,36 @@
             <tr><td>Pular o readiness check</td><td>Rode <span class="c">bmad-check-implementation-readiness</span> antes do sprint</td></tr>
           </tbody>
         </table>
-        <div class="foot"><span>03 · Dia a dia</span><span>22 / 30</span></div>
+        <div class="foot"><span>03 · Dia a dia</span><span>21 / 30</span></div>
         <aside class="notes"><p>(~2 min) Cinco erros comuns. Leia o erro e deixe a plateia adivinhar a correção antes de mostrar.</p><p>O mais frequente: pular o planejamento e pedir código direto à Dev — aí o BMAD vira vibe coding com passos extras.</p><p>Reforce o segundo: reusar o chat. O contexto certo está nos arquivos, não na conversa.</p></aside>
       </section>
 
       <!-- Section 4 -->
-      <section class="slide s dark center" data-screen-label="23 Secao Simulacao">
+      <section class="slide s dark center" data-screen-label="22 Secao Na pratica">
         <div class="stack" style="gap: 40px;">
           <span class="sec-num">04</span>
           <div class="rule"></div>
-          <h2 class="sec-title">Simulação: do PRD ao primeiro commit</h2>
-          <p class="lede">A API de tarefas passando pela squad inteira. PRD, arquitetura, épicos e readiness são <strong>saídas reais</strong>; as conversas são <strong>ilustrativas</strong>.</p>
+          <h2 class="sec-title">Na prática: do PRD à retrospectiva</h2>
+          <p class="lede">A API de tarefas passou pela squad de verdade. As perguntas do PM são <strong>ilustrativas</strong>; os terminais resumem as saídas reais.</p>
         </div>
-        <div class="foot"><span>Squad agêntica com BMAD</span><span>23 / 30</span></div>
-        <aside class="notes"><p>Transição (~20 s). Agora juntamos tudo: vamos acompanhar a API de tarefas do PRD até o primeiro commit, passando pelos gates. Avise que as respostas dos agentes são um exemplo, com uma exceção: o PRD, a arquitetura, os épicos e o relatório de readiness saíram de uma execução real.</p></aside>
+        <div class="foot"><span>Squad agêntica com BMAD</span><span>22 / 30</span></div>
+        <aside class="notes"><p>Transição (~20 s). Agora tudo junto, com artefatos reais da API de tarefas: PRD, arquitetura, readiness, story, review, commit e retrospectiva. Só a conversa do PM, no primeiro slide, é ilustrativa; os terminais resumem as saídas reais.</p></aside>
       </section>
 
-      <!-- Simulação 1: PRD -->
-      <section class="slide s" data-screen-label="24 Simulacao PRD">
+      <!-- Na prática 1: PRD -->
+      <section class="slide s" data-screen-label="23 Pratica PRD">
         <div class="head">
-          <span class="eyebrow">Simulação 1/5 · conversa ilustrativa · prd.md real</span>
+          <span class="eyebrow">Na prática 1/6 · conversa ilustrativa · prd.md real, resumido</span>
           <h2 class="h">O PRD nasce de uma conversa: o PM pergunta antes de escrever</h2>
         </div>
         <div class="grid2 wide-left">
-<div class="term"><span class="p">›</span> <span class="k">bmad-prd</span>
-<span class="m">PM ▸</span> Create, Update ou Validate?
-<span class="p">›</span> Create. API de tarefas para times
+<div class="term"><span class="p">›</span> <span class="k">bmad-prd</span> API de tarefas para times
   pequenos, com tags e prazos.
 <span class="m">PM ▸</span> Quem usa e o que dói hoje?
 <span class="p">›</span> Devs que perdem prazos em planilha.
 <span class="m">PM ▸</span> O filtro por prazo usa o fuso
   do usuário ou do servidor?</div>
-<div class="tree tree-sm"><span class="m">prd.md · trecho real</span>
+<div class="tree tree-sm"><span class="m">prd.md real · resumido</span>
 ## 3. Glossário
 Hoje: data corrente em America/Sao_Paulo
 ## 4. Funcionalidades
@@ -1148,18 +1107,18 @@ FR-1 Criar tarefa       FR-5 Etiquetar
 FR-2 Listar/consultar   FR-6 Filtrar tag
 FR-3 Editar             FR-7 Janela prazo
 FR-4 Excluir            FR-8 Tag + janela
-## 6.2 Fora da v1
+### 6.2 Fora
 - Usuários, autenticação e permissões
 - Paginação (vai para o backlog)</div>
         </div>
-        <div class="foot"><span>04 · Simulação</span><span>24 / 30</span></div>
-        <aside class="notes"><p>(~1,5 min) Primeiro passo da simulação: o PRD. A conversa à esquerda é ilustrativa; o trecho à direita é do prd.md real, gerado a partir do brief.</p><p>Mostre que o PM não sai escrevendo: ele pergunta a intenção, o público e a dor. Repare na última pergunta, sobre fuso horário: no PRD real ela virou definição no Glossário — "hoje" é a data em America/Sao_Paulo. É o tipo de detalhe que vira bug se ninguém decidir agora.</p><p>À direita: oito requisitos, cada um com consequências testáveis no arquivo, e, tão importante quanto, o que fica fora da v1.</p></aside>
+        <div class="foot"><span>04 · Na prática</span><span>23 / 30</span></div>
+        <aside class="notes"><p>(~1,5 min) A conversa é ilustrativa; o trecho à direita resume o prd.md real.</p><p>O PM não sai escrevendo: pergunta intenção, público e dor. No projeto real, o fuso foi decisão minha na revisão do rascunho, e virou definição no Glossário: "hoje" é a data em São Paulo. São oito requisitos com consequências testáveis, mais o que fica fora da v1.</p><p>Frase para fixar: ambiguidade resolvida no PRD não vira bug na story.</p></aside>
       </section>
 
-      <!-- Simulação 2: arquitetura (saída real) -->
-      <section class="slide s" data-screen-label="25 Simulacao arquitetura">
+      <!-- Na prática 2: arquitetura (saída real) -->
+      <section class="slide s" data-screen-label="24 Pratica arquitetura">
         <div class="head">
-          <span class="eyebrow">Simulação 2/5 · API de tarefas · saída real do bmad-architecture</span>
+          <span class="eyebrow">Na prática 2/6 · API de tarefas · saída real do bmad-architecture</span>
           <h2 class="h">A arquitetura fixa o que dois agentes decidiriam diferente</h2>
         </div>
         <div class="arch-grid">
@@ -1198,21 +1157,19 @@ FR-4 Excluir            FR-8 Tag + janela
             <p class="arch-legend">Setas = quem pode depender de quem. Nenhuma outra dependência é permitida.</p>
             <div class="stack-chips"><span>Python 3.14</span><span>FastAPI 0.142</span><span>sqlite3</span><span>pytest</span><span>uv</span></div>
           </div>
-          <div class="ad-grid">
+          <div class="ad-grid" style="grid-template-columns: 1fr;">
             <div class="card tint ad-card"><span class="tag">AD-2</span><h3>Um único relógio</h3><p>"Hoje" só sai de <span class="c">domain.today()</span>, no fuso de São Paulo. <span class="c">date.today()</span> é proibido.</p></div>
-            <div class="card tint ad-card"><span class="tag">AD-3</span><h3>Janelas em um só lugar</h3><p><span class="c">next7</span> vai de amanhã até hoje + 7, com limites inclusivos. O SQL só aplica.</p></div>
-            <div class="card tint ad-card"><span class="tag">AD-7</span><h3>Um formato de erro</h3><p><span class="c wrap">{"error": {code, field, message}}</span> em todo 404, 405, 422 e 500.</p></div>
-            <div class="card tint ad-card"><span class="tag">AD-9</span><h3>Tags normalizadas</h3><p><span class="c">Backend</span> vira <span class="c">backend</span> na escrita e no filtro. Um só caminho para gravar.</p></div>
+            <div class="card tint ad-card"><span class="tag">AD-7</span><h3>Um formato de erro</h3><p><span class="c wrap">{"error": {code, field, message}}</span> em toda resposta de erro.</p></div>
           </div>
         </div>
-        <div class="foot"><span>04 · Simulação · fonte: ARCHITECTURE-SPINE.md (10 decisões)</span><span>25 / 30</span></div>
-        <aside class="notes"><p>(~2 min) Este slide não é ilustrativo: é a saída real do bmad-architecture rodado na pasta api-tarefas. O arquivo é o ARCHITECTURE-SPINE.md, com 10 decisões numeradas.</p><p>À esquerda, as camadas: api, domain e repo, e quem pode depender de quem. O domain é puro, sem IO, então dá para testar sem banco. À direita, quatro das dez decisões. Todas existem porque dois agentes, sem elas, fariam diferente: um usaria date.today(), outro datetime.now(); um devolveria o 422 padrão do FastAPI, outro um formato próprio.</p><p>Frase para fixar: a arquitetura do BMAD não é um desenho bonito, é uma lista de brigas resolvidas antes de começar. Repare que o fuso que o PM perguntou no slide anterior virou regra aqui, no AD-2.</p></aside>
+        <div class="foot"><span>04 · Na prática · fonte: ARCHITECTURE-SPINE.md (10 decisões)</span><span>24 / 30</span></div>
+        <aside class="notes"><p>(~1,5 min) Saída real do bmad-architecture: 10 decisões no ARCHITECTURE-SPINE.md.</p><p>À esquerda, as camadas e quem pode depender de quem; o domain não faz IO. À direita, decisões que dois agentes tomariam diferente: date.today() ou datetime.now()? O 422 padrão do FastAPI ou um formato próprio?</p><p>Frase para fixar: arquitetura é uma lista de brigas resolvidas antes de começar.</p></aside>
       </section>
 
-      <!-- Simulação 3: readiness -->
-      <section class="slide s" data-screen-label="26 Simulacao readiness">
+      <!-- Na prática 3: readiness -->
+      <section class="slide s" data-screen-label="25 Pratica readiness">
         <div class="head">
-          <span class="eyebrow">Simulação 3/5 · saída real do readiness check</span>
+          <span class="eyebrow">Na prática 3/6 · saída real do readiness check</span>
           <h2 class="h">O readiness check deu PASS, mas apontou onde a story vai doer</h2>
         </div>
         <div class="grid2 wide-left">
@@ -1221,7 +1178,6 @@ FR-4 Excluir            FR-8 Tag + janela
 <span class="m">▸</span> Críticos: 0
 <span class="m">▸</span> M1 Story 1.1 grande (12 critérios)
   → validar com create-story (VS)
-<span class="m">▸</span> M2 task_tags nasce antes: aceito
 <span class="m">▸</span> m3 FR1 diz "ISO 8601"; as stories
   só aceitam YYYY-MM-DD
 <span class="m">▸</span> Resultado: PASS com ressalvas</div>
@@ -1229,88 +1185,118 @@ FR-4 Excluir            FR-8 Tag + janela
             <span class="tag">O que o gate achou</span>
             <div class="gate"><span class="pill ok">PASS</span></div>
             <p>PRD, arquitetura e épicos contam a mesma história: nenhum requisito sem story e nenhuma story dependendo de outra futura.</p>
-            <p>As ressalvas viram ação, não bloqueio: a story 1.1 é validada antes do dev, e o PRD ganha dois ajustes de texto.</p>
+            <p>As ressalvas não bloqueiam: a story 1.1 nasce com notas de arquitetura e armadilhas. Os dois ajustes de texto do PRD eram opcionais e só entraram na retrospectiva.</p>
           </div>
         </div>
-        <div class="foot"><span>04 · Simulação · fonte: implementation-readiness-report-2026-10-02.md</span><span>26 / 30</span></div>
-        <aside class="notes"><p>(~1,5 min) Este é o relatório real do readiness check. Ele cruzou PRD, arquitetura e épicos e deu PASS: os 8 requisitos funcionais e os 5 não funcionais têm story, e nenhuma story depende de outra que vem depois.</p><p>Mas o valor está nas ressalvas. A maior: a story 1.1 junta setup, CRUD, erros, persistência e README, com 12 critérios de aceite. A recomendação não é parar, é validar a story antes de dar para a Dev. E um detalhe fino: o PRD fala em "ISO 8601", mas as stories só aceitam data sem hora. Um dev lendo só o PRD mandaria data com hora e levaria 422.</p><p>Frase para fixar: o gate não serve só para dizer sim ou não; ele aponta onde a próxima etapa vai doer.</p></aside>
+        <div class="foot"><span>04 · Na prática · fonte: implementation-readiness-report-2026-10-02.md</span><span>25 / 30</span></div>
+        <aside class="notes"><p>(~1,5 min) Relatório real: PASS. Os 8 requisitos funcionais e os 5 não funcionais têm story, e nenhuma depende de outra posterior.</p><p>O valor está nas ressalvas: a story 1.1 junta setup, CRUD, erros e README em 12 critérios; e o PRD fala em ISO 8601, mas as stories só aceitam data sem hora.</p><p>Frase para fixar: o gate não só aprova, ele aponta onde a próxima etapa vai doer.</p></aside>
       </section>
 
-      <!-- Simulação 4: story 1.1 -->
-      <section class="slide s" data-screen-label="27 Simulacao story">
+      <!-- Na prática 4: story 1.1 -->
+      <section class="slide s" data-screen-label="26 Pratica story">
         <div class="head">
-          <span class="eyebrow">Simulação 4/5 · story do epics.md real · execução ilustrativa</span>
+          <span class="eyebrow">Na prática 4/6 · story e execução reais</span>
           <h2 class="h">Story 1.1: a Dev recebe um arquivo, não um histórico de chat</h2>
         </div>
         <div class="grid2">
 <div class="tree tree-sm"><span class="m">1-1-criar-listar-e-consultar-tarefas.md</span>
-Status: ready-for-dev
+Status: done
 ## Story
 Como dev do time-piloto, quero criar uma
 tarefa com título e prazo e depois
 listá-la ou consultá-la.
-## Critérios de aceite (3 de 12)
-1. POST /tasks → 201 + tarefa
-2. title vazio → 422 validation_error
-3. prazo no passado → 201</div>
+## Acceptance Criteria (3 de 12)
+2. POST /tasks → 201 + tarefa
+3. title vazio → 422 validation_error
+5. prazo no passado → 201
+## Dev Notes · Armadilhas conhecidas</div>
 <div class="term"><span class="p">›</span> <span class="k">bmad-create-story</span>
-<span class="m">▸</span> 1-1-criar-listar-e-consultar-tarefas.md
 <span class="m">▸</span> Status: ready-for-dev
 
 <span class="p">›</span> (chat novo) <span class="k">bmad-dev-story</span>
-<span class="m">▸</span> Implementando os 12 critérios
-<span class="m">▸</span> Testes dos ACs passando
+<span class="m">▸</span> 12 critérios implementados
+<span class="m">▸</span> uv run pytest: 24 passed
+<span class="m">▸</span> ruff check e format: ok
 <span class="m">▸</span> Status: review</div>
         </div>
-        <div class="foot"><span>04 · Simulação</span><span>27 / 30</span></div>
-        <aside class="notes"><p>(~2 min) À esquerda, o arquivo da story que o create-story gerou: história, critérios de aceite e, no arquivo real, notas de arquitetura e referências. Esse é o contexto inteiro que a Dev precisa.</p><p>Repare no critério 3: ele vem do PRD, que aceita prazo no passado de propósito, para trazer as tarefas atrasadas da planilha.</p><p>À direita, o fluxo: create-story deixa a story em ready-for-dev; num chat novo, dev-story implementa contra os 12 critérios da story (no slide, só 3), escreve os testes e move a story para review.</p><p>Reforce: a Dev não precisa do histórico da conversa com o PM. Está tudo no arquivo.</p></aside>
+        <div class="foot"><span>04 · Na prática · fonte: implementation-artifacts/1-1-criar-listar-e-consultar-tarefas.md</span><span>26 / 30</span></div>
+        <aside class="notes"><p>(~2 min) Arquivo real da story 1.1, gerado pelo create-story. Além da história e dos 12 critérios, ele traz notas de arquitetura, armadilhas conhecidas e referências: todo o contexto de que a Dev precisa, sem o histórico do chat com o PM.</p><p>Num chat novo, o dev-story implementou os 12 critérios, rodou 24 testes e o ruff, e moveu a story para review.</p><p>No projeto real, as cinco stories foram criadas em paralelo, e um workflow meu encadeou dev, review, correção e commit. O terminal mostra os mesmos passos, um de cada vez.</p><p>Frase para fixar: a Dev recebe um arquivo, não um histórico de chat.</p></aside>
       </section>
 
-      <!-- Simulação 5: review + commit -->
-      <section class="slide s" data-screen-label="28 Simulacao review">
+      <!-- Na prática 5: review + commit -->
+      <section class="slide s" data-screen-label="27 Pratica review">
         <div class="head">
-          <span class="eyebrow">Simulação 5/5 · API de tarefas · saídas ilustrativas</span>
-          <h2 class="h">O code review tria os achados, e você decide o que entra</h2>
+          <span class="eyebrow">Na prática 5/6 · review, commit e sprint-status reais</span>
+          <h2 class="h">O code review aprovou a story 1.1 e adiou os achados baixos</h2>
         </div>
         <div class="grid2 wide-left">
 <div class="term"><span class="p">›</span> (chat novo) <span class="k">bmad-code-review</span>
-<span class="m">▸</span> Corrigir: title vazio devolve o
-  422 padrão do FastAPI (fere AD-7)
-<span class="m">▸</span> Fora do escopo: paginação em
-  GET /tasks
-<span class="p">›</span> Corrija o primeiro; o outro vai
-  para o backlog.
+<span class="m">▸</span> 12 critérios conferidos
+<span class="m">▸</span> Achados altos ou médios: nenhum
+<span class="m">▸</span> Baixos: 2 (ex.: id &gt; 2^63−1 vira 500)
+  → adiados no arquivo da story
 <span class="m">▸</span> Status: done
-<span class="p">$</span> git commit -m "feat: story 1.1"</div>
-<div class="tree tree-sm"><span class="m">sprint-status.yaml real · após a 1.1</span>
+<span class="p">$</span> git commit -m "feat: story 1.1 —
+  Criar, listar e consultar tarefas"</div>
+<div class="tree tree-sm"><span class="m">sprint-status.yaml real · fim da sprint</span>
 development_status:
-  epic-1: in-progress
-  1-1-criar-listar-e-consultar-tarefas: <span class="a">done</span>
-  1-2-editar-e-concluir-tarefa: backlog
-  1-3-excluir-tarefa: backlog
-  epic-1-retrospective: optional
-  epic-2: backlog</div>
+  epic-1: <span class="a">done</span>
+  1-1-criar-listar-e-consultar-tarefas: done
+  1-2-editar-e-concluir-tarefa: done
+  1-3-excluir-tarefa: done
+  epic-2: <span class="a">done</span>
+  2-1-etiquetar-tarefas-e-...: done
+  2-2-filtrar-por-janela-...: done</div>
         </div>
-        <div class="foot"><span>04 · Simulação</span><span>28 / 30</span></div>
-        <aside class="notes"><p>(~1,5 min) Último passo da simulação. O code review roda num chat novo e separa o que pertence à story do que não pertence.</p><p>O primeiro achado é real para a story: o erro tem que sair no envelope do AD-7. O segundo, a paginação, o próprio PRD já tinha deixado fora da v1.</p><p>Você decide: corrige o achado da story agora e manda a paginação para o backlog, em vez de transformar a story numa faxina geral.</p><p>À direita, o sprint-status.yaml real gerado pelo sprint-planning, com as chaves exatas das stories. Ele nasce todo em backlog; o que aparece aqui é o estado depois deste ciclo: o épico 1 vira in-progress quando a primeira story é criada, e a 1.1 chega a done. A retrospectiva do épico fica como optional.</p><p>Story em done, sprint-status atualizado, commit feito. Feche: esse ciclo se repete para a 1.2, a 1.3 e assim por diante.</p></aside>
+        <div class="foot"><span>04 · Na prática · fonte: story 1.1 (Review Findings), sprint-status.yaml, git log</span><span>27 / 30</span></div>
+        <aside class="notes"><p>(~1,5 min) Code review real, num contexto novo: nenhum achado alto ou médio. Dois achados baixos, um deles o id acima de 2^63−1 que vira 500, ficaram adiados no próprio arquivo da story.</p><p>À direita, o fim da sprint: 5 stories e 2 épicos em done, com 77 testes. Parece perfeito. Guarde o achado adiado: ele apareceu em três reviews, e a retrospectiva, no próximo slide, mostra por quê.</p></aside>
+      </section>
+
+      <!-- Na prática 6: retrospectiva -->
+      <section class="slide s" data-screen-label="28 Pratica retrospectiva">
+        <div class="head">
+          <span class="eyebrow">Na prática 6/6 · retrospectiva real dos épicos 1 e 2</span>
+          <h2 class="h">O review achou e adiou; a retrospectiva deu dono à dívida</h2>
+        </div>
+        <div class="grid2 wide-left">
+<div class="term"><span class="p">›</span> <span class="k">bmad-retrospective</span>
+<span class="m">▸</span> 5/5 stories · 77 testes
+<span class="m">▸</span> 0 rodadas de correção no review
+<span class="m">▸</span> Mas: id &gt; 2^63−1 adiado em 3 reviews,
+  sem dono
+<span class="m">▸</span> field "task_id" feria o AD-7: passou em
+  2 reviews; o dev da 1.3 achou por acaso
+<span class="m">▸</span> 5 itens de ação · 3 combinados
+<span class="p">$</span> git commit -m "fix: fecha dívida técnica
+  da v1 (itens da retrospectiva)"  <span class="m"># 84 passed</span></div>
+          <div class="card raised">
+            <span class="tag">Causa de sistema</span>
+            <p>O fluxo só mandava corrigir achados altos e médios. Achado baixo não tinha dono.</p>
+            <p><strong>Aprovado não é pronto.</strong></p>
+          </div>
+        </div>
+        <div class="foot"><span>04 · Na prática · fonte: epic-2-retro-2026-10-02.md, deferred-work.md, git log</span><span>28 / 30</span></div>
+        <aside class="notes"><p>(~2 min) Retrospectiva real, uma só para os dois épicos. Os números pareciam perfeitos.</p><p>O review achou o id gigante em três stories e nas três adiou, sem dono. O field "task_id", que viola o AD-7, passou em dois reviews; quem achou foi o dev da 1.3, por acaso. A causa era minha, não do BMAD: o workflow de automação só mandava corrigir achados altos e médios.</p><p>Um commit fechou a dívida, com 84 testes. Frase para fixar: aprovado não é pronto.</p></aside>
       </section>
 
       <!-- 21 Checklist -->
       <section class="slide s" data-screen-label="29 Checklist">
         <div class="head">
           <span class="eyebrow">Para levar</span>
-          <h2 class="h">Checklist do primeiro dia</h2>
+          <h2 class="h">Checklist: cinco passos do primeiro dia, três lições da retrospectiva</h2>
         </div>
         <ul class="check">
-          <li><b>SETUP</b>Node.js 20.12+, Git e a IDE com IA aberta no repositório</li>
+          <li><b>SETUP</b>Node.js 20.12+, Git, uv e a IDE com IA aberta no repositório</li>
           <li><b>INSTALAR</b><span class="c">npx bmad-method install</span> com o módulo BMad Method</li>
           <li><b>ORIENTAR</b><span class="c">bmad-help</span> para saber qual trilha seguir e por onde começar</li>
           <li><b>PLANEJAR</b>PRD e arquitetura lidos e aprovados por você</li>
           <li><b>EXECUTAR</b>Sprint planning e a primeira story passando pelo ciclo completo</li>
-          <li><b>FECHAR</b>Commit feito, com a próxima story já na fila</li>
+          <li><b>REVISAR</b>"Aprovado" é todos os ADs conferidos, não só "nada alto ou médio"</li>
+          <li><b>DECIDIR</b>Achado que pede decisão vira pergunta, não item adiado</li>
+          <li><b>FECHAR</b>Story em done sem nenhum [ ] aberto, commit feito e a próxima na fila</li>
         </ul>
-        <div class="foot"><span>Resumo</span><span>29 / 30</span></div>
-        <aside class="notes"><p>(~1 min) Checklist para levar: setup, instalar, orientar com bmad-help, planejar com PRD e arquitetura aprovados, executar a primeira story pelo ciclo completo e fechar com commit.</p><p>Sugira que tirem foto deste slide.</p></aside>
+        <div class="foot"><span>Resumo · REVISAR, DECIDIR e FECHAR vêm da retrospectiva (slide 28)</span><span>29 / 30</span></div>
+        <aside class="notes"><p>(~1 min) Checklist para levar: setup, instalar, orientar com bmad-help, planejar com PRD e arquitetura aprovados e executar a primeira story pelo ciclo completo.</p><p>Os três últimos itens são os combinados da nossa retrospectiva: revisar contra todos os ADs, transformar decisão em pergunta e só fechar sem [ ] aberto. Não esperem a retro de vocês para adotá-los.</p><p>Sugira que tirem foto deste slide.</p></aside>
       </section>
 
       <!-- 22 Closing -->
@@ -1511,5 +1497,40 @@ development_status:
       focusDeck();
     })();
   </script>
+
+<script type="application/json" id="speaker-notes">
+[
+  "Abertura (~1 min). Apresente-se e diga o objetivo: sair daqui sabendo instalar o BMAD, montar a base de um projeto e operar o dia a dia com uma squad de agentes.\nCombine o formato: perguntas no final, mas pode interromper se algo não ficar claro.\nTudo o que vou mostrar é da versão 6.10 — se vocês viram material antigo com .bmad-core ou Gems, muita coisa mudou.",
+  "(~1,5 min) Pergunte: quem aqui já usa IA para codar? E quem já sentiu que o projeto desandou depois de algumas semanas?\nLado esquerdo: o chat genérico é ótimo em tarefas isoladas. Lado direito: o problema aparece quando o projeto cresce — o contexto some, decisões mudam a cada prompt, ninguém lembra o porquê.\nFeche com a frase de baixo: o problema não é o modelo, é a falta de estrutura em volta dele.",
+  "(~1,5 min) Defina squad agêntica com três palavras: papéis, artefatos e gates.\nPapéis: cada agente tem um foco, como num time real. Artefatos: o que um agente produz vira o contexto do próximo — isso substitui a memória do chat. Gates: você aprova antes de avançar.\nReforce: o humano continua decidindo. O BMAD é uma implementação open source desse modelo, e é ela que vamos ver.",
+  "(~2 min) Passe rápido pela tabela, sem ler linha por linha. Destaque que cada agente é um skill que você chama pelo nome na IDE.\nMary pensa o problema, John escreve o PRD, Winston decide a arquitetura, Sally cuida de UX, Amelia implementa, Paige documenta.\nNovidade para quem conhece a v4: não existe mais Scrum Master. A própria Dev prepara as stories. Testes E2E são um workflow da Dev; o Test Architect completo fica no módulo TEA.\nFeche: são seis papéis, e cada um é um skill que você chama pelo nome.",
+  "(~1,5 min) Este é o mapa da palestra inteira. Quatro fases: análise (opcional), planejamento, solução e implementação.\nA ideia-chave: cada documento vira contexto da fase seguinte. O PRD diz ao arquiteto o que importa; a arquitetura diz à Dev que padrões seguir.\nMostre a faixa de baixo: para trabalho pequeno existe o Quick Flow, que pula as três primeiras fases. Voltamos nele mais tarde.",
+  "Transição (~15 s). Agora vamos colocar a mão na massa: instalar, pedir orientação e escolher a trilha.",
+  "(~1 min) Cinco coisas. Node 20.12 ou superior, porque o instalador roda via npx. Git, porque artefatos e código andam juntos.\nIDE com agente: Claude Code, Cursor e outras — o comando --list-tools mostra a lista completa.\nO uv entra porque workflows como o PRD e a arquitetura rodam scripts Python com uv run — o próprio instalador avisa. E uma ideia pequena: o primeiro projeto é para aprender o fluxo, não para resolver o problema mais crítico da empresa.",
+  "(~2 min) Um comando: npx bmad-method install. Ele pergunta o diretório, os módulos (escolha BMad Method), se quer as versões estáveis, a ferramenta e algumas configs como nome e idioma.\nResultado: duas pastas. _bmad tem os agentes e workflows; _bmad-output é onde os artefatos vão nascer.\nPonto importante: na v6 tudo roda como skill dentro da IDE. Feche: um comando, duas pastas, e a squad já está no repositório.",
+  "(~1,5 min) Ele olha o que já foi feito no projeto, sabe quais módulos estão instalados e recomenda o próximo passo. E roda sozinho no fim dos workflows de planejamento.\nSe tiverem que lembrar de um comando só, é este: bmad-help.",
+  "(~1,5 min) Antes de gerar qualquer documento, escolha a trilha. Quick Flow para bugs e features simples; BMad Method para produtos e features complexas; Enterprise quando há compliance ou multi-tenant.\nOs números de stories são orientação, não regra — a própria documentação diz isso.\nPara projeto existente há um caminho específico; vamos ver no fim da próxima parte.",
+  "Transição (~20 s). Vamos construir a base com um exemplo que vai até o fim: uma API REST de tarefas, com tags e prazos, na trilha BMad Method.",
+  "(~2 min) Regra de ouro antes de tudo: um chat novo para cada workflow.\nPrimeiro o brief com a analista — opcional, mas útil quando o conceito ainda está solto. Depois o PRD com o PM, usando bmad-prd na intenção Create.\nEnfatize: revise o escopo aqui. A API não tem interface, então pulamos o bmad-ux.\nFrase para fixar: mudar o PRD custa uma conversa; mudar código já escrito custa retrabalho.",
+  "(~1,5 min) A arquitetura fixa as decisões que todo agente vai seguir: stack, modelo de dados, padrões de API e de erro, estratégia de testes.\nLado direito: o project-context.md é a constituição do projeto. Todo workflow lê esse arquivo antes de agir. Dá para gerar com bmad-generate-project-context ou escrever à mão.\nDica prática: coloque ali as convenções que você corrigiria num code review.",
+  "(~2 min) Na v6, épicos e stories vêm depois da arquitetura, então as stories já nascem sabendo banco, padrões e stack.\nNo exemplo real, dois épicos com nome de resultado: \"Registrar e manter tarefas\" e \"Saber o que venceu e o que vence\".\nDepois, o gate: o readiness check confere se PRD, arquitetura e stories contam a mesma história. Implemente com READY, ou com ressalvas que você leu e aceitou.",
+  "(~1 min) Não leia a árvore. Pergunte: se você sair do projeto amanhã, de que o próximo agente precisa? Só do repositório.\nFrase para fixar: o contexto sai da sua cabeça e vai para o repositório.",
+  "(~1 min) E se o projeto já existe? Três verbos: arquivar o plano velho, gerar o contexto, documentar o estado atual.\nFrase para fixar: antes de pedir mudança, ensine à squad como o código é hoje.",
+  "(~1 min) No brownfield, o tamanho da mudança decide o caminho: pequena, bmad-quick-dev; grande, o BMad Method completo, partindo da documentação existente.\nFeche: o BMAD oferece modernizar, mas não impõe.",
+  "Transição (~15 s). Com a base pronta, como fica o dia a dia? Duas regras: uma story por vez e um chat novo para cada workflow.",
+  "(~2 min) Uma vez por projeto: bmad-sprint-planning, que cria o sprint-status.yaml.\nDepois o ciclo, todo com a Dev: create-story gera o arquivo da story com critérios de aceite; dev-story implementa com testes; code-review faz uma revisão adversarial e aprova ou pede mudanças.\nStory aprovada, próxima. No fim de cada épico, a retrospectiva.",
+  "(~1,5 min) Quando o plano muda: mudança grande no meio do sprint, bmad-correct-course. Ajuste pequeno fora do backlog, bmad-quick-dev.\nNovo na 6.10: bmad-dev-auto, uma iteração sem supervisão pensada para orquestradores como o módulo bmad-loop — que é opcional.\nSugestão: só experimente o modo autônomo depois de dominar o ciclo manual.",
+  "(~2 min) Cinco erros comuns. Leia o erro e deixe a plateia adivinhar a correção antes de mostrar.\nO mais frequente: pular o planejamento e pedir código direto à Dev — aí o BMAD vira vibe coding com passos extras.\nReforce o segundo: reusar o chat. O contexto certo está nos arquivos, não na conversa.",
+  "Transição (~20 s). Agora tudo junto, com artefatos reais da API de tarefas: PRD, arquitetura, readiness, story, review, commit e retrospectiva. Só a conversa do PM, no primeiro slide, é ilustrativa; os terminais resumem as saídas reais.",
+  "(~1,5 min) A conversa é ilustrativa; o trecho à direita resume o prd.md real.\nO PM não sai escrevendo: pergunta intenção, público e dor. No projeto real, o fuso foi decisão minha na revisão do rascunho, e virou definição no Glossário: \"hoje\" é a data em São Paulo. São oito requisitos com consequências testáveis, mais o que fica fora da v1.\nFrase para fixar: ambiguidade resolvida no PRD não vira bug na story.",
+  "(~1,5 min) Saída real do bmad-architecture: 10 decisões no ARCHITECTURE-SPINE.md.\nÀ esquerda, as camadas e quem pode depender de quem; o domain não faz IO. À direita, decisões que dois agentes tomariam diferente: date.today() ou datetime.now()? O 422 padrão do FastAPI ou um formato próprio?\nFrase para fixar: arquitetura é uma lista de brigas resolvidas antes de começar.",
+  "(~1,5 min) Relatório real: PASS. Os 8 requisitos funcionais e os 5 não funcionais têm story, e nenhuma depende de outra posterior.\nO valor está nas ressalvas: a story 1.1 junta setup, CRUD, erros e README em 12 critérios; e o PRD fala em ISO 8601, mas as stories só aceitam data sem hora.\nFrase para fixar: o gate não só aprova, ele aponta onde a próxima etapa vai doer.",
+  "(~2 min) Arquivo real da story 1.1, gerado pelo create-story. Além da história e dos 12 critérios, ele traz notas de arquitetura, armadilhas conhecidas e referências: todo o contexto de que a Dev precisa, sem o histórico do chat com o PM.\nNum chat novo, o dev-story implementou os 12 critérios, rodou 24 testes e o ruff, e moveu a story para review.\nNo projeto real, as cinco stories foram criadas em paralelo, e um workflow meu encadeou dev, review, correção e commit. O terminal mostra os mesmos passos, um de cada vez.\nFrase para fixar: a Dev recebe um arquivo, não um histórico de chat.",
+  "(~1,5 min) Code review real, num contexto novo: nenhum achado alto ou médio. Dois achados baixos, um deles o id acima de 2^63−1 que vira 500, ficaram adiados no próprio arquivo da story.\nÀ direita, o fim da sprint: 5 stories e 2 épicos em done, com 77 testes. Parece perfeito. Guarde o achado adiado: ele apareceu em três reviews, e a retrospectiva, no próximo slide, mostra por quê.",
+  "(~2 min) Retrospectiva real, uma só para os dois épicos. Os números pareciam perfeitos.\nO review achou o id gigante em três stories e nas três adiou, sem dono. O field \"task_id\", que viola o AD-7, passou em dois reviews; quem achou foi o dev da 1.3, por acaso. A causa era minha, não do BMAD: o workflow de automação só mandava corrigir achados altos e médios.\nUm commit fechou a dívida, com 84 testes. Frase para fixar: aprovado não é pronto.",
+  "(~1 min) Checklist para levar: setup, instalar, orientar com bmad-help, planejar com PRD e arquitetura aprovados e executar a primeira story pelo ciclo completo.\nOs três últimos itens são os combinados da nossa retrospectiva: revisar contra todos os ADs, transformar decisão em pergunta e só fechar sem [ ] aberto. Não esperem a retro de vocês para adotá-los.\nSugira que tirem foto deste slide.",
+  "(~30 s + perguntas) Feche com a frase: planejar com agentes é barato; corrigir sem plano, não.\nAponte os links: documentação, repositório e Discord da comunidade.\nAbra para perguntas."
+]
+</script>
 </body>
 </html>

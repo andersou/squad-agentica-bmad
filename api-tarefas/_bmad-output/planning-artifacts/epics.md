@@ -115,9 +115,9 @@ para que eu possa recadastrar as tarefas da planilha, inclusive as atrasadas, e 
 **Quando** chamo `GET /tarefas`
 **Então** recebo 200 com um array JSON sem envelope e sem paginação, ordenado por `prazo ASC, id ASC` (FR-4, AD-4)
 
-**Dado** uma tarefa criada
-**Quando** fecho o cliente e abro outro apontando para o mesmo `TAREFAS_DB`
-**Então** a tarefa continua na listagem (NFR-5)
+**Dado** uma tarefa criada pela fixture `client`
+**Quando** o teste abre `sqlite3.connect(os.environ["TAREFAS_DB"])` e chama `repo.listar` nessa conexão, sem criar outro `TestClient`
+**Então** a tarefa está gravada em disco (NFR-5)
 
 **E** a conexão é aberta por request na dependência `api.conexao` (`yield`, `check_same_thread=False`, `PRAGMA foreign_keys=ON`), que lê `TAREFAS_DB` (padrão `tarefas.db`) a cada abertura e chama `repo.criar_schema(conn)`, que cria só a tabela `tarefa` (`id INTEGER PRIMARY KEY AUTOINCREMENT`, `titulo`, `prazo` TEXT ISO, `concluida` INTEGER 0/1) com `CREATE TABLE IF NOT EXISTS` (AD-8)
 **E** o repo devolve só `domain.Tarefa` e expõe `criar(conn, titulo, prazo, tags)` e `listar(conn)` com as assinaturas do AD-9; `criar` roda em `with conn:`

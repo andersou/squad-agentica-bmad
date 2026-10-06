@@ -2,12 +2,13 @@ import ast
 import os
 import sqlite3
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 from pathlib import Path
 
 import pytest
 
-from tarefas import repo
+from tarefas import api, repo
 from tarefas.domain import Tarefa
 
 SRC = Path(__file__).parent.parent / "src" / "tarefas"
@@ -42,6 +43,7 @@ def test_titulo_aparado(client):
         {"titulo": "x"},
         {"titulo": "", "prazo": "2026-10-06"},
         {"titulo": "   ", "prazo": "2026-10-06"},
+        {"titulo": "\x1f", "prazo": "2026-10-06"},
         {"titulo": " " + "a" * 201 + " ", "prazo": "2026-10-06"},
         {"titulo": "x", "prazo": "06/10/2026"},
         {"titulo": "x", "prazo": "2026-02-30"},
@@ -58,12 +60,23 @@ def test_corpo_invalido(client, corpo):
     assert client.get("/tarefas").json() == []
 
 
-def test_titulo_com_200_caracteres_e_aceito(client):
-    r = client.post(
-        "/tarefas", json={"titulo": " " + "a" * 200 + " ", "prazo": "2026-10-06"}
-    )
-    assert r.status_code == 201
+def _gravar(client, via, campos):
+    # Mesmo limite no POST e no PATCH: os dois schemas usam Titulo e Tags.
+    if via == "post":
+        return client.post(
+            "/tarefas", json={"titulo": "x", "prazo": "2026-10-06", **campos}
+        )
+    t = _nova(client)
+    return client.patch(f"/tarefas/{t['id']}", json=campos)
+
+
+@pytest.mark.parametrize("via", ["post", "patch"])
+def test_titulo_com_200_caracteres_e_aceito(client, via):
+    # \x1f é espaço para str.strip(), mas não para o strip_whitespace do Pydantic.
+    r = _gravar(client, via, {"titulo": " \x1f" + "a" * 200 + "\x1f "})
+    assert r.status_code == {"post": 201, "patch": 200}[via]
     assert r.json()["titulo"] == "a" * 200
+    assert [t["titulo"] for t in client.get("/tarefas").json()] == ["a" * 200]
 
 
 def test_tarefas_db_vazio_usa_padrao(client, tmp_path, monkeypatch):
@@ -120,12 +133,10 @@ def test_sem_tags(client, extra):
     assert [t["tags"] for t in client.get("/tarefas").json()] == [[]]
 
 
-def test_tag_com_50_caracteres_e_aceita(client):
-    r = client.post(
-        "/tarefas",
-        json={"titulo": "x", "prazo": "2026-10-06", "tags": [" " + "a" * 50 + " "]},
-    )
-    assert r.status_code == 201
+@pytest.mark.parametrize("via", ["post", "patch"])
+def test_tag_com_50_caracteres_e_aceita(client, via):
+    r = _gravar(client, via, {"tags": [" \x1f" + "a" * 50 + "\x1f "]})
+    assert r.status_code == {"post": 201, "patch": 200}[via]
     assert r.json()["tags"] == ["a" * 50]
     assert [t["tags"] for t in client.get("/tarefas").json()] == [["a" * 50]]
 
@@ -531,5 +542,37 @@ def test_camadas():
     )
     for modulo in ("api", "repo"):
         texto = (SRC / f"{modulo}.py").read_text().lower()
-        for proibido in ("lower(", "upper(", "casefold", "nocase"):
+        for proibido in (
+            "lower(",
+            "upper(",
+            "casefold",
+            "nocase",
+            "title(",
+            "swapcase(",
+            "normalize(",
+            "collate",
+        ):
             assert proibido not in texto, (modulo, proibido)
+
+
+def test_id_no_openapi_com_minimum_e_maximum(client):
+    caminho = client.get("/openapi.json").json()["paths"]["/tarefas/{id}"]
+    for metodo in ("patch", "delete"):
+        schema = caminho[metodo]["parameters"][0]["schema"]
+        assert schema["minimum"] == -(2**63), metodo
+        assert schema["maximum"] == 2**63 - 1, metodo
+
+
+def test_conexao_usada_em_outra_thread(client):
+    # O FastAPI abre a dependência e roda a rota em threads diferentes do pool.
+    # O TestClient não reproduz isso, então sem check_same_thread=False só o
+    # uvicorn real quebraria (AD-8).
+    gen = api.conexao()
+    conn = next(gen)
+    try:
+        with ThreadPoolExecutor(1) as ex:
+            assert ex.submit(lambda: conn.execute("SELECT 1").fetchone()).result() == (
+                1,
+            )
+    finally:
+        gen.close()

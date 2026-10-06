@@ -42,12 +42,17 @@ def _prazo_iso(v):
     return v
 
 
+def _aparar(v):
+    # str.strip(), o mesmo do domain: o strip_whitespace do Pydantic mantém \x1c-\x1f.
+    return v.strip() if isinstance(v, str) else v
+
+
 Prazo = Annotated[date, BeforeValidator(_prazo_iso)]
 Titulo = Annotated[
-    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)
+    str, BeforeValidator(_aparar), StringConstraints(min_length=1, max_length=200)
 ]
 Tags = Annotated[
-    list[Annotated[str, StringConstraints(strip_whitespace=True, max_length=50)]],
+    list[Annotated[str, BeforeValidator(_aparar), StringConstraints(max_length=50)]],
     AfterValidator(normalizar_tags),
 ]
 
@@ -58,7 +63,8 @@ def _id_inteiro(v):
     return v
 
 
-Id = Annotated[int, BeforeValidator(_id_inteiro), Path(ge=-(2**63), le=2**63 - 1)]
+# Path antes do BeforeValidator: na ordem inversa o OpenAPI sai com ge/le crus.
+Id = Annotated[int, Path(ge=-(2**63), le=2**63 - 1), BeforeValidator(_id_inteiro)]
 
 
 class TarefaCriar(BaseModel):

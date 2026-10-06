@@ -5,7 +5,7 @@ created: '2026-10-06'
 status: 'done'
 baseline_commit: '0098325cfc4eef357146944ef5f1c1f7741ee0f0'
 route: 'oneshot'
-review_loop_iteration: 1
+review_loop_iteration: 2
 context:
   - '{project-root}/_bmad-output/planning-artifacts/architecture/architecture-api-tarefas-2026-10-06/ARCHITECTURE-SPINE.md'
   - '{project-root}/_bmad-output/implementation-artifacts/epic-2-context.md'
@@ -56,4 +56,30 @@ Passada 1 (blind-hunter; os outros layers não existem na rota oneshot).
 | 7 | Sem pré-requisitos (uv, Python 3.14) | low | Real: versões no spine e no `pyproject.toml` | patch |
 | 8 | Janelas sem resultado esperado; DELETE não mostra nada sem `-i` | low | Real: `hoje` e `proximos-7-dias` devolvem `[]` no exemplo | patch |
 | 9 | O README não diz que a tarefa volta com a grafia gravada da tag | low | Real: `?tag=Backend` devolve `"backend"` | patch |
+
+Passada 2 (`bmad-code-review` sobre `0098325..0618305`: blind-hunter, edge-case-hunter, verification-gap, acceptance-auditor). O verification-gap não achou lacuna. Todos os patches foram aplicados no `README.md`.
+
+| # | Achado | Fonte | Veredito | Evidência | Rota |
+|---|---|---|---|---|---|
+| 1 | Tag vazia ou só com espaços no corpo dá 422, e o README não dizia | blind+edge+auditor | low | Real: `"tags": [" "]` e `[""]` dão 422 `tag vazia` (`domain.normalizar_tags`) | patch, aplicado |
+| 2 | O README não dizia que `titulo` e tags perdem os espaços nas pontas antes do limite, nem que a deduplicação de tags também ignora esses espaços | blind+auditor | low | Real: `"  ok  "` grava `ok`, título só com espaços dá 422, `[" Front ","front","FRONT"]` grava `["Front"]`, e uma tag de 50 caracteres com espaços nas pontas dá 201 | patch, aplicado |
+| 3 | O README não dizia que campo desconhecido dá 422 no POST e no PATCH | blind | low | Real: `extra="forbid"`; `descricao` no POST e `concluído` no PATCH dão 422 | patch, aplicado |
+| 4 | O README não dizia que `concluida` é booleano JSON estrito | blind | low | Real: `StrictBool`; `"true"` e `1` dão 422 | patch, aplicado |
+| 5 | O README não descrevia o formato de `detail` (texto no 404, lista no 422) | blind | low | Real: o 404 devolve `{"detail":"tarefa não encontrada"}` e o 422 devolve uma lista com `loc`, `msg` e `input` | patch, aplicado |
+| 6 | O README não explicava que `--host 0.0.0.0` escuta em todas as interfaces | blind+edge | low | Real. O comando da Intent fica como está, e o README só ganhou a nota de usar `127.0.0.1` quando a API rodar só na máquina (NFR-2) | patch, aplicado |
+| 7 | O comentário dizia que janela "repetida" dá 422, mas o curl mostrava só a janela desconhecida | blind | low | Real: o curl `?janela=hoje&janela=vencidas` foi acrescentado e dá 422 `informe uma janela só` | patch, aplicado |
+
+**Decisões técnicas de baixo risco, tomadas pelo agente:** a nota sobre o `0.0.0.0` complementa o comando congelado na Intent sem trocá-lo. A janela repetida ganhou um curl próprio, em vez de sumir do comentário. Nenhum achado pediu decisão de escopo ou de produto.
+
+Conferência contra a API rodando (banco novo em `/tmp`): os 11 `curl` do README, rodados em ordem, deram 201, 200, 200, 200, 200, 200, 200, 422, 422, 200, 204 e, ao repetir o DELETE, 404, todos iguais aos documentados. As afirmações novas também foram conferidas (as evidências estão na tabela). `uv run pytest` dá 131 passed, e `uv run ruff check` e `uv run ruff format --check` passam.
+
+Conferência dos AD contra o diff da passada 2 (só o README mudou): o **AD-5** cobre as tags aparadas e deduplicadas por `norm_tag`; o **AD-6** cobre o strip antes dos limites, a tag vazia, `extra="forbid"` e o `StrictBool`; o **AD-7** cobre o formato de `detail` e o NFR-2 da rede interna. Os outros AD (1 a 4, 8 e 9) não mudam, e a conferência da passada 1 continua valendo.
+
+Rejeitados na passada 2:
+- Exemplo de PATCH com 404 e de POST com 422 (blind): low e dispensável. Os códigos 404 e 422 já têm exemplo executável, e a tabela cobre PATCH.
+- `epic-2` continua `in-progress` no sprint-status (blind): não vem desta story. O `epic-1` está igual, o fechamento do épico fica com a retrospectiva, e a sincronização é o action item 6, ainda aberto.
+- Triage Log sem coluna de resultado e AC sem conferência item a item (blind): a correção seria editar a spec revisada (regra da triagem). Mesmo assim, esta tabela já registra o resultado de cada achado.
+- "Só o `README.md` muda", mas o diff também mexe na spec e no sprint-status (auditor): a correção seria editar a spec revisada, e a nota seguinte da própria spec já explica o sprint-status.
+- O `id` 1 pode não existir num banco reaproveitado (edge): false. O README já diz "com `id` 1 num banco novo" e manda trocar pelo `id` devolvido em outro banco.
+- Falta a linha 405 na tabela (edge): low e fora do contrato. Rota não definida é comportamento do framework, não um código do AD-7.
 

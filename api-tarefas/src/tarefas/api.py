@@ -5,7 +5,8 @@ from collections.abc import Iterator
 from datetime import date
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Path, Response
+from fastapi import Depends, FastAPI, HTTPException, Path, Query, Response
+from fastapi.exceptions import RequestValidationError
 from pydantic import (
     AfterValidator,
     BaseModel,
@@ -91,8 +92,42 @@ def criar_tarefa(dados: TarefaCriar, conn: Conexao) -> Tarefa:
 
 
 @app.get("/tarefas")
-def listar_tarefas(conn: Conexao) -> list[Tarefa]:
-    return repo.listar(conn)
+def listar_tarefas(
+    conn: Conexao,
+    tag: Annotated[
+        list[str],
+        Query(
+            default_factory=list,
+            description="Filtra por tag: uma tag por chamada, até 50 caracteres.",
+        ),
+    ],
+) -> list[Tarefa]:
+    valor = None
+    if tag:
+        # A checagem fica na rota (AD-6); RequestValidationError mantém o 422 em
+        # lista, no formato HTTPValidationError que o OpenAPI anuncia (AD-7).
+        motivo, entrada = None, tag
+        if len(tag) > 1:
+            motivo = "informe uma tag só"
+        else:
+            entrada = tag[0]
+            valor = _aparar(entrada)
+            if not valor:
+                motivo = "tag não pode ser vazia"
+            elif len(valor) > 50:
+                motivo = "tag deve ter até 50 caracteres"
+        if motivo:
+            raise RequestValidationError(
+                [
+                    {
+                        "type": "value_error",
+                        "loc": ("query", "tag"),
+                        "msg": motivo,
+                        "input": entrada,
+                    }
+                ]
+            )
+    return repo.listar(conn, tag=valor)
 
 
 @app.patch("/tarefas/{id}", responses={404: {"description": "tarefa não encontrada"}})

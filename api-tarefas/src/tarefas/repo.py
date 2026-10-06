@@ -70,8 +70,15 @@ def editar(conn: sqlite3.Connection, id: int, campos: dict) -> Tarefa | None:
         return _buscar(conn, "WHERE t.id = ?", (id,))[0]
 
 
-def listar(conn: sqlite3.Connection) -> list[Tarefa]:
-    return _buscar(conn, "", ())
+def listar(conn: sqlite3.Connection, *, tag: str | None = None) -> list[Tarefa]:
+    if tag is None:
+        return _buscar(conn, "", ())
+    # Subconsulta, não WHERE no JOIN: a tarefa volta com todas as tags (AD-9).
+    return _buscar(
+        conn,
+        "WHERE t.id IN (SELECT tarefa_id FROM tarefa_tag WHERE nome_norm = ?)",
+        (norm_tag(tag),),
+    )
 
 
 def _buscar(conn: sqlite3.Connection, onde: str, params: tuple) -> list[Tarefa]:

@@ -181,6 +181,101 @@ def test_listar_tags_de_varias_tarefas(client):
     ]
 
 
+def _tarefas_com_tags(client):
+    backend = _nova(client, "b", "2026-10-02", ["api", "Backend", "urgente"])
+    backend = client.patch(f"/tarefas/{backend['id']}", json={"concluida": True}).json()
+    _nova(client, "l", "2026-10-01", ["backend-legado"])
+    _nova(client, "f", "2026-10-03", ["frontend"])
+    _nova(client, "s", "2026-10-04", [])
+    return backend
+
+
+@pytest.mark.parametrize("tag", ["BACKEND", " backend "])
+def test_filtrar_por_tag(client, tag):
+    backend = _tarefas_com_tags(client)
+    r = client.get("/tarefas", params={"tag": tag})
+    assert r.status_code == 200
+    assert r.json() == [backend]
+    assert backend["concluida"] is True
+    assert backend["tags"] == ["api", "Backend", "urgente"]
+
+
+def test_filtrar_por_tag_ordenado(client):
+    a = _nova(client, "a", "2026-10-10", ["backend"])
+    _nova(client, "x", "2026-10-01", ["outra"])
+    b = _nova(client, "b", "2026-10-05", ["Backend"])
+    c = _nova(client, "c", "2026-10-10", ["backend"])
+    r = client.get("/tarefas?tag=backend")
+    assert [t["id"] for t in r.json()] == [b["id"], a["id"], c["id"]]
+
+
+def test_filtrar_por_tag_sem_match(client):
+    _tarefas_com_tags(client)
+    r = client.get("/tarefas?tag=inexistente")
+    assert r.status_code == 200
+    assert r.json() == []
+
+
+def test_listar_sem_tag_traz_todas(client):
+    _tarefas_com_tags(client)
+    r = client.get("/tarefas")
+    assert r.status_code == 200
+    assert [t["titulo"] for t in r.json()] == ["l", "b", "f", "s"]
+
+
+@pytest.mark.parametrize(
+    "query, msg, entrada",
+    [
+        ("tag=a&tag=b", "informe uma tag só", ["a", "b"]),
+        ("tag=a&tag=a", "informe uma tag só", ["a", "a"]),
+        ("tag=", "tag não pode ser vazia", ""),
+        ("tag=%20%20", "tag não pode ser vazia", "  "),
+        (
+            f"tag=%20{'a' * 51}%20",
+            "tag deve ter até 50 caracteres",
+            f" {'a' * 51} ",
+        ),
+    ],
+)
+def test_filtrar_por_tag_invalida(client, query, msg, entrada):
+    r = client.get(f"/tarefas?{query}")
+    assert r.status_code == 422
+    assert r.json()["detail"] == [
+        {"type": "value_error", "loc": ["query", "tag"], "msg": msg, "input": entrada}
+    ]
+
+
+def test_filtrar_por_tag_com_50_caracteres(client):
+    t = _nova(client, tags=["a" * 50])
+    _nova(client, tags=["b"])
+    r = client.get("/tarefas", params={"tag": " " + "A" * 50 + " "})
+    assert r.status_code == 200
+    assert r.json() == [t]
+
+
+def test_repo_listar_por_tag(client):
+    t = _nova(client, tags=["x", "Straße"])
+    _nova(client, tags=["strass"])
+    conn = sqlite3.connect(os.environ["TAREFAS_DB"])
+    try:
+        tarefas = repo.listar(conn, tag="  STRASSE ")
+    finally:
+        conn.close()
+    assert tarefas == [Tarefa(t["id"], "x", date(2026, 10, 6), ["x", "Straße"], False)]
+
+
+def test_openapi_documenta_tag(client):
+    params = client.get("/openapi.json").json()["paths"]["/tarefas"]["get"][
+        "parameters"
+    ]
+    tag = next(p for p in params if p["name"] == "tag")
+    assert tag["in"] == "query"
+    assert tag["required"] is False
+    assert tag["schema"]["type"] == "array"
+    assert tag["schema"]["items"] == {"type": "string"}
+    assert "uma tag por chamada" in tag["description"]
+
+
 def test_banco_da_story_1_1_ganha_tarefa_tag(client):
     conn = sqlite3.connect(os.environ["TAREFAS_DB"])
     try:

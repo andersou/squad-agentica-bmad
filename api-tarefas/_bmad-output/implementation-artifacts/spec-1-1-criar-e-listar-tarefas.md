@@ -2,7 +2,7 @@
 title: 'Story 1.1: Criar e listar tarefas'
 type: 'feature'
 created: '2026-10-06'
-status: 'in-progress'
+status: 'done'
 baseline_commit: '0c5e87b501e5d5b2d174b3a9ea918cd33fe19e07'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -67,12 +67,12 @@ Repositório sem código: só `AGENTS.md`, `CLAUDE.md`, `_bmad/`, `.claude/` e `
 
 Code review de 2026-10-06 (`0c5e87b..f9cc065`; camadas blind-hunter, edge-case-hunter, verification-gap e acceptance-auditor).
 
-- [ ] [Review][Decision] Surrogate UTF-16 solto no corpo dá 500 — `{"titulo": "a\ud800b", ...}` estoura `UnicodeEncodeError` no `INSERT` do sqlite. `{"prazo": "\ud800"}` também dá 500, porque o 422 repete o `input` e o `JSONResponse` não consegue codificá-lo. Um validator no `titulo` não resolve, porque o 500 só muda para a renderização do 422. A correção completa pede um handler de `RequestValidationError` que serialize com `ensure_ascii`, mais a rejeição do surrogate nos campos `str`. Nada é gravado em nenhum dos casos.
+- [x] [Review][Decision] Surrogate UTF-16 solto no corpo dá 500 — `{"titulo": "a\ud800b", ...}` estoura `UnicodeEncodeError` no `INSERT` do sqlite. `{"prazo": "\ud800"}` também dá 500, porque o 422 repete o `input` e o `JSONResponse` não consegue codificá-lo. Um validator no `titulo` não resolve, porque o 500 só muda para a renderização do 422. A correção completa pede um handler de `RequestValidationError` que serialize com `ensure_ascii`, mais a rejeição do surrogate nos campos `str`. Nada é gravado em nenhum dos casos. **Decisão do Anderson (2026-10-06): rejeitado.** Só acontece com entrada fabricada numa API interna, não perde dados, e segue o mesmo critério do achado #16.
 - [x] [Review][Patch] O desempate `id ASC` (AD-4) ficou sem teste, adiado com a premissa falsa de que não dava para provocar a falha [tests/test_tarefas.py:75] — o teste cria o índice `(prazo, id DESC)` antes do GET. Sem o `id ASC` ele falha (confirmado por mutação). O `deferred-work.md` foi removido.
 - [x] [Review][Patch] Nenhum teste cobre o fallback de `TAREFAS_DB=""` [tests/test_tarefas.py:68] — `test_tarefas_db_vazio_usa_padrao`. Ele falha com `os.environ.get("TAREFAS_DB", "tarefas.db")` (confirmado por mutação).
 - [x] [Review][Patch] `test_criar_com_tags_falha_ate_story_1_2` vazava a conexão quando a asserção falhava e não usava a fixture `client` [tests/test_tarefas.py:142] — agora fecha num `try/finally` e usa o banco da fixture.
 - [x] [Review][Patch] O teste de 200 caracteres não conferia o título gravado [tests/test_tarefas.py:60] — passa a verificar que volta `"a" * 200`.
-- [x] [Review][Patch] O sprint-status estava em `review` com a spec em `done` [sprint-status.yaml] — os dois estão em `in-progress` até a decisão acima.
+- [x] [Review][Patch] O sprint-status estava em `review` com a spec em `done` [sprint-status.yaml] — os dois estão em `done` depois da decisão acima.
 
 AC 3 conferido à mão: POST, reinício do uvicorn com `TAREFAS_DB` absoluto e GET devolve a tarefa. `uv tree --package pydantic` mostra 2.13.5.
 

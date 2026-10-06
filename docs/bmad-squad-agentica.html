@@ -256,6 +256,7 @@
 
     /* Layout helpers */
     .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+    .grid2.stretch { align-items: stretch; }
     .grid2.wide-left { grid-template-columns: 1.15fr 1fr; }
     .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
     .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
@@ -488,6 +489,7 @@
       border: 1px solid var(--border);
       color: var(--fg-2);
     }
+    .pill.warn { color: #8a4b00; border-color: rgba(245, 158, 11, 0.5); background: rgba(245, 158, 11, 0.16); }
     .pill.ok { color: var(--success); border-color: rgba(21, 190, 83, 0.4); background: rgba(21, 190, 83, 0.12); }
     /* Na prática · arquitetura real */
     .arch-grid { display: grid; grid-template-columns: 600px 1fr; gap: 64px; align-items: start; }
@@ -576,8 +578,8 @@
 
       <!-- 01 Cover -->
       <section class="slide active s dark center" data-screen-label="01 Capa">
-        <div class="stack" style="gap: 40px;">
-          <span class="eyebrow">Palestra · BMAD-METHOD v6.12.1</span>
+        <div class="stack" style="gap: 40px; margin-top: auto;">
+          <span class="eyebrow">Tech Talk · BMAD-METHOD v6.12.1</span>
           <h1 class="cover-title">Squad agêntica: do primeiro comando ao dia a dia</h1>
           <p class="lede">Como montar e operar um time de agentes de IA com o BMAD: instalação, base do projeto e rotina de desenvolvimento.</p>
           <div class="speaker">
@@ -585,7 +587,11 @@
             <span class="speaker-role">Forward Deployed Engineer</span>
           </div>
         </div>
-        <div class="foot"><span>Slides e projeto: <a href="https://github.com/andersou/squad-agentica-bmad" style="color: inherit; text-decoration: none;">github.com/andersou/squad-agentica-bmad</a> · BMAD-METHOD, licença MIT</span><span>01 / 30</span></div>
+        <div class="links" style="margin-top: auto;">
+          <div><span>BMAD-METHOD</span><a href="https://github.com/bmad-code-org/BMAD-METHOD" style="color: inherit; text-decoration: none;">github.com/bmad-code-org/BMAD-METHOD</a></div>
+          <div><span>Slides e projeto de exemplo</span><a href="https://github.com/andersou/squad-agentica-bmad" style="color: inherit; text-decoration: none;">github.com/andersou/squad-agentica-bmad</a></div>
+        </div>
+        <div class="foot"><span></span><span>01 / 30</span></div>
         <aside class="notes"><p>Abertura (~1 min). Apresente-se e diga o objetivo: sair daqui sabendo instalar o BMAD, montar a base de um projeto e operar o dia a dia com uma squad de agentes.</p><p>Combine o formato: perguntas no final, mas pode interromper se algo não ficar claro.</p><p>Tudo o que vou mostrar é da versão 6.12.1, de outubro de 2026. Se vocês viram material com .bmad-core, Gems, quick-dev ou create-story, muita coisa mudou.</p></aside>
       </section>
 
@@ -702,7 +708,7 @@
           <span>Intenção já clara vai direto para <span class="c">bmad-spec</span> e <span class="c">bmad-build</span>, sem passar pelas fases 1–3.</span>
         </div>
         <div class="foot"><span>Por quê · fonte: docs/plan/choose-a-planning-path.md</span><span>05 / 30</span></div>
-        <aside class="notes"><p>(~1,5 min) Este é o mapa da palestra inteira. Quatro fases: análise (opcional), planejamento, solução e implementação.</p><p>A ideia-chave: cada documento vira contexto da fase seguinte. O PRD diz ao arquiteto o que importa; a arquitetura diz à Dev que padrões seguir.</p><p>Mostre a faixa de baixo: quando a intenção já está clara, o caminho curto vai direto para o bmad-spec e o bmad-build. Voltamos nele mais tarde.</p></aside>
+        <aside class="notes"><p>(~1,5 min) Este é o mapa da tech talk inteira. Quatro fases: análise (opcional), planejamento, solução e implementação.</p><p>A ideia-chave: cada documento vira contexto da fase seguinte. O PRD diz ao arquiteto o que importa; a arquitetura diz à Dev que padrões seguir.</p><p>Mostre a faixa de baixo: quando a intenção já está clara, o caminho curto vai direto para o bmad-spec e o bmad-build. Voltamos nele mais tarde.</p></aside>
       </section>
 
       <!-- 06 Section 1 -->
@@ -869,7 +875,7 @@
         <aside class="notes"><p>(~1,5 min) A arquitetura fixa as decisões que todo agente vai seguir: stack, modelo de dados, padrões de API e de erro, estratégia de testes.</p><p>Lado direito: o AGENTS.md é a constituição do projeto. O bmad-project-context pergunta o que nenhum scan acha, confere cada caminho citado e grava um bloco que todo agente lê antes de agir.</p><p>Dica prática: coloque ali as convenções que você corrigiria num code review.</p></aside>
       </section>
 
-      <!-- 14 Epics + readiness -->
+      <!-- 14 Epics + gate -->
       <section class="slide s" data-screen-label="14 Epicos e gate">
         <div class="head">
           <span class="eyebrow">Fase 3 · Solução</span>
@@ -884,7 +890,7 @@
           <div class="card raised">
             <span class="tag">Gate · <span style="text-transform: none">bmad-sprint-planning</span></span>
             <p>Antes de gerar o sprint, confere se PRD, arquitetura e stories contam a mesma história.</p>
-            <div class="gate"><span class="pill ok">PASS</span><span class="pill">CONCERNS</span><span class="pill bad">FAIL</span></div>
+            <div class="gate"><span class="pill ok">PASS</span><span class="pill warn">CONCERNS</span><span class="pill bad">FAIL</span></div>
             <p>Implemente com PASS, ou com CONCERNS que você leu e aceitou.</p>
           </div>
         </div>
@@ -924,7 +930,7 @@
         <aside class="notes"><p>(~1 min) Não leia a árvore. Pergunte: se você sair do projeto amanhã, de que o próximo agente precisa? Só do repositório.</p><p>Frase para fixar: o contexto sai da sua cabeça e vai para o repositório.</p></aside>
       </section>
 
-      <!-- Brownfield A: onboarding -->
+      <!-- 16 Brownfield: onboarding -->
       <section class="slide s" data-screen-label="16 Brownfield onboarding">
         <div class="head">
           <span class="eyebrow">Projeto existente · brownfield</span>
@@ -954,7 +960,7 @@
         <aside class="notes"><p>(~1 min) E se o projeto já existe? Três verbos: arquivar o plano velho, gerar o contexto e mantê-lo vivo.</p><p>Frase para fixar: antes de pedir mudança, ensine à squad como o código é hoje.</p></aside>
       </section>
 
-      <!-- Brownfield B: choose path -->
+      <!-- 17 Brownfield: choose path -->
       <section class="slide s" data-screen-label="17 Brownfield caminhos">
         <div class="head">
           <span class="eyebrow">Projeto existente · brownfield</span>
@@ -985,7 +991,7 @@
         <aside class="notes"><p>(~1 min) No brownfield, o tamanho da mudança decide o caminho: pequena, bmad-build direto; grande, o BMad Method completo, partindo do que já existe.</p><p>Feche: uma sessão de build é um objetivo; passou disso, planeje antes.</p></aside>
       </section>
 
-      <!-- 16 Section 3 -->
+      <!-- 18 Section 3 -->
       <section class="slide s dark center" data-screen-label="18 Secao Dia a dia">
         <div class="stack" style="gap: 40px;">
           <span class="sec-num">03</span>
@@ -997,7 +1003,7 @@
         <aside class="notes"><p>Transição (~15 s). Com a base pronta, como fica o dia a dia? Duas regras: uma story por vez e um chat novo para cada workflow.</p></aside>
       </section>
 
-      <!-- 17 Cycle -->
+      <!-- 19 Cycle -->
       <section class="slide s" data-screen-label="19 Ciclo da story">
         <div class="head">
           <span class="eyebrow">Fase 4 · por story, sempre num chat novo</span>
@@ -1028,7 +1034,7 @@
         <aside class="notes"><p>(~2 min) Uma vez por projeto: o bmad-sprint-planning, que agora abre com o gate e só depois gera o sprint-status.yaml.</p><p>Depois o ciclo, por story e num chat novo: o bmad-build investiga, escreve a spec, implementa e já faz uma rodada de revisão, deixando a story em review. O bmad-code-review faz a revisão independente e fecha a story.</p><p>No fim de cada épico, a retrospectiva. Frase para fixar: duas sessões por story, uma para construir e outra para revisar.</p></aside>
       </section>
 
-            <!-- 19 When plans change -->
+      <!-- 20 Outside the cycle -->
       <section class="slide s" data-screen-label="20 Fora do ciclo">
         <div class="head">
           <span class="eyebrow">Fora do roteiro</span>
@@ -1056,7 +1062,7 @@
         <aside class="notes"><p>(~1,5 min) Fora do ciclo: mudança grande no meio do sprint, bmad-correct-course. Ajuste pequeno fora do backlog, o próprio bmad-build.</p><p>Para orquestradores, o bmad-build-auto roda o build sem supervisão e para quando a intenção fica ambígua. Só experimente depois de dominar o ciclo manual.</p><p>Se alguém viu quick-dev ou create-story num tutorial antigo: hoje é tudo bmad-build.</p></aside>
       </section>
 
-      <!-- 20 Pitfalls -->
+      <!-- 21 Pitfalls -->
       <section class="slide s" data-screen-label="21 Armadilhas">
         <div class="head">
           <span class="eyebrow">Armadilhas</span>
@@ -1076,7 +1082,7 @@
         <aside class="notes"><p>(~2 min) Cinco erros comuns. Leia o erro e deixe a plateia adivinhar a correção antes de mostrar.</p><p>O mais frequente: pular o planejamento e pedir código direto à Dev — aí o BMAD vira vibe coding com passos extras.</p><p>Reforce o segundo: reusar o chat. O contexto certo está nos arquivos, não na conversa.</p></aside>
       </section>
 
-      <!-- Section 4 -->
+      <!-- 22 Section 4 -->
       <section class="slide s dark center" data-screen-label="22 Secao Na pratica">
         <div class="stack" style="gap: 40px;">
           <span class="sec-num">04</span>
@@ -1109,7 +1115,7 @@ Janela: vencidas · hoje · próximos 7 dias
 FR-1 Criar tarefa     FR-4 Listagem geral
 FR-2 Editar tarefa    FR-5 Tags e filtro
 FR-3 Excluir tarefa   FR-6 Janelas de prazo
-## 6. Fora da v1
+## 6. Escopo · fora da v1
 - Autenticação, usuários e permissões
 - Paginação (fica no backlog)</div>
         </div>
@@ -1168,13 +1174,13 @@ FR-3 Excluir tarefa   FR-6 Janelas de prazo
         <aside class="notes"><p>(~1,5 min) Saída real do bmad-architecture: 9 decisões no ARCHITECTURE-SPINE.md, revisadas por quatro lentes: adversarial, atualidade das versões, conciliação com o PRD e rubrica.</p><p>À esquerda, as camadas e quem pode depender de quem; o domain não importa nada. À direita, decisões que dois agentes tomariam diferente: date.today() ou um relógio injetado? Que código o DELETE devolve?</p><p>Frase para fixar: arquitetura é uma lista de brigas resolvidas antes de começar.</p></aside>
       </section>
 
-      <!-- Na prática 3: readiness -->
+      <!-- Na prática 3: gate do sprint planning -->
       <section class="slide s" data-screen-label="25 Pratica gate">
         <div class="head">
           <span class="eyebrow">Na prática 3/6 · saída real do gate do sprint planning</span>
           <h2 class="h">O gate deu CONCERNS: a story 1.1 contradizia a convenção de testes</h2>
         </div>
-        <div class="grid2 wide-left">
+        <div class="grid2 wide-left stretch">
 <div class="term"><span class="p">›</span> <span class="k">bmad-sprint-planning</span>
 <span class="m">▸</span> FR-1 a FR-6 e NFR-1 a NFR-5
   cobertos por stories
@@ -1187,7 +1193,7 @@ FR-3 Excluir tarefa   FR-6 Janelas de prazo
 <span class="m">▸</span> AC corrigido · sprint-status gerado</div>
           <div class="card raised">
             <span class="tag">O que o gate achou</span>
-            <div class="gate"><span class="pill">CONCERNS</span></div>
+            <div class="gate"><span class="pill warn">CONCERNS</span></div>
             <p>Quem implementasse a 1.1 teria que decidir sozinho qual regra vale. O gate transformou isso em pergunta.</p>
             <p>Você escolhe: corrigir o AC, mudar a convenção ou seguir. Aqui, o AC foi corrigido antes do sprint.</p>
           </div>
@@ -1216,7 +1222,7 @@ PATCH, DELETE, janela, ORM, date.today()
 <div class="term"><span class="p">›</span> <span class="k">bmad-build</span> story 1.1
 <span class="m">▸</span> spec: intenção, limites, matriz
 <span class="m">▸</span> implementa api · domain · repo
-<span class="m">▸</span> triagem: 19 achados
+<span class="m">▸</span> triagem: 19 achados, 9 rejeitados
   8 patch · 1 pergunta · 1 adiado
 <span class="m">▸</span> confere AD-1 a AD-9 no diff
 <span class="m">▸</span> Status: review
@@ -1278,8 +1284,8 @@ development_status:
 <span class="m">▸</span> R2: a guarda não pega CURRENT_DATE
   no SQL
 <span class="m">▸</span> Prova por mutação, não por opinião
-<span class="p">$</span> git commit -m "fix: action items
-  1 a 4 da retro"  <span class="m"># 137 passed</span></div>
+<span class="p">$</span> git commit -m "fix: action items 1 a 4
+  da retro do épico 2"  <span class="m"># 137 passed</span></div>
           <div class="card raised">
             <span class="tag">Da v6.10 para a v6.12.1</span>
             <p>As lições da retro anterior viraram regra no AGENTS.md: corrigir achado baixo, decisão vira pergunta, revisar cada AD.</p>
@@ -1291,7 +1297,7 @@ development_status:
         <aside class="notes"><p>(~2 min) Na 6.12 a retrospectiva virou revisão do épico baseada em evidência: cada achado traz arquivo, linha ou commit. Os dois épicos saíram accepted-with-open-items.</p><p>O achado que mais vale contar: o relógio fixo dos testes caía no mesmo dia do relógio real. Com uma mutação que vaza o relógio, os 131 testes continuavam verdes. Só a visão do épico inteiro mostrou isso.</p><p>A ponte com a versão anterior: as lições da retro da 6.10 viraram regra no AGENTS.md, e mesmo assim a primeira passada de review rejeitou achados baixos. Frase para fixar: regra escrita não basta, o workflow precisa carregá-la.</p></aside>
       </section>
 
-      <!-- 21 Checklist -->
+      <!-- 29 Checklist -->
       <section class="slide s" data-screen-label="29 Checklist">
         <div class="head">
           <span class="eyebrow">Para levar</span>
@@ -1311,7 +1317,7 @@ development_status:
         <aside class="notes"><p>(~1 min) Checklist para levar: setup, instalar, orientar com o bmad-help, planejar com o gate do sprint e executar a primeira story pelo build e pelo review.</p><p>Os três últimos itens são as lições das retrospectivas: registrar a lição no AGENTS.md, corrigir na story o que tem correção clara e escrever testes que não passem por coincidência, como o relógio longe da data real. Não esperem a retro de vocês para adotá-los.</p><p>Sugira que tirem foto deste slide.</p></aside>
       </section>
 
-      <!-- 22 Closing -->
+      <!-- 30 Closing -->
       <section class="slide s dark center" data-screen-label="30 Encerramento">
         <div class="stack" style="gap: 56px;">
           <span class="eyebrow">Obrigado · perguntas?</span>
@@ -1330,7 +1336,7 @@ development_status:
             <div><span>Comunidade</span>discord.gg/gk8jAdXWmj</div>
           </div>
         </div>
-        <div class="foot"><span>Squad agêntica com BMAD v6.12.1</span><span>30 / 30</span></div>
+        <div class="foot"><span>Squad agêntica com BMAD v6.12.1 · BMAD-METHOD, licença MIT</span><span>30 / 30</span></div>
         <aside class="notes"><p>(~30 s + perguntas) Feche com a frase: planejar com agentes é barato; corrigir sem plano, não.</p><p>Aponte os links: o repositório com estes slides e o projeto de exemplo, a documentação, o repositório do BMAD e o Discord da comunidade.</p><p>Abra para perguntas.</p></aside>
       </section>
 
@@ -1519,7 +1525,7 @@ development_status:
   "(~1,5 min) Pergunte: quem aqui já usa IA para codar? E quem já sentiu que o projeto desandou depois de algumas semanas?\nLado esquerdo: o chat genérico é ótimo em tarefas isoladas. Lado direito: o problema aparece quando o projeto cresce — o contexto some, decisões mudam a cada prompt, ninguém lembra o porquê.\nFeche com a frase de baixo: o problema não é o modelo, é a falta de estrutura em volta dele.",
   "(~1,5 min) Defina squad agêntica com três palavras: papéis, artefatos e gates.\nPapéis: cada agente tem um foco, como num time real. Artefatos: o que um agente produz vira o contexto do próximo — isso substitui a memória do chat. Gates: você aprova antes de avançar.\nReforce: o humano continua decidindo. O BMAD é uma implementação open source desse modelo, e é ela que vamos ver.",
   "(~2 min) Passe rápido pela tabela, sem ler linha por linha. Cada agente é um skill que você chama pelo nome na IDE.\nMary pensa o problema, John escreve o PRD e quebra em épicos, Winston decide a arquitetura, Sally cuida de UX e Amelia implementa com o bmad-build.\nPara quem conhece versões antigas: não existe Scrum Master, e a Paige saiu na 6.11. Feche: são cinco papéis, e cada um é um skill que você chama pelo nome.",
-  "(~1,5 min) Este é o mapa da palestra inteira. Quatro fases: análise (opcional), planejamento, solução e implementação.\nA ideia-chave: cada documento vira contexto da fase seguinte. O PRD diz ao arquiteto o que importa; a arquitetura diz à Dev que padrões seguir.\nMostre a faixa de baixo: quando a intenção já está clara, o caminho curto vai direto para o bmad-spec e o bmad-build. Voltamos nele mais tarde.",
+  "(~1,5 min) Este é o mapa da tech talk inteira. Quatro fases: análise (opcional), planejamento, solução e implementação.\nA ideia-chave: cada documento vira contexto da fase seguinte. O PRD diz ao arquiteto o que importa; a arquitetura diz à Dev que padrões seguir.\nMostre a faixa de baixo: quando a intenção já está clara, o caminho curto vai direto para o bmad-spec e o bmad-build. Voltamos nele mais tarde.",
   "Transição (~15 s). Agora vamos colocar a mão na massa: instalar, pedir orientação e escolher o caminho.",
   "(~1 min) Cinco coisas. Node 20.12 ou superior, porque o instalador roda via npx. Git, porque artefatos e código andam juntos.\nIDE com agente: Claude Code, Cursor e outras — o comando --list-tools mostra a lista completa.\nO uv é obrigatório desde a 6.11: o bmad-build não roda sem ele, e o próprio instalador avisa. E uma ideia pequena: o primeiro projeto é para aprender o fluxo, não para resolver o problema mais crítico da empresa.",
   "(~2 min) Um comando: npx bmad-method install. Ele pergunta o diretório, os módulos (escolha BMad Method), se quer as versões estáveis, a ferramenta e algumas configs como nome e idioma.\nResultado: duas pastas. _bmad tem os agentes e workflows; _bmad-output é onde os artefatos vão nascer.\nPonto importante: na v6 tudo roda como skill dentro da IDE. Feche: um comando, duas pastas, e a squad já está no repositório.",
@@ -1544,7 +1550,7 @@ development_status:
   "(~1,5 min) Code review real, num chat novo. O bmad-build tinha adiado um achado médio, o desempate por id ASC, dizendo que não dava para provocar a falha. O review mostrou que a premissa era falsa, escreveu o teste e provou por mutação. O achado que pedia decisão virou pergunta para mim, não item adiado.\nÀ direita, o fim da sprint: sete stories e as duas retrospectivas em done, com 137 testes. Os épicos ainda aparecem in-progress, uma pendência real de sincronização que a retrospectiva registrou.",
   "(~2 min) Na 6.12 a retrospectiva virou revisão do épico baseada em evidência: cada achado traz arquivo, linha ou commit. Os dois épicos saíram accepted-with-open-items.\nO achado que mais vale contar: o relógio fixo dos testes caía no mesmo dia do relógio real. Com uma mutação que vaza o relógio, os 131 testes continuavam verdes. Só a visão do épico inteiro mostrou isso.\nA ponte com a versão anterior: as lições da retro da 6.10 viraram regra no AGENTS.md, e mesmo assim a primeira passada de review rejeitou achados baixos. Frase para fixar: regra escrita não basta, o workflow precisa carregá-la.",
   "(~1 min) Checklist para levar: setup, instalar, orientar com o bmad-help, planejar com o gate do sprint e executar a primeira story pelo build e pelo review.\nOs três últimos itens são as lições das retrospectivas: registrar a lição no AGENTS.md, corrigir na story o que tem correção clara e escrever testes que não passem por coincidência, como o relógio longe da data real. Não esperem a retro de vocês para adotá-los.\nSugira que tirem foto deste slide.",
-  "(~30 s + perguntas) Feche com a frase: planejar com agentes é barato; corrigir sem plano, não.\nAponte os links: documentação, repositório e Discord da comunidade.\nAbra para perguntas."
+  "(~30 s + perguntas) Feche com a frase: planejar com agentes é barato; corrigir sem plano, não.\nAponte os links: o repositório com estes slides e o projeto de exemplo, a documentação, o repositório do BMAD e o Discord da comunidade.\nAbra para perguntas."
 ]
 </script>
 </body>

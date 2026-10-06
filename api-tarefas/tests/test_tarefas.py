@@ -62,6 +62,14 @@ def test_titulo_com_200_caracteres_e_aceito(client):
         "/tarefas", json={"titulo": " " + "a" * 200 + " ", "prazo": "2026-10-06"}
     )
     assert r.status_code == 201
+    assert r.json()["titulo"] == "a" * 200
+
+
+def test_tarefas_db_vazio_usa_padrao(client, tmp_path, monkeypatch):
+    monkeypatch.setenv("TAREFAS_DB", "")
+    monkeypatch.chdir(tmp_path)
+    client.post("/tarefas", json={"titulo": "x", "prazo": "2026-10-06"})
+    assert [t["titulo"] for t in client.get("/tarefas").json()] == ["x"]
 
 
 def test_listar_ordenado_por_prazo_e_id(client):
@@ -75,6 +83,14 @@ def test_listar_ordenado_por_prazo_e_id(client):
         ids[titulo] = client.post(
             "/tarefas", json={"titulo": titulo, "prazo": prazo}
         ).json()["id"]
+    # Sem índice, o scan por rowid já sai em ordem de id. Com (prazo, id DESC),
+    # os empates só saem certos se o SQL tiver o `id ASC` (AD-4).
+    conn = sqlite3.connect(os.environ["TAREFAS_DB"])
+    try:
+        with conn:
+            conn.execute("CREATE INDEX ix_desempate ON tarefa(prazo, id DESC)")
+    finally:
+        conn.close()
     r = client.get("/tarefas")
     assert r.status_code == 200
     assert isinstance(r.json(), list)
@@ -123,10 +139,12 @@ def test_camadas():
     )
 
 
-def test_criar_com_tags_falha_ate_story_1_2(tmp_path):
-    conn = sqlite3.connect(tmp_path / "t.db")
-    repo.criar_schema(conn)
-    with pytest.raises(NotImplementedError):
-        repo.criar(conn, "x", date(2026, 10, 6), ["a"])
-    assert repo.listar(conn) == []
-    conn.close()
+def test_criar_com_tags_falha_ate_story_1_2(client):
+    conn = sqlite3.connect(os.environ["TAREFAS_DB"])
+    try:
+        repo.criar_schema(conn)
+        with pytest.raises(NotImplementedError):
+            repo.criar(conn, "x", date(2026, 10, 6), ["a"])
+    finally:
+        conn.close()
+    assert client.get("/tarefas").json() == []

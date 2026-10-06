@@ -2,7 +2,7 @@
 title: 'Story 1.1: Criar e listar tarefas'
 type: 'feature'
 created: '2026-10-06'
-status: 'done'
+status: 'in-progress'
 baseline_commit: '0c5e87b501e5d5b2d174b3a9ea918cd33fe19e07'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -63,6 +63,27 @@ Repositório sem código: só `AGENTS.md`, `CLAUDE.md`, `_bmad/`, `.claude/` e `
 - Given `domain.py` e `repo.py`, when inspeciono os imports, then `domain` só importa stdlib e `repo` não importa `api`.
 - Given a API rodando com `TAREFAS_DB` absoluto, when crio uma tarefa, reinicio a API e chamo `GET /tarefas`, then a tarefa continua lá.
 
+### Review Findings
+
+Code review de 2026-10-06 (`0c5e87b..f9cc065`; camadas blind-hunter, edge-case-hunter, verification-gap e acceptance-auditor).
+
+- [ ] [Review][Decision] Surrogate UTF-16 solto no corpo dá 500 — `{"titulo": "a\ud800b", ...}` estoura `UnicodeEncodeError` no `INSERT` do sqlite. `{"prazo": "\ud800"}` também dá 500, porque o 422 repete o `input` e o `JSONResponse` não consegue codificá-lo. Um validator no `titulo` não resolve, porque o 500 só muda para a renderização do 422. A correção completa pede um handler de `RequestValidationError` que serialize com `ensure_ascii`, mais a rejeição do surrogate nos campos `str`. Nada é gravado em nenhum dos casos.
+- [x] [Review][Patch] O desempate `id ASC` (AD-4) ficou sem teste, adiado com a premissa falsa de que não dava para provocar a falha [tests/test_tarefas.py:75] — o teste cria o índice `(prazo, id DESC)` antes do GET. Sem o `id ASC` ele falha (confirmado por mutação). O `deferred-work.md` foi removido.
+- [x] [Review][Patch] Nenhum teste cobre o fallback de `TAREFAS_DB=""` [tests/test_tarefas.py:68] — `test_tarefas_db_vazio_usa_padrao`. Ele falha com `os.environ.get("TAREFAS_DB", "tarefas.db")` (confirmado por mutação).
+- [x] [Review][Patch] `test_criar_com_tags_falha_ate_story_1_2` vazava a conexão quando a asserção falhava e não usava a fixture `client` [tests/test_tarefas.py:142] — agora fecha num `try/finally` e usa o banco da fixture.
+- [x] [Review][Patch] O teste de 200 caracteres não conferia o título gravado [tests/test_tarefas.py:60] — passa a verificar que volta `"a" * 200`.
+- [x] [Review][Patch] O sprint-status estava em `review` com a spec em `done` [sprint-status.yaml] — os dois estão em `in-progress` até a decisão acima.
+
+AC 3 conferido à mão: POST, reinício do uvicorn com `TAREFAS_DB` absoluto e GET devolve a tarefa. `uv tree --package pydantic` mostra 2.13.5.
+
+**Rejected:**
+- `listar(conn)` mais estreito que o AD-9 e fixture sem `api.agora`, sem registro no spine — false: o spine descreve o estado final, e o `epic-1-context.md` (Cross-Story Dependencies) já diz que o Épico 2 estende `listar` e acrescenta `api.agora`. Não há divergência a registrar.
+- Spec Change Log vazio e `review_loop_iteration: 0` — rejeitado: a correção edita a spec sob revisão.
+- Faltam testes de `titulo` 123/`null`, `prazo` `null`/`" 2026-10-06"`/`"2026-1-6"` e corpo não JSON — false: o comportamento está certo (422), e a matriz da spec está coberta. O regex já é protegido pelos casos `06/10/2026` e `T00:00:00`.
+- Falta guarda automática contra `date.today()` e SQL fora do `repo` — false: não há violação no diff.
+- `uv tree --depth 1` na Verification — false: ele mostra as versões das dependências diretas, e o Pydantic tem o próprio comando.
+- `test_camadas` não usa `client` — false: é análise estática, sem banco nem relógio, e nenhum dano foi apontado.
+
 ## Implementation Notes
 
 - ruff 0.16 habilita por padrão muitas regras e, sem `exclude`, `uv run ruff check`/`ruff format` sem argumentos varrem `_bmad/` e `.claude/` (55 achados no check; o format reescreveu 24 arquivos lá, revertidos com `git checkout`). `uv run ruff check src tests` e `uv run ruff format --check src tests` passam. Decisão do Anderson (2026-10-06): acrescentar `extend-exclude = ["_bmad", ".claude"]` ao `[tool.ruff]`. **Desvio do spine:** a convenção Estilo pede "sem config extra além de `target-version`". O exclude não muda regras, só tira da varredura as pastas instaladas pelo BMAD, e assim `uv run ruff check`/`format` sem argumentos funcionam como diz o AGENTS.md.
@@ -93,7 +114,7 @@ Passada 1 (blind-hunter, edge-case-hunter, verification-gap):
 | 15 | Falta CHECK de `prazo`/`concluida` no schema | false | Só o repo grava, sempre com `isoformat()` e o padrão 0 | — |
 | 16 | Título só com caracteres invisíveis (`​`) é aceito | low | Fora da regra do PRD, que fala em vazio ou só espaços, e a correção acrescenta validador. Rejeitado | — |
 | 17 | A task diz "`[tool.ruff]` só com `target-version`", mas o pyproject tem exclude | low | Real: o texto da task ficou desatualizado | patch na spec: a task cita o `extend-exclude` decidido |
-| 18 | O teste de desempate passa sem `id ASC` (gap) | medium | A ordem do scan por rowid coincide com a do id. Não dá para provocar a falha na 1.1 | defer |
+| 18 | O teste de desempate passa sem `id ASC` (gap) | medium | A ordem do scan por rowid coincide com a do id. Não dá para provocar a falha na 1.1 | defer → patch na code review (2026-10-06): a premissa era falsa |
 
 Achado 8 resolvido depois do commit da story: o Anderson aprovou registrar o desvio na convenção Estilo do spine e tirar o TODO do AGENTS.md.
 

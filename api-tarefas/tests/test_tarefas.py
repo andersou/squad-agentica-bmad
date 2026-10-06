@@ -141,6 +141,25 @@ def test_tag_com_50_caracteres_e_aceita(client, via):
     assert [t["tags"] for t in client.get("/tarefas").json()] == [["a" * 50]]
 
 
+@pytest.mark.parametrize("via", ["post", "patch"])
+@pytest.mark.parametrize(
+    "campos, loc",
+    [
+        ({"titulo": " " + "a" * 201 + " "}, ["body", "titulo"]),
+        ({"tags": [" " + "a" * 51 + " "]}, ["body", "tags", 0]),
+    ],
+)
+def test_texto_longo_da_string_too_long(client, via, campos, loc):
+    # Com o BeforeValidator antes do StringConstraints, o erro sairia como too_long,
+    # contando "items".
+    r = _gravar(client, via, campos)
+    assert r.status_code == 422
+    [erro] = r.json()["detail"]
+    assert erro["type"] == "string_too_long"
+    assert erro["loc"] == loc
+    assert "characters" in erro["msg"]
+
+
 @pytest.mark.parametrize(
     "tags",
     [[""], ["   "], [" " + "a" * 51 + " "], "backend", [1], [None], None],

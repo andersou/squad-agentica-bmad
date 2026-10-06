@@ -62,6 +62,31 @@ def test_fuso_22h_em_sao_paulo(client):
     assert _janela(client, "vencidas") == []
 
 
+def test_janelas_seguem_o_agora_injetado(client):
+    # Longe da data real: um vazamento do relógio (Python ou SQL) não coincide
+    # com o override, como coincidiria com o AGORA do conftest no dia do commit.
+    api.app.dependency_overrides[api.agora] = lambda: datetime(
+        2031, 1, 10, 15, 0, tzinfo=UTC
+    )
+    v = _nova(client, prazo="2031-01-09")
+    h = _nova(client, prazo="2031-01-10")
+    p = _nova(client, prazo="2031-01-17")
+    assert _janela(client, "vencidas") == [v]
+    assert _janela(client, "hoje") == [h]
+    assert _janela(client, "proximos-7-dias") == [p]
+
+
+def test_excluida_some_das_janelas(client):
+    # FR-3: a excluída some da listagem geral e das janelas.
+    tarefas = [
+        _nova(client, prazo=p) for p in ("2026-10-05", "2026-10-06", "2026-10-07")
+    ]
+    for t in tarefas:
+        assert client.delete(f"/tarefas/{t['id']}").status_code == 204
+    for janela in JANELAS:
+        assert _janela(client, janela) == [], janela
+
+
 def test_janela_com_tag(client):
     a = _nova(client, "a", "2026-10-03", ["backend"])
     _nova(client, "f", "2026-10-02", ["frontend"])
@@ -161,7 +186,11 @@ def test_openapi_documenta_janela(client):
 
 
 # \btime\b pega import time, from time import time e time.time (datetime não casa).
-RELOGIO = re.compile(r"\b(today|now|utcnow|fromtimestamp|localtime|gmtime|time)\b")
+# CURRENT_* é o relógio do SQLite, em qualquer caixa.
+RELOGIO = re.compile(
+    r"\b(today|now|utcnow|fromtimestamp|localtime|gmtime|time"
+    r"|(?i:current_(date|time|timestamp)))\b"
+)
 
 
 def test_relogio_lido_so_em_api_agora():

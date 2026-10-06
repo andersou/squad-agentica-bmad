@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-06-2026 12:08
-last_updated: 10-06-2026 13:32
+last_updated: 10-06-2026 13:34
 project: api-tarefas
 project_key: NOKEY
 tracking_system: file-system
@@ -108,27 +108,27 @@ action_items:
     action: "Guarda do relógio: teste com agora longe da data real nas três janelas
       e RELOGIO com CURRENT_DATE/CURRENT_TIME/CURRENT_TIMESTAMP (R1, R2)"
     owner: "dev"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-2-retro-2026-10-06.md"
   - id: "epic-2-retro-item-10-stringconstraints-antes-do-beforevalidat"
     epic: 2
     action: "StringConstraints antes do BeforeValidator(_aparar) em Titulo e Tags
       para 422 string_too_long, com teste (R3)"
     owner: "dev"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-2-retro-2026-10-06.md"
   - id: "epic-2-retro-item-11-teste-tarefa-excluída-some-das-janelas-r"
     epic: 2
     action: "Teste: tarefa excluída some das janelas (R6)"
     owner: "dev"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-2-retro-2026-10-06.md"
   - id: "epic-2-retro-item-12-readme-e-description-do-tag-tag-tag-jane"
     epic: 2
     action: "README e description do tag: &tag=<tag>, janela exata, filtro só por
       tag traz concluídas, casefold; reconferir curl (R4)"
     owner: "dev"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-2-retro-2026-10-06.md"
   - id: "epic-2-retro-item-13-fechar-epic-1-e-epic-2-como-done-no-spri"
     epic: 2

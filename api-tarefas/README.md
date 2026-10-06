@@ -29,7 +29,7 @@ curl 'http://localhost:8000/tarefas?janela=vencidas&tag=backend'
 
 A tarefa volta como `{"id": 1, "titulo": "Revisar PR do login", "prazo": "2026-01-15", "tags": ["backend"], "concluida": false}`. Listagens devolvem um array JSON nessa forma, em ordem de prazo e depois de `id`. Para ver o código HTTP de cada chamada, acrescente `-i` ao `curl`.
 
-No POST, `titulo` tem de 1 a 200 caracteres e cada tag de 1 a 50, contados depois de remover os espaços nas pontas, que não são gravados. `titulo` ou tag vazios ou só com espaços dão 422. `prazo` é uma data válida em `YYYY-MM-DD` (`2026-02-30` dá 422). Campo desconhecido no corpo dá 422, no POST e no PATCH. Tags iguais sem diferenciar maiúsculas nem espaços nas pontas são gravadas uma vez só, com a grafia da primeira, e as tarefas voltam sempre com a grafia gravada.
+No POST, `titulo` tem de 1 a 200 caracteres e cada tag de 1 a 50, contados depois de remover os espaços nas pontas, que não são gravados. `titulo` ou tag vazios ou só com espaços dão 422. `prazo` é uma data válida em `YYYY-MM-DD` (`2026-02-30` dá 422). Campo desconhecido no corpo dá 422, no POST e no PATCH. Tags iguais sem diferenciar maiúsculas (por `casefold`) nem espaços nas pontas são gravadas uma vez só, com a grafia da primeira, e as tarefas voltam sempre com a grafia gravada.
 
 ## Exemplos
 
@@ -41,11 +41,11 @@ Os exemplos usam a tarefa criada acima, com `id` 1 num banco novo. Em outro banc
 # Todas as tarefas, concluídas ou não → 200
 curl http://localhost:8000/tarefas
 
-# Filtro por tag, sem diferenciar maiúsculas nem espaços nas pontas → 200
+# Filtro por tag, concluídas ou não → 200
 curl 'http://localhost:8000/tarefas?tag=Backend'
 ```
 
-Uma tag só por chamada: mais de uma `tag` na query (`?tag=a&tag=b`), tag vazia ou com mais de 50 caracteres dá 422. Tag que nenhuma tarefa tem dá 200 com `[]`.
+A tag é comparada sem diferenciar maiúsculas (por `casefold`, então `Straße` casa `strasse`) nem espaços nas pontas. Sem `janela`, o filtro por tag traz também as concluídas; para só as pendentes, combine com uma janela. Uma tag só por chamada: mais de uma `tag` na query (`?tag=a&tag=b`), tag vazia ou com mais de 50 caracteres dá 422. Tag que nenhuma tarefa tem dá 200 com `[]`.
 
 ### Janelas de prazo
 
@@ -68,7 +68,7 @@ curl 'http://localhost:8000/tarefas?janela=amanha'
 curl 'http://localhost:8000/tarefas?janela=hoje&janela=vencidas'
 ```
 
-Qualquer janela aceita também `&tag=`. Com só a tarefa do exemplo no banco, `vencidas` a devolve e `hoje` e `proximos-7-dias` devolvem `[]`.
+O valor de `janela` é exato, em minúsculas e sem espaços: `Hoje` ou `hoje ` dão 422. Qualquer janela aceita também uma tag, como em `?janela=vencidas&tag=backend`. Com só a tarefa do exemplo no banco, `vencidas` a devolve e `hoje` e `proximos-7-dias` devolvem `[]`.
 
 ### Concluir
 

@@ -56,12 +56,14 @@ def _aparar(v):
 TAG_MAX = 50
 
 Prazo = Annotated[date, BeforeValidator(_prazo_iso)]
+# StringConstraints antes do BeforeValidator: na ordem inversa o 422 de tamanho sai
+# como too_long, contando "items". O strip roda antes da checagem do mesmo jeito.
 Titulo = Annotated[
-    str, BeforeValidator(_aparar), StringConstraints(min_length=1, max_length=200)
+    str, StringConstraints(min_length=1, max_length=200), BeforeValidator(_aparar)
 ]
 Tags = Annotated[
     list[
-        Annotated[str, BeforeValidator(_aparar), StringConstraints(max_length=TAG_MAX)]
+        Annotated[str, StringConstraints(max_length=TAG_MAX), BeforeValidator(_aparar)]
     ],
     AfterValidator(normalizar_tags),
 ]
@@ -125,8 +127,9 @@ def listar_tarefas(
         Query(
             default_factory=list,
             description=(
-                "Filtra por tag, sem diferenciar maiúsculas nem espaços nas pontas: "
-                f"uma tag por chamada, até {TAG_MAX} caracteres."
+                "Filtra por tag, sem diferenciar maiúsculas (Straße casa strasse) "
+                "nem espaços nas pontas: uma tag por chamada, até "
+                f"{TAG_MAX} caracteres. Sem janela, traz também as concluídas."
             ),
         ),
     ],

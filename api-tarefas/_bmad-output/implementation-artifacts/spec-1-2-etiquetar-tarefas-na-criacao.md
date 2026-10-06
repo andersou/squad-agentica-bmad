@@ -56,6 +56,25 @@ context:
 - Given o código da story, when rodo `uv run pytest`, `uv run ruff check` e `uv run ruff format --check`, then os três passam.
 - Given um `TAREFAS_DB` da 1.1 já existente, when a API sobe e cria uma tarefa com tags, then `tarefa_tag` é criada por `CREATE TABLE IF NOT EXISTS` e as tarefas antigas voltam com `"tags": []`.
 
+### Review Findings
+
+Code review de `f1aa30c..b17b088` (2026-10-06; blind-hunter, edge-case-hunter, verification-gap, acceptance-auditor). `uv run pytest` dá 33 passed, e `ruff check` e `ruff format --check` passam.
+
+- [x] [Review][Patch] O sprint-status estava em `review` com a spec em `done` [sprint-status.yaml] — os dois estão em `done` no fechamento desta revisão.
+
+Conferência dos AD contra o diff: AD-1 a AD-8 conferem como na passada 1 do Review Triage Log. AD-9: `criar` e o retorno só em `Tarefa` conferem, e `listar(conn)` sem filtros segue o Code Map. Os parâmetros `pendentes`/`de`/`ate`/`tag` entram no Épico 2.
+
+**Rejected:**
+- `false`: os achados #7, #11 e #12 da passada 1 foram rejeitados pelo agente quando deveriam ter virado pergunta. Os três são `low`, raros no uso normal, e a correção acrescenta regra. A regra de triagem manda rejeitar, como fez com o #14 e o #16 da 1.1. Rejeitar não é adiar, e nenhum deles pede decisão para o código atual ficar certo.
+- `low`: `StringConstraints(strip_whitespace=True)` não apara `\x1c`–`\x1f`, e o `str.strip` do domain apara. Com isso, `"a"*50 + "\x1f"` dá 422. Confirmado, mas só acontece com caractere de controle numa API interna, e a correção acrescenta um validador. O `Titulo` da 1.1 tem o mesmo comportamento.
+- `false`: o repo grava `nome` sem aparar se receber tag não normalizada. Nenhum chamador faz isso, e o Design Notes registra o contrato.
+- `low`: `test_camadas` faz busca por substring e pode disparar com um comentário. A falha seria barulhenta, não silenciosa, e trocar por AST complica o teste.
+- `false`: o teste de atomicidade não conferiria a transação. Uma versão que commitasse entre os dois `INSERT` deixaria a tarefa gravada, e o `GET == []` falharia.
+- `false`: falta teste do `ON DELETE CASCADE`. Nenhum caminho desta story exclui tarefa, e a 1.3 testa o cascade pelo `DELETE`.
+- `false`: o `.lower()` em `test_camadas` violaria o Never. O Never e o AGENTS.md tratam das camadas (`api`, `repo`), e o teste não é camada.
+- `false`: `listar(conn)` diverge do AD-9. O Code Map manda manter assim, a assinatura vem da 1.1, e os filtros são do Épico 2.
+- Rejeitados porque a correção edita a spec revisada: o Design Notes ainda descreve as duas consultas de `listar` (vale o que diz o Implementation Notes, com `LEFT JOIN`), o Spec Change Log está vazio, o triage #10 ficou desatualizado, `review_loop_iteration: 0` e o `/tmp/t12.db` fixo na checagem manual.
+
 ## Implementation Notes
 
 - **Decisão técnica de baixo risco, tomada pelo agente na revisão (achado 5):** `listar` passou a usar uma consulta só, com `LEFT JOIN tarefa_tag ... ORDER BY t.prazo, t.id, g.rowid`, no lugar das duas consultas do Design Notes. Uma instrução só lê um snapshot consistente, o que protege a listagem quando o DELETE (1.3) e o PATCH (1.4) chegarem. Os filtros do Épico 2 entram no `WHERE` da mesma consulta.

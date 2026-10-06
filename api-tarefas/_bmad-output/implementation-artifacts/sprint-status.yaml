@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-06-2026 12:08
-last_updated: 10-06-2026 12:49
+last_updated: 10-06-2026 12:54
 project: api-tarefas
 project_key: NOKEY
 tracking_system: file-system
@@ -40,10 +40,66 @@ development_status:
   1-2-etiquetar-tarefas-na-criação: done
   1-3-excluir-tarefa: done
   1-4-editar-e-concluir-tarefa: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
 
   epic-2: backlog
   2-1-filtrar-a-listagem-geral-por-tag: backlog
   2-2-consultar-pendentes-por-janela-de-prazo: backlog
   2-3-documentar-as-chamadas-no-readme: backlog
   epic-2-retrospective: optional
+action_items:
+  - id: "epic-1-retro-item-1-unificar-o-strip-de-titulo-e-tags-com-st"
+    epic: 1
+    action: "Unificar o strip de titulo e tags com str.strip() (BeforeValidator) e
+      testar limites aceitos também no PATCH (R1, R4)"
+    owner: "dev"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-10-06.md"
+  - id: "epic-1-retro-item-2-publicar-limites-do-api-id-como-minimum"
+    epic: 1
+    action: "Publicar limites do api.Id como minimum/maximum no OpenAPI, com teste
+      (R2)"
+    owner: "dev"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-10-06.md"
+  - id: "epic-1-retro-item-3-teste-de-guarda-para-check_same_thread-f"
+    epic: 1
+    action: "Teste de guarda para check_same_thread=False usando api.conexao() em
+      outra thread (R3)"
+    owner: "dev"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-10-06.md"
+  - id: "epic-1-retro-item-4-ampliar-proibidos-do-test_camadas-com-ti"
+    epic: 1
+    action: "Ampliar proibidos do test_camadas com title(, swapcase(, normalize( e
+      collate (R5)"
+    owner: "dev"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-10-06.md"
+  - id: "epic-1-retro-item-5-corrigir-review_loop_iteration-para-2-na"
+    epic: 1
+    action: "Corrigir review_loop_iteration para 2 nas specs 1.1 e 1.2 (P1)"
+    owner: "Anderson"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-10-06.md"
+  - id: "epic-1-retro-item-6-bmad-customize-fechamento-de-story-no-bm"
+    epic: 1
+    action: "bmad-customize: fechamento de story no bmad-build sincroniza spec, sprint-status
+      e review_loop_iteration (P1)"
+    owner: "Anderson"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-10-06.md"
+  - id: "epic-1-retro-item-7-bmad-customize-triagem-da-code-review-ca"
+    epic: 1
+    action: "bmad-customize: triagem da code review carrega AGENTS.md como persistent_facts
+      para barrar adiamento na passada 1 (P2)"
+    owner: "Anderson"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-10-06.md"
+  - id: "epic-1-retro-item-8-pitfall-no-agents-md-via-bmad-project-co"
+    epic: 1
+    action: "Pitfall no AGENTS.md via bmad-project-context: teste nunca confere a
+      primeira tarefa da lista sem outra de prazo menor (P3)"
+    owner: "Anderson"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-10-06.md"

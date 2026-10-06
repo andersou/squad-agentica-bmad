@@ -108,10 +108,17 @@ def _erro_query(campo, msg, entrada):
     )
 
 
-@app.get("/tarefas")
+def _janela_unica(request: Request):
+    # O FastAPI pegaria o último valor repetido sem avisar (AD-6). Como dependência
+    # da rota, roda antes da validação do enum: a repetição vence em qualquer ordem.
+    janelas = request.query_params.getlist("janela")
+    if len(janelas) > 1:
+        _erro_query("janela", "informe uma janela só", janelas)
+
+
+@app.get("/tarefas", dependencies=[Depends(_janela_unica)])
 def listar_tarefas(
     conn: Conexao,
-    request: Request,
     agora_: Annotated[datetime, Depends(agora)],
     tag: Annotated[
         list[str],
@@ -133,10 +140,6 @@ def listar_tarefas(
         ),
     ] = None,
 ) -> list[Tarefa]:
-    # O FastAPI pegaria o último valor repetido sem avisar (AD-6).
-    janelas = request.query_params.getlist("janela")
-    if len(janelas) > 1:
-        _erro_query("janela", "informe uma janela só", janelas)
     valor = None
     if tag:
         # A checagem fica na rota (AD-6).

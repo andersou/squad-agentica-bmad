@@ -11,7 +11,8 @@ from tarefas import api, domain, repo
 from tarefas.domain import Janela, Tarefa
 
 SRC = Path(__file__).parent.parent / "src" / "tarefas"
-JANELAS = [j.value for j in Janela]
+# Os valores do AD-3, escritos à mão: derivar de Janela compararia o código com ele mesmo.
+JANELAS = ["vencidas", "hoje", "proximos-7-dias"]
 
 
 def _nova(client, titulo="x", prazo="2026-10-06", tags=("a",)):
@@ -86,6 +87,7 @@ def test_sem_janela_traz_concluidas_e_futuras(client):
     [
         "janela=amanha",
         "janela=",
+        "janela=Hoje",
         "janela=hoje&janela=vencidas",
         "janela=hoje&janela=hoje",
     ],
@@ -98,15 +100,16 @@ def test_janela_invalida(client, query):
     assert [e["loc"] for e in detail] == [["query", "janela"]]
 
 
-def test_janela_repetida_lista_valores(client):
-    r = client.get("/tarefas?janela=amanha&janela=hoje")
+@pytest.mark.parametrize("valores", [["amanha", "hoje"], ["hoje", "amanha"]])
+def test_janela_repetida_lista_valores(client, valores):
+    r = client.get("/tarefas", params={"janela": valores})
     assert r.status_code == 422
     assert r.json()["detail"] == [
         {
             "type": "value_error",
             "loc": ["query", "janela"],
             "msg": "informe uma janela só",
-            "input": ["amanha", "hoje"],
+            "input": valores,
         }
     ]
 
@@ -157,13 +160,14 @@ def test_openapi_documenta_janela(client):
     assert doc["components"]["schemas"]["Janela"]["enum"] == JANELAS
 
 
-RELOGIO = re.compile(r"\b(today|now|utcnow|localtime|gmtime)\b|time\.time")
+# \btime\b pega import time, from time import time e time.time (datetime não casa).
+RELOGIO = re.compile(r"\b(today|now|utcnow|fromtimestamp|localtime|gmtime|time)\b")
 
 
 def test_relogio_lido_so_em_api_agora():
     leituras = [
         (a.name, m.group())
-        for a in SRC.glob("*.py")
+        for a in SRC.rglob("*.py")
         for m in RELOGIO.finditer(a.read_text())
     ]
     assert leituras == [("api.py", "now")]

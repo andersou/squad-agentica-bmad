@@ -2,10 +2,10 @@ import os
 import re
 import sqlite3
 from collections.abc import Iterator
-from datetime import date
+from datetime import UTC, date, datetime
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Path, Query, Response
+from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request, Response
 from fastapi.exceptions import RequestValidationError
 from pydantic import (
     AfterValidator,
@@ -16,10 +16,15 @@ from pydantic import (
     StringConstraints,
 )
 
-from tarefas import repo
-from tarefas.domain import Tarefa, normalizar_tags
+from tarefas import domain, repo
+from tarefas.domain import Janela, Tarefa, normalizar_tags
 
 app = FastAPI(title="api-tarefas")
+
+
+def agora() -> datetime:
+    # Única leitura do relógio (AD-2); os testes a substituem por override.
+    return datetime.now(UTC)
 
 
 def conexao() -> Iterator[sqlite3.Connection]:
@@ -95,9 +100,19 @@ def criar_tarefa(dados: TarefaCriar, conn: Conexao) -> Tarefa:
     return repo.criar(conn, dados.titulo, dados.prazo, dados.tags)
 
 
+def _erro_query(campo, msg, entrada):
+    # RequestValidationError mantém o 422 em lista, no formato HTTPValidationError
+    # que o OpenAPI anuncia (AD-7).
+    raise RequestValidationError(
+        [{"type": "value_error", "loc": ("query", campo), "msg": msg, "input": entrada}]
+    )
+
+
 @app.get("/tarefas")
 def listar_tarefas(
     conn: Conexao,
+    request: Request,
+    agora_: Annotated[datetime, Depends(agora)],
     tag: Annotated[
         list[str],
         Query(
@@ -108,11 +123,23 @@ def listar_tarefas(
             ),
         ),
     ],
+    janela: Annotated[
+        Janela | None,
+        Query(
+            description=(
+                "Só pendentes com prazo na janela, com hoje em America/Sao_Paulo: "
+                "uma janela por chamada."
+            )
+        ),
+    ] = None,
 ) -> list[Tarefa]:
+    # O FastAPI pegaria o último valor repetido sem avisar (AD-6).
+    janelas = request.query_params.getlist("janela")
+    if len(janelas) > 1:
+        _erro_query("janela", "informe uma janela só", janelas)
     valor = None
     if tag:
-        # A checagem fica na rota (AD-6); RequestValidationError mantém o 422 em
-        # lista, no formato HTTPValidationError que o OpenAPI anuncia (AD-7).
+        # A checagem fica na rota (AD-6).
         motivo, entrada = None, tag
         if len(tag) > 1:
             motivo = "informe uma tag só"
@@ -124,17 +151,11 @@ def listar_tarefas(
             elif len(valor) > TAG_MAX:
                 motivo = f"tag deve ter até {TAG_MAX} caracteres"
         if motivo:
-            raise RequestValidationError(
-                [
-                    {
-                        "type": "value_error",
-                        "loc": ("query", "tag"),
-                        "msg": motivo,
-                        "input": entrada,
-                    }
-                ]
-            )
-    return repo.listar(conn, tag=valor)
+            _erro_query("tag", motivo, entrada)
+    de = ate = None
+    if janela is not None:
+        de, ate = domain.intervalo(janela, domain.hoje(agora_))
+    return repo.listar(conn, pendentes=janela is not None, de=de, ate=ate, tag=valor)
 
 
 @app.patch("/tarefas/{id}", responses={404: {"description": "tarefa não encontrada"}})

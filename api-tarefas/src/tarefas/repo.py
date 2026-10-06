@@ -70,15 +70,31 @@ def editar(conn: sqlite3.Connection, id: int, campos: dict) -> Tarefa | None:
         return _buscar(conn, "WHERE t.id = ?", (id,))[0]
 
 
-def listar(conn: sqlite3.Connection, *, tag: str | None = None) -> list[Tarefa]:
-    if tag is None:
-        return _buscar(conn, "", ())
-    # Subconsulta, não WHERE no JOIN: a tarefa volta com todas as tags (AD-9).
-    return _buscar(
-        conn,
-        "WHERE t.id IN (SELECT tarefa_id FROM tarefa_tag WHERE nome_norm = ?)",
-        (norm_tag(tag),),
-    )
+def listar(
+    conn: sqlite3.Connection,
+    *,
+    pendentes: bool = False,
+    de: date | None = None,
+    ate: date | None = None,
+    tag: str | None = None,
+) -> list[Tarefa]:
+    condicoes, params = [], []
+    if pendentes:
+        condicoes.append("t.concluida = 0")
+    if de is not None:
+        condicoes.append("t.prazo >= ?")
+        params.append(de.isoformat())
+    if ate is not None:
+        condicoes.append("t.prazo <= ?")
+        params.append(ate.isoformat())
+    if tag is not None:
+        # Subconsulta, não WHERE no JOIN: a tarefa volta com todas as tags (AD-9).
+        condicoes.append(
+            "t.id IN (SELECT tarefa_id FROM tarefa_tag WHERE nome_norm = ?)"
+        )
+        params.append(norm_tag(tag))
+    onde = f"WHERE {' AND '.join(condicoes)}" if condicoes else ""
+    return _buscar(conn, onde, tuple(params))
 
 
 def _buscar(conn: sqlite3.Connection, onde: str, params: tuple) -> list[Tarefa]:

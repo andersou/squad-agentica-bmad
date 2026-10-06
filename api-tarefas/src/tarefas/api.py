@@ -11,6 +11,7 @@ from pydantic import (
     BaseModel,
     BeforeValidator,
     ConfigDict,
+    StrictBool,
     StringConstraints,
 )
 
@@ -68,6 +69,16 @@ class TarefaCriar(BaseModel):
     tags: Tags = []
 
 
+class TarefaEditar(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # Default None sem Optional: omitido some do exclude_unset, null dá 422.
+    titulo: Titulo = None
+    prazo: Prazo = None
+    tags: Tags = None
+    concluida: StrictBool = None
+
+
 @app.post("/tarefas", status_code=201)
 def criar_tarefa(dados: TarefaCriar, conn: Conexao) -> Tarefa:
     return repo.criar(conn, dados.titulo, dados.prazo, dados.tags)
@@ -76,6 +87,14 @@ def criar_tarefa(dados: TarefaCriar, conn: Conexao) -> Tarefa:
 @app.get("/tarefas")
 def listar_tarefas(conn: Conexao) -> list[Tarefa]:
     return repo.listar(conn)
+
+
+@app.patch("/tarefas/{id}", responses={404: {"description": "tarefa não encontrada"}})
+def editar_tarefa(id: Id, dados: TarefaEditar, conn: Conexao) -> Tarefa:
+    tarefa = repo.editar(conn, id, dados.model_dump(exclude_unset=True))
+    if tarefa is None:
+        raise HTTPException(404, "tarefa não encontrada")
+    return tarefa
 
 
 @app.delete(

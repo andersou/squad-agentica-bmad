@@ -224,14 +224,19 @@ def test_persistencia(client):
     )
 
 
-def _linhas_tag(id):
+def _tags_no_banco(id):
     conn = sqlite3.connect(os.environ["TAREFAS_DB"])
     try:
         return conn.execute(
-            "SELECT count(*) FROM tarefa_tag WHERE tarefa_id = ?", (id,)
-        ).fetchone()[0]
+            "SELECT nome, nome_norm FROM tarefa_tag WHERE tarefa_id = ? ORDER BY rowid",
+            (id,),
+        ).fetchall()
     finally:
         conn.close()
+
+
+def _linhas_tag(id):
+    return len(_tags_no_banco(id))
 
 
 def test_excluir(client):
@@ -299,6 +304,199 @@ def test_repo_excluir_inexistente(client):
     finally:
         conn.close()
     assert client.get("/tarefas").json() == [outra]
+
+
+def _nova(client, titulo="x", prazo="2026-10-06", tags=("a",)):
+    return client.post(
+        "/tarefas", json={"titulo": titulo, "prazo": prazo, "tags": list(tags)}
+    ).json()
+
+
+def test_editar_concluir(client):
+    t = _nova(client)
+    r = client.patch(f"/tarefas/{t['id']}", json={"concluida": True})
+    assert r.status_code == 200
+    assert r.json() == {**t, "concluida": True}
+    assert client.get("/tarefas").json() == [{**t, "concluida": True}]
+    r = client.patch(f"/tarefas/{t['id']}", json={"concluida": False})
+    assert r.json() == t
+
+
+def test_editar_corpo_vazio(client):
+    t = _nova(client)
+    r = client.patch(f"/tarefas/{t['id']}", json={})
+    assert r.status_code == 200
+    assert r.json() == t
+    assert client.get("/tarefas").json() == [t]
+
+
+def test_editar_tags(client):
+    t = _nova(client, tags=["velha", "outra"])
+    outra = _nova(client, tags=["Infra"])
+    url = f"/tarefas/{t['id']}"
+    r = client.patch(url, json={"tags": ["Infra", "infra", " Straße "]})
+    assert r.status_code == 200
+    assert r.json()["tags"] == ["Infra", "Straße"]
+    assert _tags_no_banco(t["id"]) == [("Infra", "infra"), ("Straße", "strasse")]
+    r = client.patch(url, json={"titulo": "Outro"})
+    assert r.json() == {**t, "titulo": "Outro", "tags": ["Infra", "Straße"]}
+    r = client.patch(url, json={"tags": []})
+    assert r.json()["tags"] == []
+    assert _tags_no_banco(t["id"]) == []
+    assert _tags_no_banco(outra["id"]) == [("Infra", "infra")]
+
+
+def test_editar_titulo_e_prazo(client):
+    a = _nova(client, "a", "2026-10-05")
+    b = _nova(client, "b", "2026-10-06")
+    r = client.patch(
+        f"/tarefas/{b['id']}", json={"titulo": " y ", "prazo": "2026-10-01"}
+    )
+    assert r.status_code == 200
+    assert r.json() == {**b, "titulo": "y", "prazo": "2026-10-01"}
+    assert [t["id"] for t in client.get("/tarefas").json()] == [b["id"], a["id"]]
+
+
+@pytest.mark.parametrize(
+    "corpo",
+    [
+        {"titulo": None},
+        {"prazo": None},
+        {"tags": None},
+        {"concluida": None},
+        {"concluida": "true"},
+        {"concluida": 1},
+        {"desconhecido": 1},
+        {"id": 99},
+        {"titulo": ""},
+        {"titulo": "   "},
+        {"titulo": "a" * 201},
+        {"prazo": "06/10/2026"},
+        {"prazo": "2026-02-30"},
+        {"prazo": "2026-10-06T00:00:00"},
+        {"prazo": 20261006},
+        {"tags": [""]},
+        {"tags": ["   "]},
+        {"tags": ["a" * 51]},
+        {"tags": "backend"},
+        {"tags": [1]},
+        {"tags": [None]},
+        {"titulo": "ok", "concluida": "true"},
+    ],
+)
+def test_editar_corpo_invalido(client, corpo):
+    t = _nova(client)
+    for alvo in (t["id"], t["id"] + 1):
+        r = client.patch(f"/tarefas/{alvo}", json=corpo)
+        assert r.status_code == 422
+        assert "detail" in r.json()
+    assert client.get("/tarefas").json() == [t]
+
+
+def test_editar_inexistente(client):
+    excluida = _nova(client)
+    assert client.delete(f"/tarefas/{excluida['id']}").status_code == 204
+    t = _nova(client)
+    for alvo in (excluida["id"], 999):
+        r = client.patch(f"/tarefas/{alvo}", json={"titulo": "z", "tags": ["b"]})
+        assert r.status_code == 404
+        assert r.json() == {"detail": "tarefa não encontrada"}
+    assert client.get("/tarefas").json() == [t]
+    assert _linhas_tag(excluida["id"]) == 0
+
+
+@pytest.mark.parametrize(
+    "id, status",
+    [
+        (2**63, 422),
+        (-(2**63) - 1, 422),
+        ("1_0", 422),
+        ("abc", 422),
+        (2**63 - 1, 404),
+        (-(2**63), 404),
+    ],
+)
+def test_editar_id_limites(client, id, status):
+    for i in range(10):
+        _nova(client, f"t{i}")
+    antes = client.get("/tarefas").json()
+    r = client.patch(f"/tarefas/{id}", json={"titulo": "z"})
+    assert r.status_code == status
+    if status == 404:
+        assert r.json() == {"detail": "tarefa não encontrada"}
+    else:
+        assert "detail" in r.json()
+    assert client.get("/tarefas").json() == antes
+
+
+def test_repo_editar_atomico_com_tags_colidindo(client):
+    t = _nova(client, tags=["velha"])
+    conn = sqlite3.connect(os.environ["TAREFAS_DB"])
+    try:
+        conn.execute("PRAGMA foreign_keys=ON")
+        with pytest.raises(sqlite3.IntegrityError):
+            repo.editar(conn, t["id"], {"titulo": "novo", "tags": ["a", "A"]})
+    finally:
+        conn.close()
+    assert client.get("/tarefas").json() == [t]
+
+
+def test_openapi_documenta_404(client):
+    rota = client.get("/openapi.json").json()["paths"]["/tarefas/{id}"]
+    assert "404" in rota["patch"]["responses"]
+    assert "404" in rota["delete"]["responses"]
+
+
+def test_repo_editar_inexistente(client):
+    t = _nova(client)
+    conn = sqlite3.connect(os.environ["TAREFAS_DB"])
+    try:
+        conn.execute("PRAGMA foreign_keys=ON")
+        assert repo.editar(conn, t["id"] + 1, {"tags": ["b"]}) is None
+    finally:
+        conn.close()
+    assert _linhas_tag(t["id"] + 1) == 0
+    assert client.get("/tarefas").json() == [t]
+
+
+def test_repo_editar_bloqueia_exclusao_concorrente(client):
+    t = _nova(client)
+    caminho = os.environ["TAREFAS_DB"]
+    bloqueios = []
+
+    class ConexaoEspia(sqlite3.Connection):
+        def execute(self, sql, *args):
+            cur = super().execute(sql, *args)
+            if sql.startswith("SELECT") and not bloqueios:
+                # Logo depois da conferência, outra conexão tenta excluir.
+                outra = sqlite3.connect(caminho, timeout=0)
+                try:
+                    with pytest.raises(sqlite3.OperationalError):
+                        outra.execute("DELETE FROM tarefa WHERE id = ?", (t["id"],))
+                    bloqueios.append(sql)
+                finally:
+                    outra.close()
+            return cur
+
+    conn = sqlite3.connect(caminho, factory=ConexaoEspia)
+    try:
+        conn.execute("PRAGMA foreign_keys=ON")
+        editada = repo.editar(conn, t["id"], {"tags": ["c"], "concluida": True})
+        assert client.get("/tarefas").json() == [
+            {**t, "tags": ["c"], "concluida": True}
+        ]
+        # Com a conexão do editar ainda aberta, o lock já foi liberado.
+        nova = sqlite3.connect(caminho, timeout=0)
+        try:
+            with nova:
+                nova.execute("DELETE FROM tarefa WHERE id = ?", (t["id"],))
+        finally:
+            nova.close()
+    finally:
+        conn.close()
+    assert len(bloqueios) == 1
+    assert (editada.id, editada.tags, editada.concluida) == (t["id"], ["c"], True)
+    assert client.get("/tarefas").json() == []
 
 
 def _imports(modulo):

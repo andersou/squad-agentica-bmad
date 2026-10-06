@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from tarefas import repo
+from tarefas.domain import Tarefa
 
 SRC = Path(__file__).parent.parent / "src" / "tarefas"
 
@@ -313,11 +314,13 @@ def _nova(client, titulo="x", prazo="2026-10-06", tags=("a",)):
 
 
 def test_editar_concluir(client):
+    # Outra tarefa antes na ordem: a resposta tem de ser a editada, não a primeira.
+    antes = _nova(client, "antes", "2026-10-01")
     t = _nova(client)
     r = client.patch(f"/tarefas/{t['id']}", json={"concluida": True})
     assert r.status_code == 200
     assert r.json() == {**t, "concluida": True}
-    assert client.get("/tarefas").json() == [{**t, "concluida": True}]
+    assert client.get("/tarefas").json() == [antes, {**t, "concluida": True}]
     r = client.patch(f"/tarefas/{t['id']}", json={"concluida": False})
     assert r.json() == t
 
@@ -366,6 +369,11 @@ def test_editar_titulo_e_prazo(client):
         {"concluida": None},
         {"concluida": "true"},
         {"concluida": 1},
+        {"concluida": 0},
+        {"concluida": "false"},
+        None,
+        [],
+        "x",
         {"desconhecido": 1},
         {"id": 99},
         {"titulo": ""},
@@ -495,7 +503,7 @@ def test_repo_editar_bloqueia_exclusao_concorrente(client):
     finally:
         conn.close()
     assert len(bloqueios) == 1
-    assert (editada.id, editada.tags, editada.concluida) == (t["id"], ["c"], True)
+    assert editada == Tarefa(t["id"], "x", date(2026, 10, 6), ["c"], True)
     assert client.get("/tarefas").json() == []
 
 

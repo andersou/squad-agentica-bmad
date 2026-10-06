@@ -5,7 +5,7 @@ created: '2026-10-06'
 status: 'done'
 baseline_commit: 'f0709aa77f9fb485a0189f6e10d3f27c2128b1c6'
 route: 'dispatch'
-review_loop_iteration: 0
+review_loop_iteration: 2
 context:
   - '{project-root}/_bmad-output/planning-artifacts/architecture/architecture-api-tarefas-2026-10-06/ARCHITECTURE-SPINE.md'
   - '{project-root}/_bmad-output/implementation-artifacts/epic-1-context.md'
@@ -52,6 +52,23 @@ context:
 - [x] `src/tarefas/repo.py` -- `_buscar` extraído de `listar`; `editar(conn, id, campos) -> Tarefa | None`: em `with conn:`, `BEGIN IMMEDIATE`, confere a existência (devolve `None` se não há), `UPDATE` só das colunas presentes entre `titulo`/`prazo`/`concluida` (ISO e 0/1 aqui), se `"tags" in campos` apaga e reinsere com `norm_tag`, relê com `_buscar` -- AD-8, AD-9
 - [x] `src/tarefas/api.py` -- `TarefaEditar` (`extra="forbid"`; `titulo: Titulo = None`, `prazo: Prazo = None`, `tags: Tags = None`, `concluida: StrictBool = None`) e `@app.patch("/tarefas/{id}", responses={404: ...})` `def editar_tarefa(id: Id, dados: TarefaEditar, conn: Conexao) -> Tarefa`; `None` levanta 404 -- AD-6, AD-7
 - [x] `tests/test_tarefas.py` -- um teste por linha da I/O Matrix (inválidos parametrizados, conferindo a tarefa intacta); `repo.editar` direto com id inexistente e `tags` devolve `None`; o teste de concorrência usa um proxy de conexão que, depois da conferência, tenta `DELETE` por outra conexão com `timeout=0` e espera `sqlite3.OperationalError`
+
+### Review Findings
+
+Passada 2 (`bmad-code-review`, 2026-10-06; blind-hunter, edge-case-hunter, verification-gap, acceptance-auditor). Revê também os itens rejeitados na passada 1 contra o AGENTS.md.
+
+- [x] [Review][Patch] Nenhum teste provava que a resposta do PATCH é a tarefa editada: em todos, ela já era a primeira da lista. Trocar o read-back por `_buscar(conn, "", ())[0]` mantinha 83 passed (verification-gap). Agora `test_editar_concluir` cria antes uma tarefa com prazo menor, e a mesma mutação faz o teste falhar [tests/test_tarefas.py:316]
+- [x] [Review][Patch] `StrictBool` só era testado com valores verdadeiros (`"true"`, `1`), e corpo ausente ou que não é objeto não tinha caso. `test_editar_corpo_invalido` ganhou `{"concluida": 0}`, `{"concluida": "false"}`, sem corpo, `[]` e `"x"`, todos 422 [tests/test_tarefas.py:372]
+- [x] [Review][Patch] `test_repo_editar_bloqueia_exclusao_concorrente` conferia só `id`, `tags` e `concluida` da `Tarefa` devolvida, e um `prazo` como `str` ou um `titulo` errado passariam. Agora compara com a `Tarefa` inteira [tests/test_tarefas.py:506]
+- [x] [Review][Patch] `review_loop_iteration` ficou em 0 depois da passada 1, o mesmo erro corrigido na 1.3. Agora está em 2 [spec]
+
+**Rejected:**
+- `BEGIN IMMEDIATE` com lock preso por mais de 5 s vira 500, contra o "nunca 500" da matriz (blind, edge, acceptance; era o #9 da passada 1) — false quanto à matriz: a linha "Exclusão concorrente" é coberta, porque o `DELETE` do app segura o lock por microssegundos, e o `editar` espera até 5 s. Só um processo de fora com uma transação aberta chega a 5 s. Essa contenção genérica vale para toda escrita e já foi decidida pelo Anderson na Deferred do spine ("Concorrência de escrita"), e a guarda criaria um código HTTP (503) fora do AD-7. Não fica adiado: a decisão já existe.
+- A evidência do #1 da passada 1 cita `in-progress`, mas o sprint-status commitado vai de `backlog` para `done` — false como defeito: os estados intermediários não foram commitados, e o log da passada 1 é histórico. O tracking final está consistente.
+- `campos: dict` sem tipo das chaves em `repo.editar` — false: a assinatura `editar(conn, id, campos: dict)` é a do AD-9, e o único chamador passa `model_dump(exclude_unset=True)` de `TarefaEditar`.
+- Limites aceitos via PATCH (título de 200, tag de 50, prazo passado) — false: o PATCH usa os mesmos aliases `Titulo`, `Tags` e `Prazo` do POST, cujos limites já têm teste, e `test_editar_titulo_e_prazo` grava um prazo passado.
+
+Com os patches, `uv run pytest` dá 88 passed, e `ruff check` e `ruff format --check` passam. Conferência dos AD-1 a AD-9 contra o diff refeita pelo acceptance-auditor e por mim: continua valendo a da passada 1. Os patches só tocam os testes.
 
 **Acceptance Criteria:**
 - Given o código da story, when rodo `uv run pytest`, `uv run ruff check` e `uv run ruff format --check`, then os três passam.

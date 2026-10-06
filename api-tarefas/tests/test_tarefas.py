@@ -276,7 +276,19 @@ def test_excluir_inexistente(client):
 def test_excluir_id_limites(client, id, status):
     r = client.delete(f"/tarefas/{id}")
     assert r.status_code == status
-    assert "detail" in r.json()
+    if status == 404:
+        assert r.json() == {"detail": "tarefa não encontrada"}
+    else:
+        assert "detail" in r.json()
+
+
+@pytest.mark.parametrize("alvo", ["1.0", "+1", "%201", "1_0"])
+def test_excluir_id_nao_canonico(client, alvo):
+    for i in range(10):
+        client.post("/tarefas", json={"titulo": f"t{i}", "prazo": "2026-10-06"})
+    antes = client.get("/tarefas").json()
+    assert client.delete(f"/tarefas/{alvo}").status_code == 422
+    assert client.get("/tarefas").json() == antes
 
 
 def test_repo_excluir_inexistente(client):

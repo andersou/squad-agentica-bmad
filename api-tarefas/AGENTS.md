@@ -40,7 +40,7 @@ API REST interna de tarefas com janelas de prazo (vencidas, hoje, próximos 7 di
 
 ## Known pitfalls
 
-- Na v1 anterior, um `id` de path acima de 2⁶³−1 estourava o INTEGER do SQLite e virava 500, e três revisões seguidas adiaram a correção. Declare `le=2**63-1` no parâmetro para que dê 422.
+- Na v1 anterior, um `id` de path acima de 2⁶³−1 estourava o INTEGER do SQLite e virava 500, e três revisões seguidas adiaram a correção. Declare o `id` com o alias `api.Id` (`ge=-2**63`, `le=2**63-1` e só dígitos) para que dê 422. O `int` solto também aceita `1_0` como 10 e apagaria a tarefa errada.
 - Na v1 anterior, um PATCH concorrente com uma exclusão virava 500. Confira, grave e releia na mesma transação, e trate a tarefa que sumiu como 404.
 - Parâmetro de query repetido (`?janela=` ou `?tag=`) dá 422. Para escalares, o FastAPI pega o último valor sem avisar, então a rota precisa checar a repetição.
 

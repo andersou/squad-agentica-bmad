@@ -5,7 +5,7 @@ created: '2026-10-06'
 status: 'done'
 baseline_commit: '4263204d8ff0de143a4a8245252ad3f5b75658cb'
 route: 'dispatch'
-review_loop_iteration: 0
+review_loop_iteration: 2
 context:
   - '{project-root}/_bmad-output/planning-artifacts/architecture/architecture-api-tarefas-2026-10-06/ARCHITECTURE-SPINE.md'
   - '{project-root}/_bmad-output/implementation-artifacts/epic-1-context.md'
@@ -50,13 +50,31 @@ context:
 - [x] `src/tarefas/api.py` -- `@app.delete("/tarefas/{id}", status_code=204)`, `def excluir_tarefa(id: Id, conn: Conexao) -> Response`; `False` levanta `HTTPException(404, "tarefa não encontrada")`; devolve `Response(status_code=204)` -- AD-7
 - [x] `tests/test_tarefas.py` -- um teste por linha da I/O Matrix (ids inválidos e limites parametrizados); o teste de exclusão confere `tarefa_tag` vazia para o id direto no banco -- cobre a matriz e o cascade
 
+### Review Findings
+
+Passada 2 (`bmad-code-review`, 2026-10-06; blind-hunter, edge-case-hunter, verification-gap, acceptance-auditor). Revê também os itens rejeitados ou adiados na passada 1, que o AGENTS.md não permite (achado com correção clara é corrigido, e nada é adiado).
+
+- [x] [Review][Patch] `id` não canônico apaga a tarefa errada: `DELETE /tarefas/1_0` apagava a tarefa 10, e `1.0`, `+1` e `%201` também davam 204 (era o #13 da passada 1). `api.Id` ganhou o `BeforeValidator(_id_inteiro)` com `^-?\d+$`, no padrão de `_prazo_iso`, e `test_excluir_id_nao_canonico` confere 422 e a lista intacta. Isso também prova a precedência 422 antes de 404 com um id que existe (AD-6) [src/tarefas/api.py:54]
+- [x] [Review][Patch] Nos casos-limite de 404, `test_excluir_id_limites` só conferia `"detail" in r.json()`, e um 404 de rota não casada também passaria. Agora confere `{"detail": "tarefa não encontrada"}` [tests/test_tarefas.py]
+- [x] [Review][Patch] O 404 não aparecia no OpenAPI (era o #8 da passada 1): `responses={404: ...}` no decorator [src/tarefas/api.py]
+- [x] [Review][Patch] O pitfall do `id` estava em deferred-work, o que fere o AGENTS.md (era o #6 da passada 1). O pitfall do AGENTS.md passa a citar `api.Id` com `ge`, `le` e só dígitos. O `epic-1-context.md` cita a regra de dígitos, e o item saiu do `deferred-work.md` [AGENTS.md]
+- [x] [Review][Patch] O tracking estava inconsistente: a spec dizia `done`, o sprint-status dizia `review`, e `review_loop_iteration` estava em 0. Os dois agora dizem `done`, a iteração está em 2 e `last_updated` tem o horário real do fechamento [sprint-status.yaml]
+
+**Rejected:**
+- `repo.excluir` deixa tags órfãs sem `PRAGMA foreign_keys=ON` (#5 da passada 1) — false: o único chamador é a rota, com a conexão de `api.conexao` (AD-8), e `test_excluir` quebra se o pragma sumir. Pôr uma guarda no repo duplicaria o dono da configuração da conexão.
+- `Response(status_code=204)` redundante com o decorator (#7 da passada 1) — false: nenhum dano. O decorator documenta o 204 no OpenAPI, o retorno é a assinatura fixada nas Tasks, e o corpo sai vazio (`test_excluir`).
+- `ge=-2**63` dentro do bloco congelado sem aval humano — false: a spec foi aprovada como estava pela regra da sessão ("aprovar e continuar"), e a decisão está nas Design Notes.
+- `test_excluir` não confere no banco a tag de `outra` — false: `GET /tarefas == [outra]` inclui `tags: ["a"]`, e o `LEFT JOIN` perderia a tag se a linha sumisse.
+- AD-8 sem prova de conexão por request com pragma — false: o mesmo `test_excluir` cobre isso.
+- `last_updated` recuou, e o log da passada 1 cita 12:34 em vez de 12:37 — low: é só o registro histórico da passada 1. O valor foi corrigido no fechamento desta passada.
+
 **Acceptance Criteria:**
 - Given o código da story, when rodo `uv run pytest`, `uv run ruff check` e `uv run ruff format --check`, then os três passam.
 - Given `repo.excluir` chamado direto com um id inexistente, when retorna, then devolve `False` e nenhuma tarefa é afetada.
 
 ## Implementation Notes
 
-- Arquivos: `repo.py` (`excluir`), `api.py` (alias `Id` e rota `excluir_tarefa`) e `tests/test_tarefas.py` (4 testes, mais o helper `_linhas_tag`).
+- Arquivos: `repo.py` (`excluir`), `api.py` (alias `Id` com `_id_inteiro` e rota `excluir_tarefa`) e `tests/test_tarefas.py` (5 testes, mais o helper `_linhas_tag`).
 - Sem o `PRAGMA foreign_keys=ON`, a linha de `tarefa_tag` sobra, e `test_excluir` falha. O GET sozinho não pegaria, porque o `LEFT JOIN` parte de `tarefa`.
 
 ## Spec Change Log
@@ -97,6 +115,7 @@ Conferência dos AD contra o diff:
 ## Design Notes
 
 - **Decisão técnica de baixo risco, tomada pelo agente:** o AD-6 fixa só `le=2**63-1`, mas `-2**63-1` estoura o INTEGER do SQLite do mesmo jeito (a armadilha da v1, pelo outro lado). `ge=-2**63` fecha o buraco sem mudar a regra "id inexistente dá 404": todo inteiro que cabe no SQLite e não existe continua 404.
+- **Decisão técnica de baixo risco, tomada na code review (passada 2):** `api.Id` aceita só `^-?\d+$` antes da conversão para `int`. O `int` padrão do Pydantic aceita `1.0`, `+1`, `" 1"` e `1_0` (este último vira 10), e num DELETE isso apaga a tarefa errada. Zero à esquerda (`05`) continua valendo, porque é um inteiro em dígitos.
 - O `DELETE` é uma instrução só, então não há janela entre conferir e apagar. Exclusão concorrente da mesma tarefa: uma recebe 204 e a outra 404.
 
 ## Verification

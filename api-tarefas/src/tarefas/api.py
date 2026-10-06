@@ -49,7 +49,15 @@ Tags = Annotated[
     list[Annotated[str, StringConstraints(strip_whitespace=True, max_length=50)]],
     AfterValidator(normalizar_tags),
 ]
-Id = Annotated[int, Path(ge=-(2**63), le=2**63 - 1)]
+
+
+def _id_inteiro(v):
+    if not isinstance(v, str) or not re.fullmatch(r"-?\d+", v):
+        raise ValueError("id deve ser um inteiro")
+    return v
+
+
+Id = Annotated[int, BeforeValidator(_id_inteiro), Path(ge=-(2**63), le=2**63 - 1)]
 
 
 class TarefaCriar(BaseModel):
@@ -70,7 +78,11 @@ def listar_tarefas(conn: Conexao) -> list[Tarefa]:
     return repo.listar(conn)
 
 
-@app.delete("/tarefas/{id}", status_code=204)
+@app.delete(
+    "/tarefas/{id}",
+    status_code=204,
+    responses={404: {"description": "tarefa não encontrada"}},
+)
 def excluir_tarefa(id: Id, conn: Conexao) -> Response:
     if not repo.excluir(conn, id):
         raise HTTPException(404, "tarefa não encontrada")

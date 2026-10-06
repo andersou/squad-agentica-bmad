@@ -48,12 +48,16 @@ def _aparar(v):
     return v.strip() if isinstance(v, str) else v
 
 
+TAG_MAX = 50
+
 Prazo = Annotated[date, BeforeValidator(_prazo_iso)]
 Titulo = Annotated[
     str, BeforeValidator(_aparar), StringConstraints(min_length=1, max_length=200)
 ]
 Tags = Annotated[
-    list[Annotated[str, BeforeValidator(_aparar), StringConstraints(max_length=50)]],
+    list[
+        Annotated[str, BeforeValidator(_aparar), StringConstraints(max_length=TAG_MAX)]
+    ],
     AfterValidator(normalizar_tags),
 ]
 
@@ -98,7 +102,10 @@ def listar_tarefas(
         list[str],
         Query(
             default_factory=list,
-            description="Filtra por tag: uma tag por chamada, até 50 caracteres.",
+            description=(
+                "Filtra por tag, sem diferenciar maiúsculas nem espaços nas pontas: "
+                f"uma tag por chamada, até {TAG_MAX} caracteres."
+            ),
         ),
     ],
 ) -> list[Tarefa]:
@@ -113,9 +120,9 @@ def listar_tarefas(
             entrada = tag[0]
             valor = _aparar(entrada)
             if not valor:
-                motivo = "tag não pode ser vazia"
-            elif len(valor) > 50:
-                motivo = "tag deve ter até 50 caracteres"
+                motivo = "tag vazia"
+            elif len(valor) > TAG_MAX:
+                motivo = f"tag deve ter até {TAG_MAX} caracteres"
         if motivo:
             raise RequestValidationError(
                 [

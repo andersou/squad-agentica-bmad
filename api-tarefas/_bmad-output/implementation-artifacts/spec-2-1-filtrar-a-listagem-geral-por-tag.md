@@ -5,7 +5,7 @@ created: '2026-10-06'
 status: 'done'
 baseline_commit: '63ce5a3b5f0fb737362f6df23626748764dcc1eb'
 route: 'dispatch'
-review_loop_iteration: 2
+review_loop_iteration: 3
 context:
   - '{project-root}/_bmad-output/planning-artifacts/architecture/architecture-api-tarefas-2026-10-06/ARCHITECTURE-SPINE.md'
   - '{project-root}/_bmad-output/implementation-artifacts/epic-2-context.md'
@@ -56,12 +56,32 @@ context:
 - Given `/openapi.json`, when leio o parâmetro `tag` de `GET /tarefas`, then ele é um array de strings opcional, com descrição.
 - Given um 422 da query `tag`, when leio o corpo, then `detail` é uma lista no formato que o OpenAPI anuncia para o 422 (`HTTPValidationError`), igual ao 422 do corpo.
 
+### Review Findings
+
+Passada 3 (code review pós-fechamento, 2026-10-06; diff `63ce5a3..4aa0bc8`).
+
+- [x] [Review][Patch] O limite de 50 aparecia em três lugares (`Tags`, checagem da rota e `description`); se mudar em `Tags`, a query diverge do corpo. Agora todos usam `api.TAG_MAX` [src/tarefas/api.py:51]
+- [x] [Review][Patch] A mesma regra (tag vazia depois do strip) tinha dois textos: `tag vazia` no corpo (`domain.normalizar_tags`) e `tag não pode ser vazia` na query. A query passou a usar `tag vazia` [src/tarefas/api.py:123]
+- [x] [Review][Patch] O `description` do `tag` no OpenAPI não dizia que a comparação ignora maiúsculas e espaços nas pontas [src/tarefas/api.py:105]
+- [x] [Review][Patch] `test_filtrar_por_tag_ordenado` não conferia `status_code` antes de ler `r.json()` [tests/test_tarefas.py:209]
+
+Rejeitados:
+- **false:** o 422 da query não é "igual" ao do corpo por não ter o prefixo `Value error, ` nem `ctx` (blind, acceptance). O AC pede o formato `HTTPValidationError`, em que `ctx` é opcional e `msg` é texto livre. O prefixo é artefato do Pydantic, e o próprio corpo já usa outro `type`/`msg` para 51 caracteres (`string_too_long`).
+- **false:** sem índice em `nome_norm` (blind). Com poucas centenas de tarefas no piloto, a varredura de `tarefa_tag` não chega a ser lentidão que alguém perceba. Já era o #8 da passada 1.
+- **false:** nenhum teste mistura pendente e concluída no mesmo filtro (blind). Um `concluida = 0` no caminho da tag zera a resposta de `test_filtrar_por_tag`, cujo único match é concluído, e `test_filtrar_por_tag_ordenado` cobre as pendentes.
+- **false:** os asserts de `backend` em `test_filtrar_por_tag` seriam código morto (blind). Eles conferem literais (`True`, `["api", "Backend", "urgente"]`) depois de `r.json() == [backend]`, então provam a resposta. Já era o #6 da passada 1.
+- **false:** com `repo.listar(conn, tag="")`, o repo filtra por `nome_norm = ""` (acceptance). A rota nunca passa `""`, e a escrita proíbe tag vazia.
+- **false:** tag de regra na `api` contra o AD-1 (acceptance). O AD-6 manda explicitamente checar a query na rota. Já era o #2 da passada 1.
+- **spec:** a nota da passada 2 #3 diz "levado ao Anderson" sem registrar resposta (blind). A correção seria editar a spec, e o achado foi julgado `false` por escopo (PRD §FR-6), então não há decisão pendente.
+- **spec:** a conferência do AD-9 em Implementation Notes parece afirmar a assinatura completa (blind). A correção seria editar a spec, e o subconjunto já está registrado em Design Notes.
+
 ## Implementation Notes
 
 - Arquivos: `repo.py` (`listar(conn, *, tag=None)` com a subconsulta em `nome_norm`), `api.py` (query `tag` e a checagem na rota) e `tests/test_tarefas.py` (8 testes novos).
 - O default da query é `Query(default_factory=list)`, porque o ruff barra `= []` (B006).
 - O `input` do 422 é o valor recebido, sem strip (a lista inteira quando há repetição). O limite de 50 conta depois do `str.strip()`, como no corpo.
 - Com os patches da passada 2, `uv run pytest` dá 106 passed, e `ruff check` e `ruff format --check` passam.
+- Passada 3: o limite virou `api.TAG_MAX` (usado em `Tags`, na rota e na `description`), e o 422 de tag vazia na query usa o mesmo texto do corpo (`tag vazia`). Continua 106 passed, com `ruff check` e `ruff format --check` limpos.
 
 Conferência dos AD contra o diff:
 - **AD-1:** `repo` continua importando só `tarefas.domain`, `domain` não mudou, e `test_camadas` passa.
@@ -115,6 +135,7 @@ Passada 2 (blind-hunter, edge-case-hunter, verification-gap), depois do loopback
 
 - **Decisão técnica de baixo risco, tomada pelo agente (revista na passada 1):** o 422 da query vem de `RequestValidationError`, levantado na rota. Assim o `detail` é a lista padrão do FastAPI (AD-7), a mesma do 422 do corpo e a que o OpenAPI anuncia.
 - **Decisão técnica de baixo risco, tomada pelo agente:** o limite de 50 caracteres conta depois do strip, como no corpo (AD-6, "depois do strip").
+- **Decisão técnica de baixo risco, tomada pelo agente (passada 3):** o limite de tag é a constante `api.TAG_MAX`, e não um alias validado por `TypeAdapter`. Assim o 50 tem uma fonte só, sem mudar o formato do 422 nem a checagem na rota (AD-6).
 - **Decisão técnica de baixo risco, tomada pelo agente:** `listar` ganha só `tag` agora; `pendentes`, `de` e `ate` entram na 2.2, que é quem os usa.
 
 ## Verification

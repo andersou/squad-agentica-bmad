@@ -206,6 +206,7 @@ def test_filtrar_por_tag_ordenado(client):
     b = _nova(client, "b", "2026-10-05", ["Backend"])
     c = _nova(client, "c", "2026-10-10", ["backend"])
     r = client.get("/tarefas?tag=backend")
+    assert r.status_code == 200
     assert [t["id"] for t in r.json()] == [b["id"], a["id"], c["id"]]
 
 
@@ -228,8 +229,8 @@ def test_listar_sem_tag_traz_todas(client):
     [
         ("tag=a&tag=b", "informe uma tag só", ["a", "b"]),
         ("tag=a&tag=a", "informe uma tag só", ["a", "a"]),
-        ("tag=", "tag não pode ser vazia", ""),
-        ("tag=%20%20", "tag não pode ser vazia", "  "),
+        ("tag=", "tag vazia", ""),
+        ("tag=%20%20", "tag vazia", "  "),
         (
             f"tag=%20{'a' * 51}%20",
             "tag deve ter até 50 caracteres",

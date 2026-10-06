@@ -138,7 +138,7 @@ As setas indicam quem pode importar quem. `domain` não importa ninguém. `repo`
 | JSON da tarefa | `{"id": int, "titulo": str, "prazo": "YYYY-MM-DD", "tags": [str], "concluida": bool}`. Listagens devolvem um array JSON, sem envelope. |
 | Armazenamento | `prazo` é TEXT em ISO, para comparar e ordenar como texto. `concluida` é INTEGER 0/1. |
 | Testes | pytest + `fastapi.testclient` (httpx). Um único `tests/conftest.py` com a fixture `client`, que **sempre** substitui `api.agora` por um instante fixo (ajustável pelo teste) e aponta `TAREFAS_DB` para `tmp_path`. Um teste para cada caso-limite do FR-6 (NFR-3). |
-| Estilo | `ruff check` + `ruff format`, sem config extra além de `target-version = "py314"`. |
+| Estilo | `ruff check` + `ruff format`, sem config extra além de `target-version = "py314"` e `extend-exclude = ["_bmad", ".claude"]`. O exclude não muda regras: tira da varredura as pastas instaladas pelo BMAD, que o ruff sem argumentos reescreveria (desvio aprovado pelo Anderson na Story 1.1, 2026-10-06). |
 | Documentação | README com exemplos de `curl` que cobrem o SM-2, além do `/docs` automático. |
 
 ## Stack

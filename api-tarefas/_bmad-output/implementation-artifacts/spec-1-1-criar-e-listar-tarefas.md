@@ -95,6 +95,8 @@ Passada 1 (blind-hunter, edge-case-hunter, verification-gap):
 | 17 | A task diz "`[tool.ruff]` só com `target-version`", mas o pyproject tem exclude | low | Real: o texto da task ficou desatualizado | patch na spec: a task cita o `extend-exclude` decidido |
 | 18 | O teste de desempate passa sem `id ASC` (gap) | medium | A ordem do scan por rowid coincide com a do id. Não dá para provocar a falha na 1.1 | defer |
 
+Achado 8 resolvido depois do commit da story: o Anderson aprovou registrar o desvio na convenção Estilo do spine e tirar o TODO do AGENTS.md.
+
 Conferência dos AD contra o diff:
 - **AD-1:** `domain` importa só `dataclasses`/`datetime`, e `repo` só `sqlite3`/`datetime`/`tarefas.domain`.
 - **AD-2:** nenhuma leitura de relógio.

@@ -27,7 +27,7 @@ Dar ao dev do time-piloto o CRUD completo de tarefas: criar com título, prazo e
 
 ## Technical Decisions
 
-- **Stack:** Python 3.14, uv 0.12, FastAPI 0.142.2 sem `[standard]`, Pydantic 2.13.5, uvicorn 0.54.0 e tzdata 2026.5. Em dev, pytest 9.1.1, httpx 0.28.1 (não `httpx2`) e ruff 0.16.10, com ruff configurado só com `target-version = "py314"`. O projeto nasce de `uv init --package`, com `src/tarefas/{api,domain,repo}.py`, `tests/conftest.py` e `tests/test_tarefas.py`.
+- **Stack:** Python 3.14, uv 0.12, FastAPI 0.142.2 sem `[standard]`, Pydantic 2.13.5, uvicorn 0.54.0 e tzdata 2026.5. Em dev, pytest 9.1.1, httpx 0.28.1 (não `httpx2`) e ruff 0.16.10, com ruff configurado só com `target-version = "py314"` e `extend-exclude = ["_bmad", ".claude"]`. O projeto nasce de `uv init --package`, com `src/tarefas/{api,domain,repo}.py`, `tests/conftest.py` e `tests/test_tarefas.py`.
 - **Camadas:** a direção é `api → domain ← repo`. `domain.py` não importa nada externo (nem FastAPI, nem Pydantic, nem sqlite3), e `repo.py` nunca importa `api`. Regra de prazo, janela e tag fica só em `domain.py`.
 - **Contrato HTTP:**
   - `POST /tarefas` devolve 201 com a tarefa.

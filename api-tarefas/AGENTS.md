@@ -21,7 +21,7 @@ API REST interna de tarefas com janelas de prazo (vencidas, hoje, próximos 7 di
 
 ## Running and verifying
 
-- TODO (ainda não há `pyproject.toml`; confirmar no primeiro refresh): use `uv run pytest`, `uv run ruff check` e `uv run ruff format`. Não chame `pytest` ou `ruff` sozinhos, porque rodam fora do ambiente do projeto.
+- Use `uv run pytest`, `uv run ruff check` e `uv run ruff format` (ou `--check`), sem argumentos. O `[tool.ruff]` exclui `_bmad/` e `.claude/`. Não chame `pytest` ou `ruff` sozinhos, porque rodam fora do ambiente do projeto.
 - Para subir a API, use `TAREFAS_DB=/caminho/absoluto/tarefas.db uv run uvicorn tarefas.api:app`. Com caminho relativo, subir de outro diretório abre um banco novo e vazio.
 - As versões (Python 3.14, uv 0.12) vêm do spine e do `pyproject.toml`, nunca do ambiente da sessão.
 

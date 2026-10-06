@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-06-2026 12:08
-last_updated: 10-06-2026 14:10
+last_updated: 10-06-2026 15:00
 project: api-tarefas
 project_key: NOKEY
 tracking_system: file-system
@@ -45,7 +45,7 @@ development_status:
   epic-2: in-progress
   2-1-filtrar-a-listagem-geral-por-tag: done
   2-2-consultar-pendentes-por-janela-de-prazo: done
-  2-3-documentar-as-chamadas-no-readme: backlog
+  2-3-documentar-as-chamadas-no-readme: done
   epic-2-retrospective: optional
 action_items:
   - id: "epic-1-retro-item-1-unificar-o-strip-de-titulo-e-tags-com-st"

@@ -5,7 +5,6 @@ Apresentação sobre como usar o [BMAD Method](https://github.com/bmad-code-org/
 ## Conteúdo
 
 - [`docs/bmad-squad-agentica.html`](docs/bmad-squad-agentica.html): os slides (abra no navegador).
-- [`docs/bmad-squad-agentica.pdf`](docs/bmad-squad-agentica.pdf): os mesmos slides em PDF.
 - [`api-tarefas/`](api-tarefas/): API REST de tarefas com tags e janelas de prazo (Python 3.14, FastAPI, SQLite), feita pela squad. Veja o [README](api-tarefas/README.md) para instalar, testar e rodar.
 
 ## Artefatos gerados pela squad
